@@ -1,0 +1,73 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <%- style %>
+        <header class="header">
+            <div class="logo">
+                <img src="<%- logo %> " alt="logo">
+            </div>
+            <div class="summary">
+                ADELANTOS A DESCONTAR
+            </div>
+        </header>
+        <div class="resumen">
+            <div class="user-data">
+                <div class="data">
+                    <div class="user">
+                        <span>
+                            <font style="font-weight: bold;">Período:</font>
+                            <%- month %>/<%- year %>
+                        </span>
+                    </div>
+                </div>
+                <div class="data">
+                    <div class="user">
+                        <span>
+                            <font style="font-weight: bold;">Total:</font>
+                            $ <%- total %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <main class="main">
+            <div class="tasks">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Cuit</th>
+                            <th>Sector</th>
+                            <th>$ a descontar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% providerList.forEach(function(item){ %>
+                            <tr>
+                                <td style="text-align: left">
+                                    <%- item.name %>
+                                </td>
+                                <td style="text-align: left">
+                                    <%- item.cuit %>
+                                </td>
+                                <td style="text-align: left">
+                                    <%- item.sector %>
+                                </td>
+                                <td style="text-align: right">
+                                    $ <%- item.totalPayment %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+</body>
+
+</html>

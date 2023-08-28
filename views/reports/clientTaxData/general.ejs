@@ -1,0 +1,84 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <%- style %>
+        <header class="header">
+        </header>
+        <main class="main">
+            <div class="container text-center"
+                style="border: 2px solid black;height: 35cm;margin-top: 20px;margin-bottom: 20px;width: 21cm;">
+                <div class="row" style="margin-top: 25px;margin-bottom: 25px;">
+                    <div class="col-sm-3">
+                        <img src="<%- logoAfip %> " alt="logo">
+                    </div>
+                    <div class="col-sm-9" style="margin-top: 10px;">
+                        <h5 style="margin: 0;font-size: 12px;">ADMINISTRACION FEDERAL DE INGRESOS PUBLICOS</h5>
+                        <h3 style="margin: 0;font-weight: bold;">CONSTANCIA DE INSCRIPCION</h3>
+                    </div>
+                </div>
+                <div style="height: 10%;width: 100%;border: 1px solid black;padding-left: 10px;padding-top: 10px;"
+                    class="text-left">
+                    <div>
+                        <span style="font-size: 18px;font-weight: bold;">
+                            <% if (clientDataTax.datosGenerales.razonSocial) { %>
+                                <%- clientDataTax.datosGenerales.razonSocial %>
+                                    <% }else{ %>
+                                        <%- clientDataTax.datosGenerales.apellido %> <%-
+                                                clientDataTax.datosGenerales.nombre %>
+                                                <% } %>
+                        </span>
+                    </div>
+                    <div style="padding-top: 10px;">
+                        <span style="font-size: 18px;">CUIT:
+                            <font style="font-weight: bold;"><%- clientDataTax.datosGenerales.idPersona %></font>
+                        </span>
+                    </div>
+                </div>
+                <h5 style="font-weight: bold;margin-top: 25px;">IMPUESTOS / FECHA DE ALTA</h5>
+                <div style="height: 34%;width: 100%;border: 1px solid black;padding: 5px;">
+                    <% for( let i=0; i < clientDataTax.datosRegimenGeneral.impuesto.length; i++ ) { %>
+                        <%- include('./taxRow.ejs', {period: clientDataTax.datosRegimenGeneral.impuesto[i].periodo,
+                            description: clientDataTax.datosRegimenGeneral.impuesto[i].descripcionImpuesto}) %>
+                            <% } %>
+                </div>
+                <h5 style="font-weight: bold;margin-top: 25px;">ACTIVIDADES REGISTRADAS Y FECHAS DE ALTA</h5>
+                <div style="height: 14%;width: 100%;border: 1px solid black;padding: 5px;">
+                    <% for( let i=0; i < clientDataTax.datosRegimenGeneral.actividad.length; i++ ) { %>
+                        <%- include('./taxRow.ejs', {period: clientDataTax.datosRegimenGeneral.actividad[i].periodo,
+                            description: clientDataTax.datosRegimenGeneral.actividad[i].descripcionActividad}) %>
+                            <% } %>
+                                <div class="row" style="margin-top: 5px;">
+                                    <div class="col-sm-12 text-left">
+                                        <span>Mes de cierre ejercicio comercial: <%-
+                                                clientDataTax.datosGenerales.mesCierre %></span>
+                                    </div>
+                                </div>
+                </div>
+                <h5 style="font-weight: bold;margin-top: 25px;">DOMICILIO FISCAL - AFIP</h5>
+                <div style="height: 6%;width: 100%;border: 1px solid black;padding: 5px;" class="text-left">
+                    <h5 style="font-size: 15px;margin-top: 10px;"><%-
+                            clientDataTax.datosGenerales.domicilioFiscal.direccion %></h5>
+                    <h5 style="font-size: 15px;margin-top: 10px;"><%-
+                            clientDataTax.datosGenerales.domicilioFiscal.codPostal %> - <%-
+                                clientDataTax.datosGenerales.domicilioFiscal.localidad %> <%-
+                                    clientDataTax.datosGenerales.domicilioFiscal.descripcionProvincia %></h5>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 text-left" style="margin-top: 50px;">
+                        <h5 style="font-weight: bold;">Fecha: <%- date %></h5>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <img src="<%- logo %> " alt="logo" style="width: 200px;">
+                    </div>
+                </div>
+            </div>
+        </main>
+</body>
+
+</html>

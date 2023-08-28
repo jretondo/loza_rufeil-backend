@@ -1,0 +1,111 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <%- style %>
+        <header class="header">
+        </header>
+        <main class="main">
+            <div class="container text-center"
+                style="border: 2px solid black;height: 35cm;margin-top: 20px;margin-bottom: 20px;width: 21cm;">
+                <div class="row" style="margin-top: 25px;margin-bottom: 5px;">
+                    <div class="col-sm-3">
+                        <img src="<%- logoAfip %> " alt="logo">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h2 style="margin: 0;font-weight: bold;">CONSTANCIA DE OPCIÓN</h2>
+                        <h5 style="margin: 0;">Régimen Simplificado para Pequeños Contribuyentes</h5>
+                    </div>
+                </div>
+                <div style="height: 12%;width: 100%;border: 1px solid black;padding: 10px;margin-top: 30px;"
+                    class="text-left">
+                    <div>
+                        <span style="font-size: 18px;">CUIT:
+                            <font style="font-weight: bold;"><%- clientDataTax.datosGenerales.idPersona %></font>
+                        </span>
+                    </div>
+                    <div>
+                        <span style="font-size: 18px;font-weight: bold;"> <%- clientDataTax.datosGenerales.apellido %>
+                                <%- clientDataTax.datosGenerales.nombre %></span>
+                    </div>
+                    <div>
+                        <span style="font-size: 18px;"><%- clientDataTax.datosGenerales.domicilioFiscal.direccion
+                                %></span>
+                    </div>
+                    <div>
+                        <span style="font-size: 18px;"><%- clientDataTax.datosGenerales.domicilioFiscal.localidad
+                                %></span>
+                    </div>
+                    <div>
+                        <span style="font-size: 18px;"><%- clientDataTax.datosGenerales.domicilioFiscal.codPostal %> -
+                                <%- clientDataTax.datosGenerales.domicilioFiscal.descripcionProvincia %></span>
+                    </div>
+                </div>
+                <h5 style="margin-top: 25px;text-align: left;font-size: 18px;">020 - MONOTRIBUTO</h5>
+                <div style="height: 220px;width: 100%;padding: 5px;border-bottom: 1px solid black;">
+                    <div class="row">
+                        <div class="col-sm-4">
+                        </div>
+                        <div class="col-sm-4">
+                            <div style="padding: 80px;padding-bottom: 0;padding-top: 0;">
+                                <div style="border: 1px solid black;">
+                                    <span style="font-size: 25px;">CATEGORIA</span> <br />
+                                    <span style="font-size: 80px;font-weight: bold;"><%-
+                                            clientDataTax.datosMonotributo.categoriaMonotributo.descripcionCategoria.slice(0,1)
+                                            %></span>
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 20px;"><%-
+                                        clientDataTax.datosMonotributo.categoriaMonotributo.descripcionCategoria.slice(2,clientDataTax.datosMonotributo.categoriaMonotributo.descripcionCategoria.length)
+                                        %></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                    </div>
+                    <div class="row" style="height: 100px;">
+                        <div class="col-sm-6 text-left" style="margin-top: auto;">
+                            <span style="font-size: 12px;">FECHA DE INICIO: <%-
+                                    clientDataTax.datosMonotributo.categoriaMonotributo.periodo.toString().slice(4,6)
+                                    %>/<%-
+                                        clientDataTax.datosMonotributo.categoriaMonotributo.periodo.toString().slice(0,4)
+                                        %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <% for( let i=0; i < clientDataTax.datosRegimenGeneral.impuesto.length; i++ ) { %>
+                    <%- include('./monoTax.ejs', {period: clientDataTax.datosRegimenGeneral.impuesto[i].periodo,
+                        description: clientDataTax.datosRegimenGeneral.impuesto[i].descripcionImpuesto, code:
+                        clientDataTax.datosRegimenGeneral.impuesto[i].idImpuesto}) %>
+                        <% } %>
+
+                            <h5 style="margin-top: 25px;text-align: left;font-size: 14px;">ACTIVIDADES:</h5>
+                            <div style="height: 200px;width: 100%;padding: 5px;border-bottom: 1px solid black;">
+                                <% for( let i=0; i < clientDataTax.datosRegimenGeneral.actividad.length; i++ ) { %>
+                                    <%- include('./taxRow.ejs', {period:
+                                        clientDataTax.datosRegimenGeneral.actividad[i].periodo, description:
+                                        clientDataTax.datosRegimenGeneral.actividad[i].descripcionActividad}) %>
+                                        <% } %>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6 text-left" style="margin-top: 50px;">
+                                    <h5 style="font-weight: bold;">Fecha: <%- date %></h5>
+                                </div>
+                                <div class="col-sm-6 text-right">
+                                    <img src="<%- logo %> " alt="logo" style="width: 200px;">
+                                </div>
+                            </div>
+            </div>
+        </main>
+</body>
+
+</html>
