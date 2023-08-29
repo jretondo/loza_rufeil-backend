@@ -57,7 +57,7 @@ export = () => {
         }
     }
 
-    const allList = async (isAdmin: boolean, userId?: number) => {
+    const allList = async (isAdmin?: boolean, userId?: number) => {
         return await Client.findAll({
             include: [{
                 model: AdminPermission,
