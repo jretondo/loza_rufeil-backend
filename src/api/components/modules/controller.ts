@@ -1,20 +1,19 @@
 import { Op } from 'sequelize';
 import { INewPermissions } from '../../../interfaces/Others';
 import AdminPermission from '../../../models/AdminPermission';
-import { IUserPermission } from '../../../interfaces/Tables';
+import { IAdminPermission } from '../../../interfaces/Tables';
 import Permission from '../../../models/Module';
-import UserModules from '../../../models/UserModule';
 
 export = () => {
     const upsert = async (body: INewPermissions) => {
         if (body.permissions.length > 0) {
-            await AdminPermission.destroy({ where: { user_id: body.idUser } })
+            await AdminPermission.destroy({ where: { admin_id: body.idUser } })
 
-            const permissions: Array<IUserPermission> =
+            const permissions: Array<IAdminPermission> =
                 body.permissions.map((item) => {
                     return {
-                        permission_id: item.idPermission,
-                        user_id: body.idUser,
+                        module_id: item.idPermission,
+                        admin_id: body.idUser,
                         permission_grade: item.permissionGrade,
                         client_id: item.idClient,
                         client_enabled: item.clientEnabled
@@ -23,21 +22,8 @@ export = () => {
 
             return await AdminPermission.bulkCreate(permissions);
         } else {
-            await AdminPermission.destroy({ where: { user_id: body.idUser } })
+            await AdminPermission.destroy({ where: { admin_id: body.idUser } })
         }
-    }
-
-    const getModulePermission = async (idUser: number, idPermission: number, grade: number) => {
-        return await UserModules.findAll({
-            where: {
-                [Op.and]:
-                    [
-                        { module_id: idPermission },
-                        { user_id: idUser },
-                        { permission_grade: { [Op.gte]: grade } }
-                    ]
-            }
-        })
     }
 
     const getPermission = async (idUser: number, idPermission: number, idClient: number, grade: number) => {
@@ -45,8 +31,8 @@ export = () => {
             where: {
                 [Op.and]:
                     [
-                        { permission_id: idPermission },
-                        { user_id: idUser },
+                        { module_id: idPermission },
+                        { admin_id: idUser },
                         { client_enabled: true },
                         { client_id: idClient },
                         { permission_grade: { [Op.gte]: grade } }
@@ -60,7 +46,7 @@ export = () => {
 
         const userPermissions = await AdminPermission.findAll({
             where: {
-                user_id: idUser
+                admin_id: idUser
             },
             include: Permission
         });
@@ -86,13 +72,12 @@ export = () => {
     }
 
     const get = async (idUser: number) => {
-        return await AdminPermission.findAll({ where: { user_id: idUser } });
+        return await AdminPermission.findAll({ where: { admin_id: idUser } });
     }
 
     return {
         upsert,
         getPermission,
-        getModulePermission,
         get,
         get2,
     };

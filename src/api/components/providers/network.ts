@@ -71,11 +71,11 @@ const getTaxProof = (
 
 //Routes
 router
-    .get("/dataTaxProof", secure(undefined, undefined, EModules.purchases, 1), getTaxProof)
-    .get("/dataTax", secure(undefined, undefined, EModules.purchases, 1), getClientDataTax)
-    .get("/:page", secure(undefined, undefined, EModules.purchases, 1), list)
-    .get("/", secure(undefined, undefined, EModules.purchases, 1), allList)
-    .delete("/:id", secure(undefined, undefined, EModules.purchases, 3), remove)
-    .post("/", secure(undefined, undefined, EModules.purchases, 2), upsert);
+    .get("/dataTaxProof", secure(undefined, EModules.purchases, 1), getTaxProof)
+    .get("/dataTax", secure(undefined, EModules.purchases, 1), getClientDataTax)
+    .get("/:page", secure(undefined, EModules.purchases, 1), list)
+    .get("/", secure(undefined, EModules.purchases, 1), allList)
+    .delete("/:id", secure(undefined, EModules.purchases, 3), remove)
+    .post("/", secure(undefined, EModules.purchases, 2), upsert);
 
 export = router;

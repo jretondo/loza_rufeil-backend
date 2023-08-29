@@ -38,9 +38,9 @@ const getOther = (
 
 //Routes
 router
-    .post("/", secure(undefined, undefined, EModules.users, 2), upsert)
-    .put("/", secure(undefined, undefined, EModules.users, 3), upsert)
-    .get("/:id", secure(undefined, undefined, EModules.users, 1), getOther)
+    .post("/", secure(undefined, EModules.users, 2), upsert)
+    .put("/", secure(undefined, EModules.users, 3), upsert)
+    .get("/:id", secure(undefined, EModules.users, 1), getOther)
     .get("/", secure(), get);
 
 export = router;

@@ -123,24 +123,12 @@ const upsertUserPermissions = (
         .catch(next)
 }
 
-const upsertUserModulesPermissions = (
+const getModules = (
     req: Request,
     res: Response,
     next: NextFunction
 ) => {
-    Controller.upsertUserModulesPermissions(req.body.idUser, req.body.permissionsList)
-        .then((data) => {
-            success({ req, res, message: data });
-        })
-        .catch(next)
-}
-
-const getPermissionsUserModules = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    Controller.getPermissionsUserModules(Number(req.query.idUser))
+    Controller.getModules(Number(req.body.user.admin_id), Number(req.query.clientId))
         .then((data) => {
             success({ req, res, message: data });
         })
@@ -148,16 +136,15 @@ const getPermissionsUserModules = (
 }
 
 router
-    .get("/details/:id", secure(undefined, undefined, EModules.users, 1), get)
+    .get("/details/:id", secure(undefined, EModules.users, 1), get)
     .get("/mydata", secure(), myDataUser)
-    .get("/permissions", secure(undefined, undefined, EModules.users, 1), getUserClientsPermissions)
-    .get("/modulesPermissions", secure(undefined, undefined, EModules.users, 1), getPermissionsUserModules)
-    .get("/:page", secure(undefined, undefined, EModules.users, 1), listPagination)
-    .get("/", secure(undefined, undefined, EModules.users, 1), list)
-    .post("/permissions", secure(undefined, undefined, EModules.users, 2), upsertUserPermissions)
-    .post("/modulesPermissions", secure(undefined, undefined, EModules.users, 2), upsertUserModulesPermissions)
-    .post("/", secure(undefined, undefined, EModules.users, 2), upsert)
-    .put("/", secure(undefined, undefined, EModules.users, 3), upsert)
-    .delete("/:id", secure(undefined, undefined, EModules.users, 3), remove);
+    .get("/permissions", secure(undefined, EModules.users, 1), getUserClientsPermissions)
+    .get("/modules", secure(), getModules)
+    .get("/:page", secure(undefined, EModules.users, 1), listPagination)
+    .get("/", secure(undefined, EModules.users, 1), list)
+    .post("/permissions", secure(undefined, EModules.users, 2), upsertUserPermissions)
+    .post("/", secure(undefined, EModules.users, 2), upsert)
+    .put("/", secure(undefined, EModules.users, 3), upsert)
+    .delete("/:id", secure(undefined, EModules.users, 3), remove);
 
 export = router;

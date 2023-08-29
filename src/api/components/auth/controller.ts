@@ -5,7 +5,6 @@ import { sendPass } from '../../../utils/sendEmails/sendPass';
 import auth from '../../../auth';
 import { IAuth } from '../../../interfaces/Tables';
 import Admin from '../../../models/Admin';
-import UserModules from '../../../models/UserModule';
 
 export = () => {
     const upsert = async (body: IAuth, email: string, name: string) => {
@@ -54,7 +53,6 @@ export = () => {
     const login = async (username: string, password: string) => {
         const data3 = await AuthAdmin.findAll({ where: { user: username } });
         const data2 = await Admin.findAll({ where: { user: username } });
-        const modulesView = await UserModules.findAll({ where: { user_id: data2[0].dataValues.id } })
         const userData = data2[0]
         const data = {
             ...data2[0].dataValues,
@@ -68,7 +66,6 @@ export = () => {
                         token: auth.sign(JSON.stringify(data)),
                         userData: userData,
                         provisory: prov,
-                        modules: modulesView
                     }
                 } else {
                     throw new Error('información invalida')

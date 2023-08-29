@@ -33,7 +33,7 @@ const list = (
 
 //Routes
 router
-    .get("/:page", secure(undefined, undefined, EModules.users, 1), list)
+    .get("/:page", secure(undefined, EModules.users, 1), list)
     .post("/", secure(), upsert);
 
 export = router;

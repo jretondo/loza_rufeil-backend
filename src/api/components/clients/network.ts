@@ -36,7 +36,7 @@ const allList = (
     res: Response,
     next: NextFunction
 ) => {
-    Controller.allList().then(dataList => {
+    Controller.allList(Number(req.body.user.admin_id)).then(dataList => {
         success({ req, res, message: dataList })
     }).catch(next)
 }
@@ -73,11 +73,11 @@ const getTaxProof = (
 
 //Routes
 router
-    .get("/dataTaxProof", secure(undefined, undefined, EModules.clients, 1), getTaxProof)
-    .get("/dataTax", secure(undefined, undefined, EModules.clients, 1), getClientDataTax)
-    .get("/:page", secure(undefined, undefined, EModules.clients, 1), list)
-    .get("/", secure(undefined, undefined, EModules.clients, 1), allList)
-    .delete("/:id", secure(undefined, undefined, EModules.clients, 3), remove)
-    .post("/", secure(undefined, undefined, EModules.clients, 2), upsert);
+    .get("/dataTaxProof", secure(undefined, EModules.clients, 1), getTaxProof)
+    .get("/dataTax", secure(undefined, EModules.clients, 1), getClientDataTax)
+    .get("/:page", secure(undefined, EModules.clients, 1), list)
+    .get("/", secure(undefined, EModules.clients, 1), allList)
+    .delete("/:id", secure(undefined, EModules.clients, 3), remove)
+    .post("/", secure(undefined, EModules.clients, 2), upsert);
 
 export = router;

@@ -10,23 +10,14 @@ const sign = (data: string) => {
 }
 
 const check = {
-    permission: async (req: Request, next: NextFunction, idPermission?: number, clientId?: number, moduleId?: number, grade?: number) => {
+    permission: async (req: Request, next: NextFunction, idPermission?: number, clientId?: number, grade?: number) => {
         const decoded: any = decodeHeader(req, next)
-        if (!idPermission && !moduleId) {
+        if (!idPermission) {
             next()
         } else if (decoded.admin) {
             next();
         } else if (idPermission && clientId) {
             const permissionsList = await permissions.getPermission(req.body.user.id, idPermission, clientId, grade || 0);
-            const permissionsQuantity = permissionsList.length;
-            if (permissionsQuantity < 1) {
-                req.body.statusError = 403
-                next(error("No tiene los permisos"));
-            } else {
-                next();
-            }
-        } else if (moduleId) {
-            const permissionsList = await permissions.getModulePermission(req.body.user.id, moduleId, grade || 0);
             const permissionsQuantity = permissionsList.length;
             if (permissionsQuantity < 1) {
                 req.body.statusError = 403

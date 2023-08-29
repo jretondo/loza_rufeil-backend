@@ -41,7 +41,7 @@ export = () => {
                     where: (!isAdmin ? {
                         [Op.and]: [
                             { permission_grade: { [Op.gte]: 1 } },
-                            { user_id: userId },
+                            { admin_id: userId },
                             { client_enabled: true }
                         ]
                     } : {}
@@ -57,8 +57,17 @@ export = () => {
         }
     }
 
-    const allList = async () => {
-        return await Client.findAll()
+    const allList = async (userId?: number) => {
+        return await Client.findAll({
+            include: [{
+                model: AdminPermission,
+                where: (userId ? [
+                    { permission_grade: { [Op.gte]: 1 } },
+                    { admin_id: userId },
+                    { client_enabled: true }
+                ] : {})
+            }]
+        })
     }
 
     const remove = async (idClient: number) => {

@@ -73,11 +73,11 @@ const updateAttribute = (
 
 //Routes
 router
-    .get("/:page", secure(undefined, undefined, EModules.certificates, 1), list)
-    .get("/crt-key/:id", secure(undefined, undefined, EModules.certificates, 1), downloadCertificate)
-    .delete("/:id", secure(undefined, undefined, EModules.certificates, 3), remove)
-    .post("/csr", secure(undefined, undefined, EModules.certificates, 2), createCsr)
-    .post("/", secure(undefined, undefined, EModules.certificates, 2), uploadFile(FILES_ADDRESS.certAfip, ["crt_file", "key_file"]), upsert)
-    .put("/", secure(undefined, undefined, EModules.certificates, 3), updateAttribute)
+    .get("/:page", secure(undefined, EModules.certificates, 1), list)
+    .get("/crt-key/:id", secure(undefined, EModules.certificates, 1), downloadCertificate)
+    .delete("/:id", secure(undefined, EModules.certificates, 3), remove)
+    .post("/csr", secure(undefined, EModules.certificates, 2), createCsr)
+    .post("/", secure(undefined, EModules.certificates, 2), uploadFile(FILES_ADDRESS.certAfip, ["crt_file", "key_file"]), upsert)
+    .put("/", secure(undefined, EModules.certificates, 3), updateAttribute)
 
 export = router;

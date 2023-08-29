@@ -15,30 +15,18 @@ export interface IUser {
     admin?: boolean,
     userName?: string
 }
-export interface IUserPermission {
+export interface IAdminPermission {
     id?: number,
-    user_id: number,
-    permission_id: number,
+    admin_id: number,
+    module_id: number,
     client_id: number,
     permission_grade: number, //0 ==> read, 1 ==> read and edit, 2 ==> read, edit and delete
     client_enabled: boolean
 }
 
-export interface IUserModules {
-    id?: number,
-    user_id: number,
-    module_id: number,
-    permission_grade: number //0 ==> read, 1 ==> read and edit, 2 ==> read, edit and delete
-}
-
 export interface IModules {
     id?: number,
     module_name: string
-}
-
-export interface IClientsPermissions {
-    id?: number,
-    description: string
 }
 
 export interface IActivity {
@@ -89,12 +77,6 @@ export interface IIvaTypes {
     id?: number,
     name: string,
     percentage: number
-}
-
-export interface IParameters {
-    id?: number,
-    parameter: string,
-    value: string
 }
 
 export interface IAfipCrt {
