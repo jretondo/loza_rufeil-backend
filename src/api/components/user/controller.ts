@@ -86,7 +86,7 @@ export = () => {
     }
 
     const getPermissionsUser = async (userId: number) => {
-        const clients = await ClientsController.allList(userId)
+        const clients = await ClientsController.allList()
         const Modules = await Module.findAll()
         const permissions = await AdminPermission.findAll({ where: { admin_id: userId } })
         let userPermissions: Array<IPermissions> = []
