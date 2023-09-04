@@ -1,13 +1,11 @@
-import { Columns, Tables } from '../constant/TABLES';
-import { Restrictions } from '../constant/OTHERS';
+import { Tables } from '../constant/TABLES';
 import { DataTypes, Optional, Model } from 'sequelize';
 import sequelize from '../database';
-import Admin from './Admin';
 import { IAuth } from '../interfaces/Tables';
 
-type IAuthCreationAttributes = Optional<IAuth, 'id'>;
+type AuthCreationAttributes = Optional<IAuth, 'id'>;
 
-class AuthAdmin extends Model<IAuth, IAuthCreationAttributes> { }
+class AuthAdmin extends Model<IAuth, AuthCreationAttributes> { }
 
 AuthAdmin.init({
     id: {

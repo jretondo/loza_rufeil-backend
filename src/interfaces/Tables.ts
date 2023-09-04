@@ -88,3 +88,24 @@ export interface IAfipCrt {
     enabled?: boolean,
     crt_name: string
 }
+
+export interface IAccountingPeriod {
+    id?: number,
+    from_date: Date,
+    to_date: Date,
+    client_id: number,
+    closed: boolean
+}
+
+export interface IAccountCharts {
+    id?: number,
+    genre: number,
+    group: number,
+    caption: number,
+    account: number,
+    sub_account: number,
+    code: string,
+    name: string,
+    attributable: boolean,
+    accounting_period_id: number
+}

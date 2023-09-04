@@ -1,6 +1,11 @@
 import { App } from './app';
 import { config } from '../config';
 import sequelize from '../database';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.join(__dirname, "..", "..", '.env') });
+
 
 const handleConn = async () => {
     try {

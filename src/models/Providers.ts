@@ -4,7 +4,6 @@ import { IProviders } from '../interfaces/Tables';
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database';
 import IvaCondition from './IvaCondition';
-import Client from './Client';
 
 type ProviderCreationAttributes = Optional<IProviders, 'id'>;
 

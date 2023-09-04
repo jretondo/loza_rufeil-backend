@@ -1,7 +1,7 @@
 import { IAfipCrt } from '../interfaces/Tables';
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database';
-import { Columns, Tables } from '../constant/TABLES';
+import { Tables } from '../constant/TABLES';
 
 type AfipCrtCreationAttributes = Optional<IAfipCrt, 'id'>;
 

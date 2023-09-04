@@ -90,6 +90,27 @@ enum AfipCrt {
     enabled = "enabled"
 }
 
+enum AccountingPeriod {
+    id = "id",
+    from_date = "from_date",
+    to_date = "to_date",
+    client_id = "client_id",
+    closed = "closed"
+}
+
+enum AccountCharts {
+    id = "id",
+    genre = "genre",
+    group = "group",
+    caption = "caption",
+    account = "account",
+    sub_account = "sub_account",
+    code = "code",
+    name = "name",
+    attributable = "attributable",
+    accounting_period_id = "accounting_period_id"
+}
+
 export enum Tables {
     ADMIN = "admins",
     AUTH_ADMIN = "auth_admin",
@@ -101,7 +122,9 @@ export enum Tables {
     INVOICE_TYPES = "invoice_types",
     IVA_TYPES = "iva_types",
     AFIP_CRT = "afip_crt",
-    PROVIDERS = "providers"
+    PROVIDERS = "providers",
+    ACCOUNTING_PERIOD = "accounting_period",
+    ACCOUNT_CHARTS = "account_charts"
 }
 
 export const Columns = {
@@ -115,5 +138,7 @@ export const Columns = {
     invoiceTypes: InvoiceTypes,
     ivaTypes: IvaTypes,
     afipCrt: AfipCrt,
-    providers: Providers
+    providers: Providers,
+    accountingPeriod: AccountingPeriod,
+    accountCharts: AccountCharts
 }
