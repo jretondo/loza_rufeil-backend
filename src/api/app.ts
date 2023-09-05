@@ -20,6 +20,7 @@ import activity from './components/activity/network';
 import clients from './components/clients/network';
 import providers from './components/providers/network';
 import certificates from './components/certificates/network';
+import accounting from './components/accounting/network';
 import views from './components/views/network';
 import { config } from '../config';
 export class App {
@@ -59,6 +60,7 @@ export class App {
         this.app.use("/api/clients", clients)
         this.app.use("/api/providers", providers)
         this.app.use("/api/certificates", certificates)
+        this.app.use("/api/accounting", accounting)
         this.app.use(errorThrow);
     }
 

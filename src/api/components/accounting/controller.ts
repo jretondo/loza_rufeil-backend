@@ -1,9 +1,6 @@
-import { Op } from 'sequelize';
-import { IAccountingPeriod, IActivity } from '../../../interfaces/Tables';
-import { IUser } from 'interfaces/Tables';
-import Activity from '../../../models/Activity';
-import Admin from '../../../models/Admin';
-import AccountingPeriod from 'models/AccountingPeriod';
+import { IAccountingPeriod } from '../../../interfaces/Tables';
+import AccountingPeriod from '../../../models/AccountingPeriod';
+import Client from '../../../models/Client';
 
 export = () => {
     const periodUpsert = async (fromDate: Date, toDate: Date, clientId: number) => {
@@ -19,7 +16,7 @@ export = () => {
     const periodList = async (clientId: number) => {
         return await AccountingPeriod.findAndCountAll({
             where: [{ client_id: clientId }],
-            include: Admin,
+            include: Client
         });
     }
 
