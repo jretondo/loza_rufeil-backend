@@ -17,10 +17,10 @@ AccountingPeriod.init({
         primaryKey: true
     },
     from_date: {
-        type: DataTypes.DATE
+        type: DataTypes.DATEONLY
     },
     to_date: {
-        type: DataTypes.DATE
+        type: DataTypes.DATEONLY
     },
     client_id: {
         type: DataTypes.INTEGER

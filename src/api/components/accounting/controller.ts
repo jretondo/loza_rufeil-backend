@@ -4,6 +4,7 @@ import AccountingPeriod from '../../../models/AccountingPeriod';
 import Client from '../../../models/Client';
 import { error } from '../../../network/response';
 import { Request, Response } from 'express';
+import { Columns } from '../../../constant/TABLES';
 
 export = () => {
     const periodUpsert = async (fromDate: Date, toDate: Date, clientId: number, res: Response, req: Request) => {
@@ -45,6 +46,7 @@ export = () => {
         }
         return await AccountingPeriod.findAll({
             where: [{ client_id: clientId }],
+            order: [[`${Columns.accountingPeriod.from_date}`, 'DESC']],
             include: Client
         });
     }
