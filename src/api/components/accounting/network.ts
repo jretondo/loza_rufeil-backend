@@ -14,7 +14,8 @@ const periodUpsert = (
     Controller.periodUpsert(
         req.body.fromDate,
         req.body.toDate,
-        req.body.clientId
+        req.body.clientId,
+        res, req
     ).then(response => {
         success({ req, res, message: response })
     }).catch(next)
