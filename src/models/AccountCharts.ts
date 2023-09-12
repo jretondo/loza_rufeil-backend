@@ -40,6 +40,9 @@ AccountChart.init({
     attributable: {
         type: DataTypes.BOOLEAN
     },
+    inflation_adjustment: {
+        type: DataTypes.BOOLEAN
+    },
     accounting_period_id: {
         type: DataTypes.INTEGER
     }
@@ -56,7 +59,7 @@ AccountingPeriod.hasOne(AccountChart, {
     onUpdate: Restrictions.RESTRICT
 })
 
-AccountingPeriod.belongsTo(AccountingPeriod, {
+AccountChart.belongsTo(AccountingPeriod, {
     foreignKey: Columns.accountCharts.accounting_period_id,
     targetKey: Columns.accountingPeriod.id
 })

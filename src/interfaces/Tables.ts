@@ -107,5 +107,6 @@ export interface IAccountCharts {
     code: string,
     name: string,
     attributable: boolean,
+    inflation_adjustment: boolean,
     accounting_period_id: number
 }

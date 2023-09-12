@@ -108,6 +108,7 @@ enum AccountCharts {
     code = "code",
     name = "name",
     attributable = "attributable",
+    inflation_adjustment = "inflation_adjustment",
     accounting_period_id = "accounting_period_id"
 }
 

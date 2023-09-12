@@ -1,3 +1,5 @@
+import { IAccountCharts } from "./Tables"
+
 export interface IEmailSendPass {
     Colors: object,
     Links: object,
@@ -40,4 +42,10 @@ export interface IModulesPermissions {
     module_id: number,
     module_name: string,
     permission_grade: number
+}
+
+export interface IAccountChartsToFront extends IAccountCharts {
+    open: boolean,
+    principal: boolean,
+    subAccounts: Array<IAccountChartsToFront>
 }

@@ -33,9 +33,23 @@ const periodList = (
     }).catch(next)
 }
 
+const getAccountList = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    Controller.getAccountList(
+        Number(req.query.periodId)
+    ).then(dataList => {
+        success({ req, res, message: dataList })
+    }).catch(next)
+}
+
+
 //Routes
 router
     .get("/period", secure(undefined, EModules.accounting, 1), periodList)
-    .post("/period", secure(undefined, EModules.accounting, 2), periodUpsert);
+    .get("/accountingCharts", secure(undefined, EModules.accounting, 1), getAccountList)
+    .post("/period", secure(undefined, EModules.accounting, 2), periodUpsert)
 
 export = router;
