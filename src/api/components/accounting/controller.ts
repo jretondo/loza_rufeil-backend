@@ -54,12 +54,13 @@ export = () => {
         });
     }
 
-    const getAccountList = async (accountPeriodId: number) => {
+    const getAccountList = async (accountPeriodId: number, contain?: string) => {
         const accountingList = await AccountChart.findAll({
-            where: { accounting_period_id: accountPeriodId },
-            order: [
-                [`${Columns.accountCharts.code}`, "ASC"]
-            ]
+            where: [
+                { accounting_period_id: accountPeriodId },
+                { name: { [Op.like]: `%${contain}%` } }
+            ],
+            order: [[`${Columns.accountCharts.code}`, "ASC"]]
         })
 
         const control = new accountControl()
@@ -110,9 +111,53 @@ export = () => {
         }
     }
 
+    const getNewChildren = async (accountId: number) => {
+        const accountData = await AccountChart.findOne({ where: { id: accountId } })
+        const lastChildren = await lastChildrenAccount(accountData)
+        console.log('lastChildren :>> ', lastChildren);
+        return ""
+    }
+
+    const lastChildrenAccount = async (accountData: AccountChart | null) => {
+        if (accountData?.dataValues.group === 0) {
+            return await AccountChart.findOne({
+                where: { genre: accountData.dataValues.genre },
+                order: [[`${Columns.accountCharts.group}`, "DESC"]]
+            })
+        } else if (accountData?.dataValues.caption === 0) {
+            return await AccountChart.findOne({
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { genre: accountData.dataValues.group }
+                ],
+                order: [[`${Columns.accountCharts.caption}`, "DESC"]]
+            })
+        } else if (accountData?.dataValues.account === 0) {
+            return await AccountChart.findOne({
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { genre: accountData.dataValues.group },
+                    { genre: accountData.dataValues.caption }
+                ],
+                order: [[`${Columns.accountCharts.account}`, "DESC"]]
+            })
+        } else if (accountData?.dataValues.sub_account === 0) {
+            return await AccountChart.findOne({
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { genre: accountData.dataValues.group },
+                    { genre: accountData.dataValues.caption },
+                    { genre: accountData.dataValues.account }
+                ],
+                order: [[`${Columns.accountCharts.sub_account}`, "DESC"]]
+            })
+        }
+    }
+
     return {
         periodUpsert,
         periodList,
-        getAccountList
+        getAccountList,
+        getNewChildren
     };
 }

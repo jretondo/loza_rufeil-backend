@@ -39,17 +39,29 @@ const getAccountList = (
     next: NextFunction
 ) => {
     Controller.getAccountList(
-        Number(req.query.periodId)
+        Number(req.query.periodId),
+        String(req.query.contain ? req.query.contain : "")
     ).then(dataList => {
         success({ req, res, message: dataList })
     }).catch(next)
 }
 
+const getNewChildren = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    Controller.getNewChildren(Number(req.query.accountId))
+        .then(dataList => {
+            success({ req, res, message: dataList })
+        }).catch(next)
+}
 
 //Routes
 router
     .get("/period", secure(undefined, EModules.accounting, 1), periodList)
     .get("/accountingCharts", secure(undefined, EModules.accounting, 1), getAccountList)
+    .get("/accountingChart", secure(undefined, EModules.accounting, 1), getNewChildren)
     .post("/period", secure(undefined, EModules.accounting, 2), periodUpsert)
 
 export = router;

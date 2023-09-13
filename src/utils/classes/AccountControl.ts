@@ -1,3 +1,5 @@
+import { IAccountCharts } from "interfaces/Tables"
+
 export class accountControl {
     last
     count
@@ -18,7 +20,7 @@ export class accountControl {
         }
     }
 
-    public lastGenre(newLastGenre: number) {
+    lastGenre(newLastGenre: number) {
         this.last = {
             genre: newLastGenre,
             group: 0,
@@ -27,7 +29,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public lastGroup(newLastGroup: number) {
+    lastGroup(newLastGroup: number) {
         this.last = {
             genre: this.last.genre,
             group: newLastGroup,
@@ -36,7 +38,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public lastCaption(newLastCaption: number) {
+    lastCaption(newLastCaption: number) {
         this.last = {
             genre: this.last.genre,
             group: this.last.group,
@@ -45,7 +47,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public lastAccount(newLastAccount: number) {
+    lastAccount(newLastAccount: number) {
         this.last = {
             genre: this.last.genre,
             group: this.last.group,
@@ -54,7 +56,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public lastSubAccount(newLastSubAccount: number) {
+    lastSubAccount(newLastSubAccount: number) {
         this.last = {
             genre: this.last.genre,
             group: this.last.group,
@@ -64,7 +66,7 @@ export class accountControl {
         }
     }
 
-    public addCountGenre() {
+    addCountGenre() {
         this.count = {
             genre: this.count.genre + 1,
             group: 0,
@@ -73,7 +75,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public addCountGroup() {
+    addCountGroup() {
         this.count = {
             genre: this.count.genre,
             group: this.count.group + 1,
@@ -82,7 +84,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public addCountCaption() {
+    addCountCaption() {
         this.count = {
             genre: this.count.genre,
             group: this.count.group,
@@ -91,7 +93,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public addCountAccount() {
+    addCountAccount() {
         this.count = {
             genre: this.count.genre,
             group: this.count.group,
@@ -100,7 +102,7 @@ export class accountControl {
             subAccount: 0
         }
     }
-    public addCountSubAccount() {
+    addCountSubAccount() {
         this.count = {
             genre: this.count.genre,
             group: this.count.group,
@@ -109,11 +111,21 @@ export class accountControl {
             subAccount: this.count.subAccount + 1
         }
     }
+    isPrincipal(account: IAccountCharts) {
+        if (account.genre > 0 &&
+            account.group === 0 &&
+            account.caption === 0 &&
+            account.account === 0 &&
+            account.sub_account === 0
+        ) {
+            return true
+        }
+        return false
+    }
     get data() {
         return {
             last: this.last,
             count: this.count
         }
     }
-
 }
