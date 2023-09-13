@@ -45,7 +45,6 @@ export interface IModulesPermissions {
 }
 
 export interface IAccountChartsToFront extends IAccountCharts {
-    open: boolean,
     principal: boolean,
     subAccounts: Array<IAccountChartsToFront>
 }
