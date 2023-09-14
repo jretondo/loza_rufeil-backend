@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import { IAccountCharts, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
 import Client from '../../../models/Client';
@@ -6,12 +6,11 @@ import { error } from '../../../network/response';
 import { Request, Response } from 'express';
 import { Columns } from '../../../constant/TABLES';
 import AccountChart from '../../../models/AccountCharts';
-import { IAccountChartsToFront } from 'interfaces/Others';
+import { IAccountChartsToFront } from '../../../interfaces/Others';
 import { accountControl } from '../../../utils/classes/AccountControl';
 
 export = () => {
     const periodUpsert = async (fromDate: Date, toDate: Date, clientId: number, res: Response, req: Request) => {
-
         const periods = await periodList(clientId, fromDate, toDate)
         const newPeriod: IAccountingPeriod = {
             from_date: fromDate,
@@ -47,6 +46,7 @@ export = () => {
                 include: Client
             });
         }
+
         return await AccountingPeriod.findAll({
             where: [{ client_id: clientId }],
             order: [[`${Columns.accountingPeriod.from_date}`, 'DESC']],
@@ -93,6 +93,116 @@ export = () => {
         return list
     }
 
+    const upsertAccountChart = async (account: IAccountCharts) => {
+        if (account.id) {
+            return await AccountChart.update(account, { where: { id: account.id } })
+        } else {
+            return await AccountChart.create(account)
+        }
+    }
+
+    const deleteAccountChart = async (accountId: number) => {
+        return await AccountChart.destroy({ where: { id: accountId } })
+    }
+
+    const getNewChildren = async (accountId: number) => {
+        const accountData = await AccountChart.findOne({ where: { id: accountId } })
+        return await nextChildrenAccount(accountData)
+    }
+
+    const nextChildrenAccount = async (accountData: AccountChart | null): Promise<AccountChart | null> => {
+        if (accountData?.dataValues.group === 0) {
+            let nextAccount: AccountChart | null = await AccountChart.findOne({
+                attributes: {
+                    include: [[Sequelize.literal("`" + `${Columns.accountCharts.group}` + "`" + ` + 1`), `${Columns.accountCharts.group}`]],
+                    exclude: [`${Columns.accountCharts.name}`, `${Columns.accountCharts.code}`, `${Columns.accountCharts.id}`]
+                },
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { group: { [Op.gt]: 0 } },
+                    { caption: 0 },
+                    { account: 0 },
+                    { sub_account: 0 }
+                ],
+                order: [[`${Columns.accountCharts.group}`, "DESC"]]
+            })
+            if (nextAccount?.dataValues) {
+                return nextAccount
+            } else {
+                nextAccount = accountData
+                nextAccount.dataValues.group = 1
+                return nextAccount
+            }
+        } else if (accountData?.dataValues.caption === 0) {
+            let nextAccount: AccountChart | null = await AccountChart.findOne({
+                attributes: {
+                    include: [[Sequelize.literal("`" + `${Columns.accountCharts.caption}` + "`" + ` + 1`), `${Columns.accountCharts.caption}`]],
+                    exclude: [`${Columns.accountCharts.name}`, `${Columns.accountCharts.code}`, `${Columns.accountCharts.id}`]
+                },
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { group: accountData.dataValues.group },
+                    { caption: { [Op.gt]: 0 } },
+                    { account: 0 },
+                    { sub_account: 0 }
+                ],
+                order: [[`${Columns.accountCharts.caption}`, "DESC"]]
+            })
+            if (nextAccount?.dataValues) {
+                return nextAccount
+            } else {
+                nextAccount = accountData
+                nextAccount.dataValues.caption = 1
+                return nextAccount
+            }
+        } else if (accountData?.dataValues.account === 0) {
+            let nextAccount: AccountChart | null = await AccountChart.findOne({
+                attributes: {
+                    include: [[Sequelize.literal("`" + `${Columns.accountCharts.account}` + "`" + ` + 1`), `${Columns.accountCharts.account}`]],
+                    exclude: [`${Columns.accountCharts.name}`, `${Columns.accountCharts.code}`, `${Columns.accountCharts.id}`]
+                },
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { group: accountData.dataValues.group },
+                    { caption: accountData.dataValues.caption },
+                    { account: { [Op.gt]: 0 } },
+                    { sub_account: 0 }
+                ],
+                order: [[`${Columns.accountCharts.account}`, "DESC"]]
+            })
+            if (nextAccount?.dataValues) {
+                return nextAccount
+            } else {
+                nextAccount = accountData
+                nextAccount.dataValues.account = 1
+                return nextAccount
+            }
+        } else if (accountData?.dataValues.sub_account === 0) {
+            let nextAccount: AccountChart | null = await AccountChart.findOne({
+                attributes: {
+                    include: [[Sequelize.literal("`" + `${Columns.accountCharts.sub_account}` + "`" + ` + 1`), `${Columns.accountCharts.sub_account}`]],
+                    exclude: [`${Columns.accountCharts.name}`, `${Columns.accountCharts.code}`, `${Columns.accountCharts.id}`]
+                },
+                where: [
+                    { genre: accountData.dataValues.genre },
+                    { group: accountData.dataValues.group },
+                    { caption: accountData.dataValues.caption },
+                    { account: accountData.dataValues.account },
+                    { sub_account: { [Op.gt]: 0 } }
+                ],
+                order: [[`${Columns.accountCharts.sub_account}`, "DESC"]]
+            })
+            if (nextAccount?.dataValues) {
+                return nextAccount
+            } else {
+                nextAccount = accountData
+                nextAccount.dataValues.sub_account = 1
+                return nextAccount
+            }
+        }
+        return null
+    }
+
     const accountChartItem = (account: IAccountCharts, principal: boolean): IAccountChartsToFront => {
         return {
             id: account.id,
@@ -111,53 +221,12 @@ export = () => {
         }
     }
 
-    const getNewChildren = async (accountId: number) => {
-        const accountData = await AccountChart.findOne({ where: { id: accountId } })
-        const lastChildren = await lastChildrenAccount(accountData)
-        console.log('lastChildren :>> ', lastChildren);
-        return ""
-    }
-
-    const lastChildrenAccount = async (accountData: AccountChart | null) => {
-        if (accountData?.dataValues.group === 0) {
-            return await AccountChart.findOne({
-                where: { genre: accountData.dataValues.genre },
-                order: [[`${Columns.accountCharts.group}`, "DESC"]]
-            })
-        } else if (accountData?.dataValues.caption === 0) {
-            return await AccountChart.findOne({
-                where: [
-                    { genre: accountData.dataValues.genre },
-                    { genre: accountData.dataValues.group }
-                ],
-                order: [[`${Columns.accountCharts.caption}`, "DESC"]]
-            })
-        } else if (accountData?.dataValues.account === 0) {
-            return await AccountChart.findOne({
-                where: [
-                    { genre: accountData.dataValues.genre },
-                    { genre: accountData.dataValues.group },
-                    { genre: accountData.dataValues.caption }
-                ],
-                order: [[`${Columns.accountCharts.account}`, "DESC"]]
-            })
-        } else if (accountData?.dataValues.sub_account === 0) {
-            return await AccountChart.findOne({
-                where: [
-                    { genre: accountData.dataValues.genre },
-                    { genre: accountData.dataValues.group },
-                    { genre: accountData.dataValues.caption },
-                    { genre: accountData.dataValues.account }
-                ],
-                order: [[`${Columns.accountCharts.sub_account}`, "DESC"]]
-            })
-        }
-    }
-
     return {
         periodUpsert,
         periodList,
         getAccountList,
-        getNewChildren
+        getNewChildren,
+        upsertAccountChart,
+        deleteAccountChart
     };
 }
