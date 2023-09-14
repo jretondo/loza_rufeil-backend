@@ -26,7 +26,82 @@ export = () => {
                 res
             })
         }
-        return await AccountingPeriod.create(newPeriod)
+        const result = await AccountingPeriod.create(newPeriod)
+        console.log('result :>> ', result);
+        return newDefaultAccountCharts(result.dataValues.id || 0)
+
+    }
+
+    const newDefaultAccountCharts = async (accountPeriodId: number) => {
+        console.log('accountPeriodId :>> ', accountPeriodId);
+        if ((accountPeriodId) > 0) {
+            const newAccountsCharts: Array<IAccountCharts> = [
+                {
+                    genre: 1,
+                    group: 0,
+                    caption: 0,
+                    account: 0,
+                    sub_account: 0,
+                    inflation_adjustment: false,
+                    attributable: false,
+                    code: "100000000",
+                    name: "ACTIVO",
+                    accounting_period_id: accountPeriodId
+                },
+                {
+                    genre: 2,
+                    group: 0,
+                    caption: 0,
+                    account: 0,
+                    sub_account: 0,
+                    inflation_adjustment: false,
+                    attributable: false,
+                    code: "200000000",
+                    name: "PASIVO",
+                    accounting_period_id: accountPeriodId
+                },
+                {
+                    genre: 3,
+                    group: 0,
+                    caption: 0,
+                    account: 0,
+                    sub_account: 0,
+                    inflation_adjustment: false,
+                    attributable: false,
+                    code: "300000000",
+                    name: "PATRIMONIO NETO",
+                    accounting_period_id: accountPeriodId
+                },
+                {
+                    genre: 4,
+                    group: 0,
+                    caption: 0,
+                    account: 0,
+                    sub_account: 0,
+                    inflation_adjustment: false,
+                    attributable: false,
+                    code: "400000000",
+                    name: "RESULTADO POSITIVO",
+                    accounting_period_id: accountPeriodId
+                },
+                {
+                    genre: 5,
+                    group: 0,
+                    caption: 0,
+                    account: 0,
+                    sub_account: 0,
+                    inflation_adjustment: false,
+                    attributable: false,
+                    code: "500000000",
+                    name: "RESULTADO NEGATIVO",
+                    accounting_period_id: accountPeriodId
+                }
+            ]
+            console.log('newAccountsCharts :>> ', newAccountsCharts);
+            return AccountChart.bulkCreate(newAccountsCharts)
+        } else {
+            return null
+        }
     }
 
     const periodList = async (clientId: number, fromDate?: Date, toDate?: Date) => {
@@ -122,7 +197,8 @@ export = () => {
                     { group: { [Op.gt]: 0 } },
                     { caption: 0 },
                     { account: 0 },
-                    { sub_account: 0 }
+                    { sub_account: 0 },
+                    { accounting_period_id: accountData.dataValues.accounting_period_id }
                 ],
                 order: [[`${Columns.accountCharts.group}`, "DESC"]]
             })
@@ -144,7 +220,8 @@ export = () => {
                     { group: accountData.dataValues.group },
                     { caption: { [Op.gt]: 0 } },
                     { account: 0 },
-                    { sub_account: 0 }
+                    { sub_account: 0 },
+                    { accounting_period_id: accountData.dataValues.accounting_period_id }
                 ],
                 order: [[`${Columns.accountCharts.caption}`, "DESC"]]
             })
@@ -166,7 +243,8 @@ export = () => {
                     { group: accountData.dataValues.group },
                     { caption: accountData.dataValues.caption },
                     { account: { [Op.gt]: 0 } },
-                    { sub_account: 0 }
+                    { sub_account: 0 },
+                    { accounting_period_id: accountData.dataValues.accounting_period_id }
                 ],
                 order: [[`${Columns.accountCharts.account}`, "DESC"]]
             })
@@ -188,7 +266,8 @@ export = () => {
                     { group: accountData.dataValues.group },
                     { caption: accountData.dataValues.caption },
                     { account: accountData.dataValues.account },
-                    { sub_account: { [Op.gt]: 0 } }
+                    { sub_account: { [Op.gt]: 0 } },
+                    { accounting_period_id: accountData.dataValues.accounting_period_id }
                 ],
                 order: [[`${Columns.accountCharts.sub_account}`, "DESC"]]
             })
