@@ -178,8 +178,19 @@ export = () => {
 
     const deleteAccountChart = async (accountId: number) => {
         const account = await AccountChart.findOne({ where: { id: accountId } })
+        if (account) {
+            if (account?.dataValues.sub_account > 0) {
+                return await AccountChart.destroy({ where: { id: accountId } })
+            } else if (account?.dataValues.account > 0) {
+                return await AccountChart.destroy({ where: { id: accountId } })
+            } else if (account?.dataValues.caption > 0) {
 
-        return await AccountChart.destroy({ where: { id: accountId } })
+            } else if (account?.dataValues.group > 0) {
+
+            } else if (account?.dataValues.genre > 0) {
+
+            }
+        }
     }
 
     const getNewChildren = async (accountId: number) => {
