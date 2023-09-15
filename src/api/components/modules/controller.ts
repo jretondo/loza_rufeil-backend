@@ -42,6 +42,7 @@ export = () => {
     }
 
     const get2 = async (idUser: number) => {
+        console.log('idUser :>> ', idUser);
         const allPermissions = await Permission.findAll();
 
         const userPermissions = await AdminPermission.findAll({

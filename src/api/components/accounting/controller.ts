@@ -177,6 +177,8 @@ export = () => {
     }
 
     const deleteAccountChart = async (accountId: number) => {
+        const account = await AccountChart.findOne({ where: { id: accountId } })
+
         return await AccountChart.destroy({ where: { id: accountId } })
     }
 

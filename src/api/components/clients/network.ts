@@ -37,7 +37,6 @@ const allList = (
     next: NextFunction
 ) => {
     Controller.allList(
-        req.body.user.admin,
         Number(req.body.user.admin_id)
     ).then(dataList => {
         success({ req, res, message: dataList })
