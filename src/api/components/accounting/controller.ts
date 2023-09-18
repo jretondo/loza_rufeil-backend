@@ -182,13 +182,32 @@ export = () => {
             if (account?.dataValues.sub_account > 0) {
                 return await AccountChart.destroy({ where: { id: accountId } })
             } else if (account?.dataValues.account > 0) {
-                return await AccountChart.destroy({ where: { id: accountId } })
+                const account = await AccountChart.findOne({ where: { id: accountId } })
+                return await AccountChart.destroy({
+                    where: [
+                        { genre: account?.dataValues.genre },
+                        { group: account?.dataValues.group },
+                        { caption: account?.dataValues.caption },
+                        { account: account?.dataValues.account }
+                    ]
+                })
             } else if (account?.dataValues.caption > 0) {
-
+                const account = await AccountChart.findOne({ where: { id: accountId } })
+                return await AccountChart.destroy({
+                    where: [
+                        { genre: account?.dataValues.genre },
+                        { group: account?.dataValues.group },
+                        { caption: account?.dataValues.caption }
+                    ]
+                })
             } else if (account?.dataValues.group > 0) {
-
-            } else if (account?.dataValues.genre > 0) {
-
+                const account = await AccountChart.findOne({ where: { id: accountId } })
+                return await AccountChart.destroy({
+                    where: [
+                        { genre: account?.dataValues.genre },
+                        { group: account?.dataValues.group }
+                    ]
+                })
             }
         }
     }

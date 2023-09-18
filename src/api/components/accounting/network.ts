@@ -86,6 +86,6 @@ router
     .get("/accountingChart", secure(undefined, EModules.accounting, 1), getNewChildren)
     .post("/period", secure(undefined, EModules.accounting, 2), periodUpsert)
     .post("/accountingChart", secure(undefined, EModules.accounting, 2), upsertAccountChart)
-    .delete("/accountingChart", secure(undefined, EModules.accounting, 3), deleteAccountChart)
+    .delete("/accountingChart/:id", secure(undefined, EModules.accounting, 3), deleteAccountChart)
 
 export = router;
