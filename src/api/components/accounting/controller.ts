@@ -212,6 +212,23 @@ export = () => {
         }
     }
 
+    const copyPasteAccountsChart = async (original_period_id: number, copy_period_id: number) => {
+        const responseDelete = await AccountChart.destroy({ where: { accounting_period_id: original_period_id } })
+        if (responseDelete > 0) {
+            const copyAccounts = await AccountChart.findAll(
+                {
+                    attributes: {
+                        include: [[Sequelize.literal(`${original_period_id}`), `${Columns.accountCharts.accounting_period_id}`]],
+                        exclude: [`${Columns.accountCharts.id}`]
+                    },
+                    where: { accounting_period_id: copy_period_id }
+                })
+            return await AccountChart.bulkCreate(copyAccounts.map((account) => account.dataValues))
+        } else {
+            throw Error("No se pudo eliminar la cuenta original. Posiblemente haya movimientos asociados a esas cuentas.")
+        }
+    }
+
     const getNewChildren = async (accountId: number) => {
         const accountData = await AccountChart.findOne({ where: { id: accountId } })
         return await nextChildrenAccount(accountData)
@@ -338,6 +355,7 @@ export = () => {
         getAccountList,
         getNewChildren,
         upsertAccountChart,
-        deleteAccountChart
+        deleteAccountChart,
+        copyPasteAccountsChart
     };
 }

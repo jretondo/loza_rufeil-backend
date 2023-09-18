@@ -79,12 +79,26 @@ const deleteAccountChart = (
         }).catch(next)
 }
 
+const copyPasteAccountsChart = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    Controller.copyPasteAccountsChart(
+        Number(req.body.original_period_id),
+        Number(req.body.copy_period_id))
+        .then(dataList => {
+            success({ req, res, message: dataList })
+        }).catch(next)
+}
+
 //Routes
 router
     .get("/period", secure(undefined, EModules.accounting, 1), periodList)
     .get("/accountingCharts", secure(undefined, EModules.accounting, 1), getAccountList)
     .get("/accountingChart", secure(undefined, EModules.accounting, 1), getNewChildren)
     .post("/period", secure(undefined, EModules.accounting, 2), periodUpsert)
+    .put("/period", secure(undefined, EModules.accounting, 3), copyPasteAccountsChart)
     .post("/accountingChart", secure(undefined, EModules.accounting, 2), upsertAccountChart)
     .delete("/accountingChart/:id", secure(undefined, EModules.accounting, 3), deleteAccountChart)
 

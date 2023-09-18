@@ -55,8 +55,8 @@ AccountChart.init({
 AccountingPeriod.hasOne(AccountChart, {
     foreignKey: Columns.accountCharts.accounting_period_id,
     sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 AccountChart.belongsTo(AccountingPeriod, {

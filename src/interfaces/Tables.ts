@@ -110,3 +110,8 @@ export interface IAccountCharts {
     inflation_adjustment: boolean,
     accounting_period_id: number
 }
+
+export interface ITributeTypes {
+    id?: number,
+    name: string
+}
