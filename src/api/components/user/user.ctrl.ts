@@ -1,14 +1,16 @@
-import { IListResponse, IModulesPermissions, IPermissions } from './../../../interfaces/Others';
-import { Op, where } from 'sequelize';
-import { IAdminPermission, IAuth, IUser } from 'interfaces/Tables';;
-import AuthController from '../auth/index';
+import { NextFunction, Request, Response } from 'express';
+import { Op } from 'sequelize';
+import { IModulesPermissions, IPermissions } from '../../../interfaces/Others';
+import { IAdminPermission, IAuth, IUser } from '../../../interfaces/Tables';;
 import Admin from '../../../models/Admin';
-import ClientsController from '../clients';
 import AdminPermission from '../../../models/AdminPermission';
 import Module from '../../../models/Module';
+import { authUpsert } from '../auth/auth.ctrl';
+import Client from '../../../models/Client';
+import { success } from '../../../network/response';
 
-export = () => {
-    const list = async (page?: number, item?: string, itemsPerPage?: number): Promise<IListResponse> => {
+export const list = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (page?: number, item?: string, itemsPerPage?: number) {
         if (page) {
             const offset = ((page || 1) - 1) * (itemsPerPage || 10)
             const { count, rows } = await Admin.findAndCountAll({
@@ -51,9 +53,15 @@ export = () => {
                 items: rows
             }
         }
-    }
+    })(
+        Number(req.params.page),
+        String(req.query.query ? req.query.query : ""),
+        Number(req.query.cantPerPage)
+    ).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const upsert = async (body: IUser) => {
+export const upsert = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (body: IUser) {
         const user: IUser = {
             name: body.name,
             lastname: body.lastname,
@@ -73,20 +81,33 @@ export = () => {
                 prov: 1,
                 admin_id: result.dataValues.id || 0
             }
-            return await AuthController.upsert(newAuth, body.email, `${body.name} ${body.lastname}`);
+            return await authUpsert(newAuth, body.email, `${body.name} ${body.lastname}`);
         }
-    }
+    })(req.body).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const remove = async (userId: number) => {
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number) {
         return await Admin.destroy({ where: { id: userId } })
-    }
+    })(Number(req.params.id)).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const getUser = async (userId: number) => {
+export const getUser = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number) {
         return await Admin.findByPk(userId)
-    }
+    })(Number(req.params.id)).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const getPermissionsUser = async (userId: number) => {
-        const clients = await ClientsController.allList()
+export const getMyUserData = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number) {
+        return await Admin.findByPk(userId)
+    })(Number(req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number) {
+
+        const clients = await Client.findAll({ include: [{ model: AdminPermission }] })
         const Modules = await Module.findAll()
         const permissions = await AdminPermission.findAll({ where: { admin_id: userId } })
         let userPermissions: Array<IPermissions> = []
@@ -115,9 +136,11 @@ export = () => {
                 })
             })
         })
-    }
+    })(Number(req.query.idUser)).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const upsertUserPermissions = async (userId: number, permissionsList: Array<IPermissions>) => {
+export const upsertUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number, permissionsList: Array<IPermissions>) {
         let newPermissions: Array<IAdminPermission> = []
         permissionsList.map((clientPermission, key1) => {
             clientPermission.modules.map(async (modulePermission, key2) => {
@@ -134,9 +157,11 @@ export = () => {
                 }
             })
         })
-    }
+    })(Number(req.body.idUser), req.body.permissionsList).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const getModules = async (userId: number, clientId: number) => {
+export const getModules = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number, clientId: number) {
         return AdminPermission.findAll({
             where: [
                 { admin_id: userId },
@@ -145,15 +170,5 @@ export = () => {
                 { permission_grade: { [Op.gte]: 1 } }
             ]
         })
-    }
-
-    return {
-        list,
-        upsert,
-        remove,
-        getUser,
-        getPermissionsUser,
-        upsertUserPermissions,
-        getModules
-    }
+    })(Number(req.body.user.admin_id), Number(req.query.clientId)).then(data => success({ req, res, message: data })).catch(next)
 }

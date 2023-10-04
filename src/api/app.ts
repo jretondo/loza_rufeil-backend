@@ -12,15 +12,15 @@ dotenv.config({
 import { errorThrow } from '../network/errors';
 
 import test from './components/test';
-import auth from './components/auth/network';
+import auth from './components/auth/auth.rtr';
 import permissions from './components/modules/network';
-import user from './components/user/network';
-import routes from './components/routes/network';
-import activity from './components/activity/network';
-import clients from './components/clients/network';
-import providers from './components/providers/network';
-import certificates from './components/certificates/network';
-import accounting from './components/accounting/network';
+import user from './components/user/user.rtr';
+import routes from './components/routes/routes.rtr';
+import activity from './components/activity/activity.rtr';
+import clients from './components/clients/clients.rtr';
+import providers from './components/providers/providers.rtr';
+import certificates from './components/certificates/certificates.rtr';
+import accounting from './components/accounting/accounting.rtr';
 import views from './components/views/network';
 import { config } from '../config';
 export class App {

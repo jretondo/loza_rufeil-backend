@@ -1,22 +1,26 @@
-import { IAfipCrt } from '../../../interfaces/Tables';
-import { Op, where } from 'sequelize';
-import AfipCrt from '../../../models/AfipCrt';
+import { NextFunction, Request, Response } from 'express';
+import fs from 'fs';
 import path from 'path';
-import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
 import { execSync } from 'child_process';
 import compressing from 'compressing';
-import fs from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
+import { Op } from 'sequelize';
+import { IAfipCrt } from '../../../interfaces/Tables';
+import AfipCrt from '../../../models/AfipCrt';
+import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
+import { success } from '../../../network/response';
 
-export = () => {
-    const upsert = async (certDataIn: {
-        filesName: Array<{ fieldName: string, path: string }>,
-        document_number: string,
-        business_name: string,
-        crt_name: string,
-        id?: number
-    }) => {
+export const upsert = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        certDataIn: {
+            filesName: Array<{ fieldName: string, path: string }>,
+            document_number: string,
+            business_name: string,
+            crt_name: string,
+            id?: number
+        }
+    ) {
         const certData: IAfipCrt = {
             business_name: certDataIn.business_name,
             document_number: certDataIn.document_number,
@@ -27,7 +31,7 @@ export = () => {
         }
         if (certData.id) {
             if (certDataIn.filesName) {
-                const oldData = await getCert(certData.id)
+                const oldData = await AfipCrt.findOne({ where: { id: certData.id } })
                 const fileCert = path.join(FILES_ADDRESS.certAfip, oldData?.dataValues.crt_file || "");
                 const fileKey = path.join(FILES_ADDRESS.certAfip, oldData?.dataValues.key_file || "");
                 try {
@@ -42,9 +46,14 @@ export = () => {
         } else {
             return await AfipCrt.create(certData)
         }
-    }
+    })(req.body).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const list = async (page: number, query?: string) => {
+export const list = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        page: number,
+        query?: string
+    ) {
         const ITEMS_PER_PAGE = 10;
 
         const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
@@ -63,10 +72,16 @@ export = () => {
             itemsPerPage: ITEMS_PER_PAGE,
             items: rows
         }
-    }
+    })(
+        Number(req.params.page),
+        String(req.query.query || "")
+    ).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const remove = async (idCert: number) => {
-        const oldData = await getCert(idCert)
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (idCert: number) {
+
+        const oldData = await AfipCrt.findOne({ where: { id: idCert } })
         const response = await AfipCrt.destroy({ where: { id: idCert } })
         const fileCert = path.join(FILES_ADDRESS.certAfip, oldData?.dataValues.crt_file || "");
         const fileKey = path.join(FILES_ADDRESS.certAfip, oldData?.dataValues.key_file || "");
@@ -82,14 +97,15 @@ export = () => {
         } else {
             throw Error("No se pudo eliminar el certificado!")
         }
+    })(Number(req.params.id)).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    }
-
-    const getCert = async (id: number) => {
-        return await AfipCrt.findOne({ where: { id: id } })
-    }
-
-    const generateCsr = async (cuit: string, businessName: string, certificateName: string) => {
+export const generateCsr = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        cuit: string,
+        businessName: string,
+        certificateName: string
+    ) {
         const firstCommand = `openssl genrsa -out ${businessName.replace(new RegExp(" ", 'g'), "_")}.key 2048`
         const secondCommand = `openssl req -new -key ${businessName.replace(new RegExp(" ", 'g'), "_")}.key -subj "/C=AR/O=${businessName}/CN=${certificateName.replace(new RegExp(" ", 'g'), "_")}/serialNumber=CUIT ${cuit}" -out ${businessName.replace(new RegExp(" ", 'g'), "_")}.csr`
 
@@ -119,9 +135,11 @@ export = () => {
             console.error(error)
             throw Error("No se pudo generar la solicitus de certificado y tampoco la llave privada.")
         })
-    }
+    })(req.body.cuit, req.body.businessName, req.body.certificateName).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const updateAttribute = async (id: number, field: IAfipCrt) => {
+export const updateAttribute = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (id: number, field: IAfipCrt) {
         const response = await AfipCrt.update(field, { where: { id: id } })
         if (response[0] > 0) {
             if (field.enabled) {
@@ -132,9 +150,11 @@ export = () => {
         }
 
         return response
-    }
+    })(req.body.id, req.body.field).then(data => success({ req, res, message: data })).catch(next)
+}
 
-    const downloadCertificate = async (id: number) => {
+export const downloadCertificate = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (id: number) {
         const certData = await AfipCrt.findOne({ where: { id: id } });
         const fileCert = path.join(FILES_ADDRESS.certAfip, certData?.dataValues.crt_file || "");
         const fileKey = path.join(FILES_ADDRESS.certAfip, certData?.dataValues.key_file || "");
@@ -164,15 +184,5 @@ export = () => {
             }
         }
         return response()
-    }
-
-    return {
-        upsert,
-        list,
-        remove,
-        getCert,
-        generateCsr,
-        updateAttribute,
-        downloadCertificate
-    };
+    })(parseInt(req.params.id)).then(data => success({ req, res, message: data })).catch(next)
 }

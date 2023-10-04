@@ -5,7 +5,11 @@ import { EModules } from '../../../constant/OTHERS';
 const router = Router();
 
 const responseSuccess = (req: Request, res: Response, next: NextFunction) => {
-    success({ req, res });
+    try {
+        success({ req, res });
+    } catch (error) {
+        next(error);
+    }
 }
 
 //Routes

@@ -1,8 +1,7 @@
-import { NextFunction, Request, Response } from "express"
+import { NextFunction, Request, Response, Router } from "express"
 import { success } from '../../network/response';
 import { config } from '../../config'
-const express = require('express')
-const router = express.Router()
+const router = Router()
 
 //internal Functions
 const test = (req: Request, res: Response, next: NextFunction) => {
@@ -11,7 +10,6 @@ const test = (req: Request, res: Response, next: NextFunction) => {
     } else {
         success({ res: res, req: req, status: 200, message: "Bienvenido a la API de producción" });
     }
-
 }
 
 //Routes
