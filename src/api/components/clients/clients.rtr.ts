@@ -7,17 +7,19 @@ import {
     getTaxProof,
     list,
     remove,
+    updatePermissions,
     upsert
 } from './clients.ctrl';
 const router = Router();
 
 //Routes
 router
-    .get("/dataTaxProof", secure(undefined, EModules.clients, 1), getTaxProof)
-    .get("/dataTax", secure(undefined, EModules.clients, 1), getClientDataTax)
-    .get("/:page", secure(undefined, EModules.clients, 1), list)
-    .get("/", secure(undefined, EModules.clients, 1), allList)
-    .delete("/:id", secure(undefined, EModules.clients, 3), remove)
-    .post("/", secure(undefined, EModules.clients, 2), upsert);
+    .get("/dataTaxProof", secure(), getTaxProof)
+    .get("/dataTax", secure(), getClientDataTax)
+    .get("/:page", secure(), list)
+    .get("/", secure(), allList)
+    .delete("/:id", secure(), remove)
+    .post("/permissions", secure(), updatePermissions)
+    .post("/", secure(), upsert);
 
 export = router;

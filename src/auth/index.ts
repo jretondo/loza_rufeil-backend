@@ -3,31 +3,40 @@ import jwt from 'jsonwebtoken';
 import err from '../network/error';
 import { config } from '../config';
 import error from '../network/error';
-import permissions from '../api/components/modules';
+import { userPermissions } from '../api/components/user/user.fn';
 
 const sign = (data: string) => {
+    console.log('data    :>> ', data);
     return jwt.sign(data, config.jwt.secret);
 }
 
 const check = {
-    permission: async (req: Request, next: NextFunction, idPermission?: number, clientId?: number, grade?: number) => {
+    permission: async (req: Request, next: NextFunction, idPermission?: number, clientId?: number, grade?: number, admin?: boolean) => {
         const decoded: any = decodeHeader(req, next)
-        if (!idPermission) {
-            next()
-        } else if (decoded.admin) {
-            next();
-        } else if (idPermission && clientId) {
-            const permissionsList = await permissions.getPermission(req.body.user.id, idPermission, clientId, grade || 0);
-            const permissionsQuantity = permissionsList.length;
-            if (permissionsQuantity < 1) {
-                req.body.statusError = 403
-                next(error("No tiene los permisos"));
-            } else {
+        if (admin) {
+            if (decoded.admin) {
                 next();
+            } else {
+                next(error("No tiene los permisos"));
             }
         } else {
-            req.body.statusError = 403
-            next(error("No tiene los permisos"));
+            if (!idPermission) {
+                next()
+            } else if (decoded.admin) {
+                next();
+            } else if (idPermission && clientId) {
+                const permissionsList = await userPermissions(req.body.user.id, clientId, grade || 0);
+                const permissionsQuantity = permissionsList.length;
+                if (permissionsQuantity < 1) {
+                    req.body.statusError = 403
+                    next(error("No tiene los permisos"));
+                } else {
+                    next();
+                }
+            } else {
+                req.body.statusError = 403
+                next(error("No tiene los permisos"));
+            }
         }
     }
 };

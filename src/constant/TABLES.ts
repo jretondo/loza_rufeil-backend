@@ -17,11 +17,9 @@ enum AuthAdm {
 
 enum AdminPermission {
     id = "id",
-    admin_id = "admin_id",
-    module_id = "module_id",
+    user_id = "user_id",
     client_id = "client_id",
-    permission_grade = "permission_grade",
-    client_enabled = "client_enabled"
+    permission_grade_id = "permission_grade_id"
 }
 
 enum Modules {
@@ -112,10 +110,17 @@ enum AccountCharts {
     accounting_period_id = "accounting_period_id"
 }
 
+enum ClientsPermissions {
+    id = "id",
+    client_id = "client_id",
+    module_id = "module_id"
+}
+
 export enum Tables {
     ADMIN = "admins",
     AUTH_ADMIN = "auth_admin",
     ADMIN_PERMISSIONS = "admin_permissions",
+    CLIENTS_PERMISSIONS = "clients_permissions",
     MODULES = "modules",
     ACTIVITY = "activities",
     CLIENTS = "clients",
@@ -132,6 +137,7 @@ export const Columns = {
     admin: Admin,
     authAdmin: AuthAdm,
     adminPermissions: AdminPermission,
+    clientsPermissions: ClientsPermissions,
     modules: Modules,
     activity: Activity,
     clients: Clients,

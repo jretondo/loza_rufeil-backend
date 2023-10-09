@@ -6,10 +6,8 @@ export enum Restrictions {
 }
 
 export enum EModules {
-    users = 6,
-    clients,
-    certificates,
+
+    purchases = 9,
     sells,
-    purchases,
     accounting
 }

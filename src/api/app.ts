@@ -13,7 +13,6 @@ import { errorThrow } from '../network/errors';
 
 import test from './components/test';
 import auth from './components/auth/auth.rtr';
-import permissions from './components/modules/network';
 import user from './components/user/user.rtr';
 import routes from './components/routes/routes.rtr';
 import activity from './components/activity/activity.rtr';
@@ -21,6 +20,7 @@ import clients from './components/clients/clients.rtr';
 import providers from './components/providers/providers.rtr';
 import certificates from './components/certificates/certificates.rtr';
 import accounting from './components/accounting/accounting.rtr';
+import modules from './components/modules/modules.rtr';
 import views from './components/views/network';
 import { config } from '../config';
 export class App {
@@ -52,7 +52,6 @@ export class App {
         this.app.use("/static", express.static(path.join(__dirname, "..", "..", "public")));
         this.app.use('/api', test);
         this.app.use("/api/auth", auth)
-        this.app.use("/api/permissions", permissions)
         this.app.use("/api/user", user)
         this.app.use("/api/routes", routes)
         this.app.use("/api/activity", activity)
@@ -61,6 +60,7 @@ export class App {
         this.app.use("/api/providers", providers)
         this.app.use("/api/certificates", certificates)
         this.app.use("/api/accounting", accounting)
+        this.app.use("/api/modules", modules)
         this.app.use(errorThrow);
     }
 

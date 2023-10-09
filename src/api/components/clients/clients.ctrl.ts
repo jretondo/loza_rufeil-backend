@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { IClients } from '../../../interfaces/Tables';
+import { IClients, IClientsModules } from '../../../interfaces/Tables';
 import Client from '../../../models/Client';
 import IvaCondition from '../../../models/IvaCondition';
 import AdminPermission from '../../../models/AdminPermission';
 import { file, success } from '../../../network/response';
 import { clientDataTax, clientDataTaxPDF } from '../../../utils/afip/dataTax';
+import ClientPermission from '../../../models/ClientsPermissions';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IClients) {
@@ -70,13 +71,12 @@ export const allList = async (req: Request, res: Response, next: NextFunction) =
             include: [{
                 model: AdminPermission,
                 where: ((userId) ? [
-                    { permission_grade: { [Op.gte]: 1 } },
-                    { admin_id: userId },
-                    { client_enabled: true }
+                    { permission_grade_id: { [Op.gte]: 1 } },
+                    { user_id: userId }
                 ] : {})
             }]
         })
-    })(Number(req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(!req.body.user.admin && req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
@@ -98,4 +98,23 @@ export const getTaxProof = async (req: Request, res: Response, next: NextFunctio
         .then((pdfData) => {
             file(req, res, pdfData.filePath, 'application/pdf', pdfData.fileName, pdfData);
         }).catch(next)
+}
+
+export const updatePermissions = (req: Request, res: Response, next: NextFunction) => {
+    (async function (clientId: number, permissionsArray: [IClientsModules]) {
+        await ClientPermission.destroy({ where: { client_id: clientId } })
+        const newPermissions: IClientsModules[] = permissionsArray.map(permission => {
+            return {
+                client_id: clientId,
+                module_id: permission.module_id,
+                active: permission.active
+            }
+        })
+        const response = await ClientPermission.bulkCreate(newPermissions)
+        if (response.length > 0) {
+            return response
+        } else {
+            throw Error("No se pudo actualizar los permisos del cliente")
+        }
+    })(req.body.clientId, req.body.permissions).then(data => success({ req, res, message: data })).catch(next)
 }

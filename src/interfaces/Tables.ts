@@ -15,15 +15,6 @@ export interface IUser {
     admin?: boolean,
     userName?: string
 }
-export interface IAdminPermission {
-    id?: number,
-    admin_id: number,
-    module_id: number,
-    client_id: number,
-    permission_grade: number, //0 ==> read, 1 ==> read and edit, 2 ==> read, edit and delete
-    client_enabled: boolean
-}
-
 export interface IModules {
     id?: number,
     module_name: string
@@ -114,4 +105,23 @@ export interface IAccountCharts {
 export interface ITributeTypes {
     id?: number,
     name: string
+}
+
+export interface IPermissionsGrades {
+    id?: number,
+    name: string
+}
+
+export interface IClientsModules {
+    id?: number,
+    client_id: number,
+    module_id: number,
+    active: boolean
+}
+
+export interface IAdminPermission {
+    id?: number,
+    user_id: number,
+    client_id: number,
+    permission_grade_id: number
 }

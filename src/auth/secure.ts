@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import auth from './index';
 
-const checkAuth = (idPermission?: number, clientId?: number, grade?: number) => {
+const checkAuth = (idPermission?: number, clientId?: number, grade?: number, admin?: boolean) => {
     const middleware = async (
         req: Request,
         res: Response,
         next: NextFunction
     ) => {
         try {
-            auth.check.permission(req, next, idPermission, clientId, grade)
+            auth.check.permission(req, next, idPermission, clientId, grade, admin)
         } catch (error) {
 
         }

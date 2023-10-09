@@ -13,11 +13,11 @@ const router = Router();
 
 //Routes
 router
-    .get("/dataTaxProof", secure(undefined, EModules.clients, 1), getTaxProof)
-    .get("/dataTax", secure(undefined, EModules.clients, 1), getClientDataTax)
-    .get("/:page", secure(undefined, EModules.clients, 1), list)
-    .get("/", secure(undefined, EModules.clients, 1), allList)
-    .delete("/:id", secure(undefined, EModules.clients, 3), remove)
-    .post("/", secure(undefined, EModules.clients, 2), upsert);
+    .get("/dataTaxProof", secure(undefined, undefined, undefined, true), getTaxProof)
+    .get("/dataTax", secure(undefined, undefined, undefined, true), getClientDataTax)
+    .get("/:page", secure(undefined, undefined, undefined, true), list)
+    .get("/", secure(undefined, undefined, undefined, true), allList)
+    .delete("/:id", secure(undefined, undefined, undefined, true), remove)
+    .post("/", secure(undefined, undefined, undefined, true), upsert);
 
 export = router;

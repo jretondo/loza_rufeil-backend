@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { IModulesPermissions, IPermissions } from '../../../interfaces/Others';
+import { IPermissions } from '../../../interfaces/Others';
 import { IAdminPermission, IAuth, IUser } from '../../../interfaces/Tables';;
 import Admin from '../../../models/Admin';
 import AdminPermission from '../../../models/AdminPermission';
-import Module from '../../../models/Module';
 import { authUpsert } from '../auth/auth.ctrl';
-import Client from '../../../models/Client';
 import { success } from '../../../network/response';
+import { userPermissions } from './user.fn';
+import Client from '../../../models/Client';
 
 export const list = async (req: Request, res: Response, next: NextFunction) => {
     (async function (page?: number, item?: string, itemsPerPage?: number) {
@@ -104,71 +104,42 @@ export const getMyUserData = async (req: Request, res: Response, next: NextFunct
     })(Number(req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
 }
 
-export const getUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (userId: number) {
-
-        const clients = await Client.findAll({ include: [{ model: AdminPermission }] })
-        const Modules = await Module.findAll()
-        const permissions = await AdminPermission.findAll({ where: { admin_id: userId } })
-        let userPermissions: Array<IPermissions> = []
-        return new Promise((resolve) => {
-            clients.map((client, key1) => {
-                const clientEnabled = permissions.filter(permission => permission.dataValues.client_id === client.dataValues.id)
-                let modulesPermissions: Array<IModulesPermissions> = []
-                Modules.map((Module, key2) => {
-                    const permission: Array<AdminPermission> = clientEnabled.filter(permission1 => permission1.dataValues.module_id === Module.dataValues.id)
-                    modulesPermissions.push({
-                        module_id: Module.dataValues.id || 0,
-                        module_name: Module.dataValues.module_name,
-                        permission_grade: permission[0]?.dataValues.permission_grade || 0
-                    })
-                    if (key2 === Modules.length - 1) {
-                        userPermissions.push({
-                            client_id: client.dataValues.id || 0,
-                            business_name: client.dataValues.business_name,
-                            enabled: clientEnabled[0]?.dataValues.client_enabled || false,
-                            modules: modulesPermissions
-                        })
-                        if (key1 === clients.length - 1) {
-                            resolve(userPermissions)
-                        }
-                    }
-                })
-            })
-        })
-    })(Number(req.query.idUser)).then(data => success({ req, res, message: data })).catch(next)
-}
-
 export const upsertUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
     (async function (userId: number, permissionsList: Array<IPermissions>) {
-        let newPermissions: Array<IAdminPermission> = []
-        permissionsList.map((clientPermission, key1) => {
-            clientPermission.modules.map(async (modulePermission, key2) => {
-                newPermissions.push({
-                    admin_id: userId,
-                    module_id: modulePermission.module_id,
-                    permission_grade: modulePermission.permission_grade,
-                    client_id: clientPermission.client_id,
-                    client_enabled: clientPermission.enabled
-                })
-                if (key1 === permissionsList.length - 1 && key2 === clientPermission.modules.length - 1) {
-                    await AdminPermission.destroy({ where: { admin_id: userId } })
-                    return await AdminPermission.bulkCreate(newPermissions)
-                }
+        await AdminPermission.destroy({ where: { user_id: userId } })
+        const permissions: Array<IAdminPermission> = []
+        permissionsList.map(permission => {
+            permissions.push({
+                user_id: userId,
+                client_id: permission.client_id,
+                permission_grade_id: permission.permission_grade_id,
             })
         })
+        return await AdminPermission.bulkCreate(permissions)
     })(Number(req.body.idUser), req.body.permissionsList).then(data => success({ req, res, message: data })).catch(next)
 }
 
-export const getModules = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
     (async function (userId: number, clientId: number) {
-        return AdminPermission.findAll({
+        return userPermissions(userId, clientId, 1)
+    })(Number(req.body.user.admin_id), Number(req.query.clientId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getUserClients = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (userId: number) {
+        const userClients = await AdminPermission.findAll({
             where: [
-                { admin_id: userId },
-                { client_id: clientId },
-                { client_enabled: true },
-                { permission_grade: { [Op.gte]: 1 } }
+                { user_id: userId }
             ]
         })
-    })(Number(req.body.user.admin_id), Number(req.query.clientId)).then(data => success({ req, res, message: data })).catch(next)
+        const allClients = await Client.findAll()
+        return allClients.map(client => {
+            const userClient = userClients.find(userClient => userClient.dataValues.client_id === client.dataValues.id)
+            return {
+                client_id: client.dataValues.id,
+                business_name: client.dataValues.business_name,
+                permission_grade_id: userClient ? userClient.dataValues.permission_grade_id : 0
+            }
+        })
+    })(Number(req.query.idUser)).then(data => success({ req, res, message: data })).catch(next)
 }
