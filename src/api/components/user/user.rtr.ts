@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { EModules } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import {
     getMyUserData,
@@ -11,18 +10,19 @@ import {
     upsert,
     upsertUserPermissions
 } from './user.ctrl';
+import { checkAdminAuth } from '../../../middlewares/secureMiddlewares';
 const router = Router();
 
 router
-    .get("/details/:id", secure(undefined, undefined, undefined, true), getUser)
+    .get("/details/:id", secure(), checkAdminAuth, getUser)
     .get("/mydata", secure(), getMyUserData)
-    .get("/permissions", secure(undefined, undefined, undefined, true), getUserPermissions)
-    .get("/clients", secure(undefined, undefined, undefined, true), getUserClients)
-    .get("/:page", secure(undefined, undefined, undefined, true), list)
-    .get("/", secure(undefined, undefined, undefined, true), list)
-    .post("/clients", secure(undefined, undefined, undefined, true), upsertUserPermissions)
-    .post("/", secure(undefined, undefined, undefined, true), upsert)
-    .put("/", secure(undefined, undefined, undefined, true), upsert)
-    .delete("/:id", secure(undefined, undefined, undefined, true), remove);
+    .get("/permissions", secure(), checkAdminAuth, getUserPermissions)
+    .get("/clients", secure(), checkAdminAuth, getUserClients)
+    .get("/:page", secure(), checkAdminAuth, list)
+    .get("/", secure(), checkAdminAuth, list)
+    .post("/clients", secure(), checkAdminAuth, upsertUserPermissions)
+    .post("/", secure(), checkAdminAuth, upsert)
+    .put("/", secure(), checkAdminAuth, upsert)
+    .delete("/:id", secure(), checkAdminAuth, remove);
 
 export = router;

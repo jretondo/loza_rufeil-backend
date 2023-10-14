@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { EModules } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import { list, upsert } from './activity.ctrl';
+import { checkAdminAuth } from '../../../middlewares/secureMiddlewares';
 
 const router = Router();
 
 router
-    .get("/:page", secure(undefined, undefined, undefined, true), list)
+    .get("/:page", secure(), checkAdminAuth, list)
     .post("/", secure(), upsert);
 
 export = router;

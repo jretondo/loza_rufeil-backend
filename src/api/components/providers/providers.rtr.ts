@@ -1,5 +1,6 @@
+import { EModules, EPermissions } from './../../../constant/OTHERS';
+import { checkClient, checkModule } from './../../../middlewares/secureMiddlewares';
 import { Router } from 'express';
-import { EModules } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import {
     allList,
@@ -13,11 +14,11 @@ const router = Router();
 
 //Routes
 router
-    .get("/dataTaxProof", secure(undefined, undefined, undefined, true), getTaxProof)
-    .get("/dataTax", secure(undefined, undefined, undefined, true), getClientDataTax)
-    .get("/:page", secure(undefined, undefined, undefined, true), list)
-    .get("/", secure(undefined, undefined, undefined, true), allList)
-    .delete("/:id", secure(undefined, undefined, undefined, true), remove)
-    .post("/", secure(undefined, undefined, undefined, true), upsert);
+    .get("/dataTaxProof", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getTaxProof)
+    .get("/dataTax", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getClientDataTax)
+    .get("/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), list)
+    .get("/", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), allList)
+    .delete("/:id", secure(), checkClient(EPermissions.totalControl), checkModule(EModules.purchases), remove)
+    .post("/", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsert);
 
 export = router;

@@ -1,42 +1,23 @@
-import { Request, NextFunction } from 'express';
+import { Request, NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import err from '../network/error';
 import { config } from '../config';
-import error from '../network/error';
-import { userPermissions } from '../api/components/user/user.fn';
+import Admin from '../models/Admin';
 
 const sign = (data: string) => {
-    console.log('data    :>> ', data);
     return jwt.sign(data, config.jwt.secret);
 }
 
 const check = {
-    permission: async (req: Request, next: NextFunction, idPermission?: number, clientId?: number, grade?: number, admin?: boolean) => {
+    permission: async (req: Request, res: Response, next: NextFunction) => {
         const decoded: any = decodeHeader(req, next)
-        if (admin) {
-            if (decoded.admin) {
-                next();
-            } else {
-                next(error("No tiene los permisos"));
-            }
+        const userId: number = decoded.id
+        const userData = await Admin.findByPk(userId)
+        if (userData) {
+            req.body.user = decoded
+            next()
         } else {
-            if (!idPermission) {
-                next()
-            } else if (decoded.admin) {
-                next();
-            } else if (idPermission && clientId) {
-                const permissionsList = await userPermissions(req.body.user.id, clientId, grade || 0);
-                const permissionsQuantity = permissionsList.length;
-                if (permissionsQuantity < 1) {
-                    req.body.statusError = 403
-                    next(error("No tiene los permisos"));
-                } else {
-                    next();
-                }
-            } else {
-                req.body.statusError = 403
-                next(error("No tiene los permisos"));
-            }
+            next(err("No tiene los token envíado"))
         }
     }
 };
@@ -60,9 +41,9 @@ const verify = (token: string) => {
 const decodeHeader = (req: Request, next: NextFunction) => {
     try {
         const authorization = req.headers.authorization || ""
-        const token = getToken(authorization, next)
+        const userAuth = authorization.split("||")[0]
+        const token = getToken(userAuth, next)
         const decoded = verify(token)
-        req.body.user = decoded
         return decoded
     } catch (error) {
         next(err("Token invalido"))

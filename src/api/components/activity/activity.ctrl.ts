@@ -4,6 +4,7 @@ import { IActivity, IUser } from '../../../interfaces/Tables';
 import Activity from '../../../models/Activity';
 import Admin from '../../../models/Admin';
 import { success } from '../../../network/response';
+import { Columns, Tables } from '../../../constant/TABLES';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -43,7 +44,8 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
             where: filter,
             include: Admin,
             offset: offset,
-            limit: ITEMS_PER_PAGE
+            limit: ITEMS_PER_PAGE,
+            order: [[Columns.activity.date, 'DESC']]
         });
         return {
             totalItems: count,

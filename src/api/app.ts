@@ -21,6 +21,7 @@ import providers from './components/providers/providers.rtr';
 import certificates from './components/certificates/certificates.rtr';
 import accounting from './components/accounting/accounting.rtr';
 import modules from './components/modules/modules.rtr';
+import purchases from './components/purchases/purchases.rtr';
 import views from './components/views/network';
 import { config } from '../config';
 export class App {
@@ -60,6 +61,7 @@ export class App {
         this.app.use("/api/providers", providers)
         this.app.use("/api/certificates", certificates)
         this.app.use("/api/accounting", accounting)
+        this.app.use("/api/purchases", purchases)
         this.app.use("/api/modules", modules)
         this.app.use(errorThrow);
     }

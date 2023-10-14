@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { EModules } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import {
     allList,
+    clientTokenGenerator,
     getClientDataTax,
     getTaxProof,
     list,
@@ -10,16 +10,18 @@ import {
     updatePermissions,
     upsert
 } from './clients.ctrl';
+import { checkAdminAuth } from '../../../middlewares/secureMiddlewares';
 const router = Router();
 
 //Routes
 router
-    .get("/dataTaxProof", secure(), getTaxProof)
-    .get("/dataTax", secure(), getClientDataTax)
+    .get("/dataTaxProof", secure(), checkAdminAuth, getTaxProof)
+    .get("/dataTax", secure(), checkAdminAuth, getClientDataTax)
+    .get("/token", secure(), clientTokenGenerator)
     .get("/:page", secure(), list)
     .get("/", secure(), allList)
-    .delete("/:id", secure(), remove)
-    .post("/permissions", secure(), updatePermissions)
-    .post("/", secure(), upsert);
+    .delete("/:id", secure(), checkAdminAuth, remove)
+    .post("/permissions", secure(), checkAdminAuth, updatePermissions)
+    .post("/", secure(), checkAdminAuth, upsert);
 
 export = router;

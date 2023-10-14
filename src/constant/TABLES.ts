@@ -116,6 +116,74 @@ enum ClientsPermissions {
     module_id = "module_id"
 }
 
+enum Receipts {
+    id = "id",
+    date = "date",
+    invoice_type_id = "invoice_type_id",
+    sell_point = "sell_point",
+    number = "number",
+    total = "total",
+    unrecorded = "unrecorded",
+    exempt_transactions = "exempt_transactions",
+    vat_withholdings = "vat_withholdings",
+    national_tax_withholdings = "national_tax_withholdings",
+    gross_income_withholdings = "gross_income_withholdings",
+    local_tax_withholdings = "local_tax_withholdings",
+    internal_tax = "internal_tax",
+    vat_rates_quantity = "vat_rates_quantity",
+    provider_id = "provider_id",
+    purchase_period_id = "purchase_period_id"
+}
+
+enum PurchaseRatesReceipts {
+    id = "id",
+    receipt_id = "receipt_id",
+    recorded_net = "recorded_net",
+    vat_type_id = "vat_type_id",
+    vat_amount = "vat_amount"
+}
+
+enum PurchasesPeriods {
+    id = "id",
+    month = "month",
+    year = "year",
+    accounting_period_id = "accounting_period_id",
+    closed = "closed"
+}
+
+enum PurchaseParameters {
+    id = "id",
+    client_id = "client_id",
+    type = "type",
+    is_vat = "is_vat",
+    active = "active",
+    account_chart_id = "account_chart_id"
+}
+
+enum VatRatePurchase {
+    id = "id",
+    receipt_id = "receipt_id",
+    recorded_net = "recorded_net",
+    vat_type_id = "vat_type_id",
+    vat_amount = "vat_amount"
+}
+
+enum PaymentTypesParameters {
+    id = "id",
+    client_id = "client_id",
+    name = "name",
+    active = "active",
+    account_chart_id = "account_chart_id"
+}
+
+enum ProvidersParameters {
+    id = "id",
+    provider_id = "provider_id",
+    active = "active",
+    description = "description",
+    account_chart_id = "account_chart_id"
+}
+
 export enum Tables {
     ADMIN = "admins",
     AUTH_ADMIN = "auth_admin",
@@ -130,7 +198,13 @@ export enum Tables {
     AFIP_CRT = "afip_crt",
     PROVIDERS = "providers",
     ACCOUNTING_PERIOD = "accounting_period",
-    ACCOUNT_CHARTS = "account_charts"
+    ACCOUNT_CHARTS = "account_charts",
+    RECEIPTS = "receipts",
+    VAT_RATES_RECEIPTS = "vat_rates_receipts",
+    PURCHASE_PERIODS = "purchase_periods",
+    PURCHASE_PARAMETERS = "purchase_parameters",
+    PAYMENT_TYPES_PARAMETERS = "payment_types_parameters",
+    PROVIDERS_PARAMETERS = "providers_parameters"
 }
 
 export const Columns = {
@@ -147,5 +221,12 @@ export const Columns = {
     afipCrt: AfipCrt,
     providers: Providers,
     accountingPeriod: AccountingPeriod,
-    accountCharts: AccountCharts
+    accountCharts: AccountCharts,
+    receipts: Receipts,
+    purchaseRatesReceipts: PurchaseRatesReceipts,
+    purchasePeriods: PurchasesPeriods,
+    purchaseParameters: PurchaseParameters,
+    vatRatePurchase: VatRatePurchase,
+    paymentTypesParameters: PaymentTypesParameters,
+    providersParameters: ProvidersParameters
 }

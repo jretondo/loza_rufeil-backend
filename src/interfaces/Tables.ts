@@ -80,28 +80,6 @@ export interface IAfipCrt {
     crt_name: string
 }
 
-export interface IAccountingPeriod {
-    id?: number,
-    from_date: Date,
-    to_date: Date,
-    client_id: number,
-    closed: boolean
-}
-
-export interface IAccountCharts {
-    id?: number,
-    genre: number,
-    group: number,
-    caption: number,
-    account: number,
-    sub_account: number,
-    code: string,
-    name: string,
-    attributable: boolean,
-    inflation_adjustment: boolean,
-    accounting_period_id: number
-}
-
 export interface ITributeTypes {
     id?: number,
     name: string
@@ -124,4 +102,89 @@ export interface IAdminPermission {
     user_id: number,
     client_id: number,
     permission_grade_id: number
+}
+
+export interface IAccountingPeriod {
+    id?: number,
+    from_date: Date,
+    to_date: Date,
+    client_id: number,
+    closed: boolean
+}
+
+export interface IAccountCharts {
+    id?: number,
+    genre: number,
+    group: number,
+    caption: number,
+    account: number,
+    sub_account: number,
+    code: string,
+    name: string,
+    attributable: boolean,
+    inflation_adjustment: boolean,
+    accounting_period_id: number
+}
+
+export interface IPurchasePeriods {
+    id?: number,
+    month: number,
+    year: number,
+    accounting_period_id: number,
+    closed?: boolean
+}
+
+export interface IReceipts {
+    id?: number,
+    date: Date,
+    invoice_type_id: number,
+    sell_point: number,
+    number: number,
+    total: number,
+    unrecorded: number, //No grabado
+    exempt_transactions: number, //Operaciones exentas
+    vat_withholdings: number, //Percepciones de IVA
+    national_tax_withholdings: number, //Percepciones de impuestos nacionales
+    gross_income_withholdings: number, //Percepciones de ingresos brutos
+    local_tax_withholdings: number, //Percepciones municipales
+    internal_tax: number, //Impuestos internos
+    vat_rates_quantity: number, //Cantidad de alícuotas de IVA  
+    provider_id: number,
+    purchase_period_id: number
+}
+
+export interface IVatRatesReceipts {
+    id?: number,
+    receipt_id: number,
+    recorded_net: number, //Neto gravado
+    vat_type_id: number, //Tipo de IVA
+    vat_amount: number //Importe de IVA
+}
+
+export interface IPurchaseParameters {
+    id?: number,
+    client_id: number,
+    type: number,
+    is_vat: boolean,
+    active: boolean,
+    account_chart_id: number,
+    AccountChart?: IAccountCharts
+}
+
+export interface IPaymentTypesParameters {
+    id?: number,
+    client_id: number,
+    name: string,
+    active: boolean,
+    account_chart_id: number,
+    AccountChart?: IAccountCharts
+}
+
+export interface IProvidersParameters {
+    id?: number,
+    provider_id: number,
+    active: boolean,
+    description: string,
+    account_chart_id: number,
+    AccountChart?: IAccountCharts
 }

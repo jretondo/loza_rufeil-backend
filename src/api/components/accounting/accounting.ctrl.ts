@@ -184,3 +184,15 @@ export const getNewChildren = async (req: Request, res: Response, next: NextFunc
         return await nextChildrenAccount(accountData)
     })(Number(req.query.accountId)).then(data => success({ req, res, message: data })).catch(next)
 }
+
+export const getAttributableAccounts = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountPeriodId: number) {
+        return await AccountChart.findAll({
+            where: [
+                { accounting_period_id: accountPeriodId },
+                { attributable: true }
+            ],
+            order: [[`${Columns.accountCharts.code}`, "ASC"]]
+        })
+    })(Number(req.query.accountPeriodId)).then(data => success({ req, res, message: data })).catch(next)
+}

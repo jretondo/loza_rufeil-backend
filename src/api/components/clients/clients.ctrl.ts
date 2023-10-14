@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { IClients, IClientsModules } from '../../../interfaces/Tables';
@@ -7,6 +8,8 @@ import AdminPermission from '../../../models/AdminPermission';
 import { file, success } from '../../../network/response';
 import { clientDataTax, clientDataTaxPDF } from '../../../utils/afip/dataTax';
 import ClientPermission from '../../../models/ClientsPermissions';
+import { getClientsPermissions } from '../modules/modules.fn';
+import { config } from '../../../config';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IClients) {
@@ -76,7 +79,7 @@ export const allList = async (req: Request, res: Response, next: NextFunction) =
                 ] : {})
             }]
         })
-    })(Number(!req.body.user.admin && req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number((!req.body.user.admin) && req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
@@ -112,9 +115,28 @@ export const updatePermissions = (req: Request, res: Response, next: NextFunctio
         })
         const response = await ClientPermission.bulkCreate(newPermissions)
         if (response.length > 0) {
-            return response
+            const activePermissions = await getClientsPermissions(clientId)
+            return activePermissions
         } else {
             throw Error("No se pudo actualizar los permisos del cliente")
         }
     })(req.body.clientId, req.body.permissions).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const clientTokenGenerator = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (clientId: number, userId: number) {
+        const client = await Client.findByPk(clientId, {
+            include: {
+                model: AdminPermission,
+                where: {
+                    user_id: userId
+                }
+            }
+        })
+        if (client) {
+            return { token: jwt.sign(JSON.stringify(client), config.jwt.secret) }
+        } else {
+            throw Error("No tiene permisos para el cliente")
+        }
+    })(Number(req.query.clientId), req.body.user.id).then(data => success({ req, res, message: data })).catch(next)
 }
