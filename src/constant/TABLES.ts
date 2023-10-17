@@ -132,7 +132,8 @@ enum Receipts {
     internal_tax = "internal_tax",
     vat_rates_quantity = "vat_rates_quantity",
     provider_id = "provider_id",
-    purchase_period_id = "purchase_period_id"
+    purchase_period_id = "purchase_period_id",
+    observation = "observation"
 }
 
 enum PurchaseRatesReceipts {
@@ -157,7 +158,8 @@ enum PurchaseParameters {
     type = "type",
     is_vat = "is_vat",
     active = "active",
-    account_chart_id = "account_chart_id"
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
 }
 
 enum VatRatePurchase {
@@ -173,7 +175,8 @@ enum PaymentTypesParameters {
     client_id = "client_id",
     name = "name",
     active = "active",
-    account_chart_id = "account_chart_id"
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
 }
 
 enum ProvidersParameters {
@@ -181,7 +184,19 @@ enum ProvidersParameters {
     provider_id = "provider_id",
     active = "active",
     description = "description",
-    account_chart_id = "account_chart_id"
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
+}
+
+enum PurchaseEntries {
+    id = "id",
+    date = "date",
+    receipt_id = "receipt_id",
+    account_chart_id = "account_chart_id",
+    purchase_period_id = "purchase_period_id",
+    description = "description",
+    debit = "debit",
+    credit = "credit"
 }
 
 export enum Tables {
@@ -204,7 +219,8 @@ export enum Tables {
     PURCHASE_PERIODS = "purchase_periods",
     PURCHASE_PARAMETERS = "purchase_parameters",
     PAYMENT_TYPES_PARAMETERS = "payment_types_parameters",
-    PROVIDERS_PARAMETERS = "providers_parameters"
+    PROVIDERS_PARAMETERS = "providers_parameters",
+    PURCHASE_ENTRIES = "purchase_entries"
 }
 
 export const Columns = {
@@ -228,5 +244,6 @@ export const Columns = {
     purchaseParameters: PurchaseParameters,
     vatRatePurchase: VatRatePurchase,
     paymentTypesParameters: PaymentTypesParameters,
-    providersParameters: ProvidersParameters
+    providersParameters: ProvidersParameters,
+    purchaseEntries: PurchaseEntries
 }

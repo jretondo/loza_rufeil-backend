@@ -150,7 +150,10 @@ export interface IReceipts {
     internal_tax: number, //Impuestos internos
     vat_rates_quantity: number, //Cantidad de alícuotas de IVA  
     provider_id: number,
-    purchase_period_id: number
+    purchase_period_id: number,
+    observation: string,
+    word: string,
+    receipt_type: number,
 }
 
 export interface IVatRatesReceipts {
@@ -168,6 +171,8 @@ export interface IPurchaseParameters {
     is_vat: boolean,
     active: boolean,
     account_chart_id: number,
+    accounting_period_id: number,
+    is_tax: boolean,
     AccountChart?: IAccountCharts
 }
 
@@ -177,6 +182,7 @@ export interface IPaymentTypesParameters {
     name: string,
     active: boolean,
     account_chart_id: number,
+    accounting_period_id: number,
     AccountChart?: IAccountCharts
 }
 
@@ -186,5 +192,53 @@ export interface IProvidersParameters {
     active: boolean,
     description: string,
     account_chart_id: number,
+    accounting_period_id: number,
     AccountChart?: IAccountCharts
+}
+
+export interface IHeaderReceiptReq {
+    date: Date,
+    total: number,
+    type: {
+        id: number,
+        name: string
+    },
+    word: string,
+    sellPoint: number,
+    number: number,
+}
+
+export interface IPaymentReceiptReq {
+    account_chart_id: number,
+    accounting_period_id: number,
+    amount: number,
+    name: string,
+}
+
+export interface ITaxesReceiptReq {
+    type: number,
+    amount: number,
+    is_vat: boolean,
+    name: string,
+    AccountChart?: IAccountCharts
+}
+
+export interface IReceiptConcept {
+    account_chart_id: number,
+    accounting_period_id: number,
+    amount: number,
+    description: string,
+    AccountChart?: IAccountCharts
+    recordType: number,
+}
+
+export interface IPurchaseEntries {
+    id?: number,
+    date: Date,
+    receipt_id: number,
+    account_chart_id: number,
+    purchase_period_id: number,
+    description: string,
+    debit: number,
+    credit: number
 }

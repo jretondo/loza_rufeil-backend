@@ -10,6 +10,7 @@ import { clientDataTax, clientDataTaxPDF } from '../../../utils/afip/dataTax';
 import ClientPermission from '../../../models/ClientsPermissions';
 import { getClientsPermissions } from '../modules/modules.fn';
 import { config } from '../../../config';
+import AccountingPeriod from '../../../models/AccountingPeriod';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IClients) {
@@ -124,7 +125,8 @@ export const updatePermissions = (req: Request, res: Response, next: NextFunctio
 }
 
 export const clientTokenGenerator = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (clientId: number, userId: number) {
+    (async function (clientId: number, userId: number, periodId?: number) {
+        let period = null
         const client = await Client.findByPk(clientId, {
             include: {
                 model: AdminPermission,
@@ -133,10 +135,26 @@ export const clientTokenGenerator = async (req: Request, res: Response, next: Ne
                 }
             }
         })
+        if (periodId) {
+            period = await AccountingPeriod.findByPk(periodId, {
+                include: {
+                    model: Client,
+                    where: {
+                        id: client?.dataValues.id
+                    }
+                }
+            })
+        }
+
+        const data = {
+            client: client,
+            period: period
+        }
+
         if (client) {
-            return { token: jwt.sign(JSON.stringify(client), config.jwt.secret) }
+            return { token: jwt.sign(JSON.stringify(data), config.jwt.secret) }
         } else {
             throw Error("No tiene permisos para el cliente")
         }
-    })(Number(req.query.clientId), req.body.user.id).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.query.clientId), req.body.user.id, Number(req.query.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

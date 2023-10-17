@@ -5,6 +5,7 @@ import sequelize from '../database';
 import Client from './Client';
 import { Restrictions } from '../constant/OTHERS';
 import AccountChart from './AccountCharts';
+import AccountingPeriod from './AccountingPeriod';
 
 type PurchaseParameterCreationAttributes = Optional<IPurchaseParameters, 'id'>;
 
@@ -37,6 +38,14 @@ PurchaseParameter.init({
     account_chart_id: {
         type: DataTypes.INTEGER,
         allowNull: true
+    },
+    accounting_period_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    is_tax: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
     }
 }, {
     sequelize,
@@ -66,6 +75,18 @@ AccountChart.hasOne(PurchaseParameter, {
 PurchaseParameter.belongsTo(AccountChart, {
     foreignKey: Columns.purchaseParameters.account_chart_id,
     targetKey: Columns.accountCharts.id
+})
+
+AccountingPeriod.hasOne(PurchaseParameter, {
+    foreignKey: Columns.purchaseParameters.accounting_period_id,
+    sourceKey: Columns.accountingPeriod.id,
+    onDelete: Restrictions.RESTRICT,
+    onUpdate: Restrictions.RESTRICT
+})
+
+PurchaseParameter.belongsTo(AccountingPeriod, {
+    foreignKey: Columns.purchaseParameters.accounting_period_id,
+    targetKey: Columns.accountingPeriod.id
 })
 
 export default PurchaseParameter;

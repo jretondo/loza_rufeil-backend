@@ -2,7 +2,18 @@ import { EModules, EPermissions } from './../../../constant/OTHERS';
 import { checkClient, checkModule } from './../../../middlewares/secureMiddlewares';
 import { Router } from 'express';
 import secure from '../../../auth/secure';
-import { getClientsParams, getPaymentsParametersClient, insertClientsParams, insertPaymentsParametersClient, listPurchasePeriods, upsertPurchasePeriod } from './purchases.ctrl';
+import {
+    getClientsParams,
+    getPaymentsParametersClient,
+    insertClientsParams,
+    insertPaymentsParametersClient,
+    listPurchasePeriods,
+    insertPeriod,
+    getReceipts,
+    upsertReceipt,
+    deleteReceipt,
+    getReceipt
+} from './purchases.ctrl';
 
 const router = Router();
 
@@ -10,8 +21,13 @@ router
     .get("/period", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), listPurchasePeriods)
     .get("/params", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getClientsParams)
     .get("/paymentsMethods", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getPaymentsParametersClient)
-    .post("/period", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsertPurchasePeriod)
+    .get("/receipt/:id", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getReceipt)
+    .get("/receipts/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getReceipts)
     .post("/params", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertClientsParams)
     .post("/paymentsMethods", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertPaymentsParametersClient)
+    .post("/receipt", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsertReceipt)
+    .post("/period", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertPeriod)
+    .delete("/receipt/:id", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), deleteReceipt)
+    .put("/receipt", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsertReceipt)
 
 export default router;

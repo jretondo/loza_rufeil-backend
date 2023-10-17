@@ -8,8 +8,9 @@ import { Op } from 'sequelize';
 const checkClientAuth = async (req: Request, res: Response, next: NextFunction, permissionGrade: number) => {
     const isAdmin: boolean = req.body.user.admin
     const decoded: any = decodeHeader(req, next)
-    const clientId = decoded.id
-
+    const client = decoded.client
+    const period = decoded.period
+    const clientId = client.id
     const clientsUserPermissions = await AdminPermission.findAll({
         where: {
             client_id: clientId,
@@ -19,7 +20,8 @@ const checkClientAuth = async (req: Request, res: Response, next: NextFunction, 
     })
 
     if (clientsUserPermissions.length > 0 || isAdmin) {
-        req.body.clientId = decoded.id
+        req.body.clientId = clientId
+        period && (req.body.periodId = period.id)
         next()
     } else {
         next(err("No tiene los token envíado"))

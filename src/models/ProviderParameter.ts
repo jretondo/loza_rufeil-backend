@@ -3,8 +3,9 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import { IProvidersParameters } from '../interfaces/Tables';
 import sequelize from '../database';
 import Provider from './Providers';
-import { Restrictions } from 'constant/OTHERS';
+import { Restrictions } from '../constant/OTHERS';
 import AccountChart from './AccountCharts';
+import AccountingPeriod from './AccountingPeriod';
 
 type ProviderParameterCreationAttributes = Optional<IProvidersParameters, 'id'>;
 
@@ -32,6 +33,10 @@ ProviderParameter.init({
     account_chart_id: {
         type: DataTypes.INTEGER,
         allowNull: true
+    },
+    accounting_period_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
 }, {
     tableName: Tables.PROVIDERS_PARAMETERS,
@@ -39,7 +44,7 @@ ProviderParameter.init({
     sequelize
 })
 
-Provider.hasOne(ProviderParameter, {
+Provider.hasMany(ProviderParameter, {
     foreignKey: Columns.providersParameters.provider_id,
     sourceKey: Columns.providers.id,
     onDelete: Restrictions.RESTRICT,
@@ -51,7 +56,7 @@ ProviderParameter.belongsTo(Provider, {
     targetKey: Columns.providers.id
 })
 
-AccountChart.hasOne(ProviderParameter, {
+AccountChart.hasMany(ProviderParameter, {
     foreignKey: Columns.providersParameters.account_chart_id,
     sourceKey: Columns.accountCharts.id,
     onDelete: Restrictions.RESTRICT,
@@ -61,6 +66,18 @@ AccountChart.hasOne(ProviderParameter, {
 ProviderParameter.belongsTo(AccountChart, {
     foreignKey: Columns.providersParameters.account_chart_id,
     targetKey: Columns.accountCharts.id
+})
+
+AccountingPeriod.hasOne(ProviderParameter, {
+    foreignKey: Columns.providersParameters.accounting_period_id,
+    sourceKey: Columns.accountingPeriod.id,
+    onDelete: Restrictions.RESTRICT,
+    onUpdate: Restrictions.RESTRICT
+})
+
+ProviderParameter.belongsTo(AccountingPeriod, {
+    foreignKey: Columns.providersParameters.accounting_period_id,
+    targetKey: Columns.accountingPeriod.id
 })
 
 export default ProviderParameter

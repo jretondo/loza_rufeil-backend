@@ -3,7 +3,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database';
 import { Columns, Tables } from '../constant/TABLES';
 import PurchasePeriod from './PurchasePeriod';
-import { Restrictions } from 'constant/OTHERS';
+import { Restrictions } from '../constant/OTHERS';
 import Provider from './Providers';
 
 type ReceiptCreationAttributes = Optional<IReceipts, 'id'>;
@@ -30,37 +30,55 @@ Receipt.init({
         type: DataTypes.INTEGER
     },
     total: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false
     },
     unrecorded: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     exempt_transactions: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     vat_withholdings: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     national_tax_withholdings: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     gross_income_withholdings: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     local_tax_withholdings: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     internal_tax: {
-        type: DataTypes.DECIMAL(12, 2)
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
     },
     vat_rates_quantity: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     },
     provider_id: {
         type: DataTypes.INTEGER
     },
     purchase_period_id: {
         type: DataTypes.INTEGER
+    },
+    observation: {
+        type: DataTypes.TEXT('long')
+    },
+    word: {
+        type: DataTypes.CHAR(1)
+    },
+    receipt_type: {
+        type: DataTypes.TINYINT
     }
 }, {
     sequelize,

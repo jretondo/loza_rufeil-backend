@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { IProviders } from '../../../interfaces/Tables';
+import { IProviders, IProvidersParameters } from '../../../interfaces/Tables';
 import IvaCondition from '../../../models/IvaCondition';
 import Provider from '../../../models/Providers';
 import { file, success } from '../../../network/response';
 import { clientDataTax, clientDataTaxPDF } from '../../../utils/afip/dataTax';
-
+import ProviderParameter from '../../../models/ProviderParameter';
+import AccountChart from '../../../models/AccountCharts';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IProviders) {
@@ -30,7 +31,12 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
                     { document_number: { [Op.substring]: text } }
                 ]
             },
-            include: [IvaCondition],
+            include: [IvaCondition, {
+                model: ProviderParameter,
+                include: [{
+                    model: AccountChart
+                }]
+            }],
             offset: offset,
             limit: ITEMS_PER_PAGE
         });
@@ -43,9 +49,16 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 export const allList = async (req: Request, res: Response, next: NextFunction) => {
-    (async function () {
-        return await Provider.findAll()
-    })().then(data => success({ req, res, message: data })).catch(next)
+    (async function (accountingPeriodId: number) {
+        return await Provider.findAll({
+            include: [IvaCondition, {
+                model: ProviderParameter,
+                where: { accounting_period_id: accountingPeriodId },
+                required: false,
+            }],
+
+        })
+    })(req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
@@ -67,4 +80,36 @@ export const getTaxProof = async (req: Request, res: Response, next: NextFunctio
         .then((pdfData) => {
             file(req, res, pdfData.filePath, 'application/pdf', pdfData.fileName, pdfData);
         }).catch(next)
+}
+
+export const insertProviderParameter = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (providerParameters: Array<IProvidersParameters>, providerId: number, periodId: number) {
+        if (providerParameters.length > 0) {
+            const providerParameters: [IProvidersParameters] = req.body.params.map((param: IProvidersParameters) => {
+                return {
+                    provider_id: providerId,
+                    active: param.active,
+                    description: param.description,
+                    account_chart_id: param.account_chart_id,
+                    accounting_period_id: periodId,
+                }
+            })
+            await ProviderParameter.destroy({
+                where: [{ provider_id: providerId }, { accounting_period_id: periodId }]
+            })
+            return await ProviderParameter.bulkCreate(providerParameters)
+        } else {
+            return await ProviderParameter.destroy({ where: [{ provider_id: providerId }, { accounting_period_id: periodId }] })
+        }
+
+    })(req.body.params, req.body.providerId, req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getProvidersParameters = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (providerId: number, accountingPeriodId: number) {
+        return await ProviderParameter.findAll({
+            where: [{ provider_id: providerId }, { accounting_period_id: accountingPeriodId }],
+            include: [AccountChart]
+        })
+    })(Number(req.query.providerId), Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

@@ -103,7 +103,7 @@ export const getAccountList = async (req: Request, res: Response, next: NextFunc
         })
         return list
     })(
-        Number(req.query.periodId),
+        Number(req.body.periodId),
         String(req.query.contain ? req.query.contain : "")
     ).then(data => success({ req, res, message: data })).catch(next)
 }
@@ -182,7 +182,7 @@ export const getNewChildren = async (req: Request, res: Response, next: NextFunc
     (async function (accountId: number) {
         const accountData = await AccountChart.findOne({ where: { id: accountId } })
         return await nextChildrenAccount(accountData)
-    })(Number(req.query.accountId)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const getAttributableAccounts = async (req: Request, res: Response, next: NextFunction) => {
@@ -194,5 +194,5 @@ export const getAttributableAccounts = async (req: Request, res: Response, next:
             ],
             order: [[`${Columns.accountCharts.code}`, "ASC"]]
         })
-    })(Number(req.query.accountPeriodId)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

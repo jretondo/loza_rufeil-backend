@@ -37,7 +37,7 @@ PurchasePeriod.init({
     sequelize,
     tableName: Tables.PURCHASE_PERIODS,
     timestamps: false,
-    indexes: [{ fields: [Columns.purchasePeriods.month, Columns.purchasePeriods.year], name: 'UQ_month_year', unique: true },]
+    indexes: [{ fields: [Columns.purchasePeriods.month, Columns.purchasePeriods.year, Columns.purchasePeriods.accounting_period_id], name: 'UQ_month_year_period', unique: true },]
 
 })
 
@@ -64,5 +64,6 @@ AccountingPeriod.belongsTo(AccountChart, {
     foreignKey: Columns.paymentTypesParameters.account_chart_id,
     targetKey: Columns.accountCharts.id
 })
+
 
 export default PurchasePeriod;
