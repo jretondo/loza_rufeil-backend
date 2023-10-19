@@ -24,7 +24,8 @@ PurchaseEntry.init({
         type: DataTypes.INTEGER
     },
     account_chart_id: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        allowNull: true
     },
     purchase_period_id: {
         type: DataTypes.INTEGER
@@ -61,8 +62,8 @@ PurchaseEntry.belongsTo(Receipt, {
 AccountChart.hasMany(PurchaseEntry, {
     foreignKey: Columns.purchaseEntries.account_chart_id,
     sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.SET_NULL,
+    onUpdate: Restrictions.SET_NULL
 })
 
 PurchaseEntry.belongsTo(AccountChart, {

@@ -236,7 +236,7 @@ export interface IPurchaseEntries {
     id?: number,
     date: Date,
     receipt_id: number,
-    account_chart_id: number,
+    account_chart_id: number | null,
     purchase_period_id: number,
     description: string,
     debit: number,

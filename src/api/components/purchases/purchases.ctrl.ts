@@ -136,7 +136,7 @@ export const insertPaymentsParametersClient = async (req: Request, res: Response
                 client_id: clientId,
                 name: paymentParam.name,
                 active: paymentParam.active,
-                account_chart_id: paymentParam.AccountChart?.id || 0,
+                account_chart_id: paymentParam.AccountChart?.id || null,
                 accounting_period_id: periodId
             }
         })

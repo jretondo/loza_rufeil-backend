@@ -29,6 +29,8 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
         page: number,
         text?: string
     ) {
+
+        console.log('isAdmin :>> ', isAdmin);
         const ITEMS_PER_PAGE = 10;
 
         const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
@@ -43,6 +45,7 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
             },
             include: [IvaCondition,
                 {
+                    required: false,
                     model: AdminPermission,
                     where: (!isAdmin ? {
                         [Op.and]: [
@@ -50,8 +53,7 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
                             { admin_id: userId },
                             { client_enabled: true }
                         ]
-                    } : {}
-                    )
+                    } : {})
                 }],
             offset: offset,
             limit: ITEMS_PER_PAGE

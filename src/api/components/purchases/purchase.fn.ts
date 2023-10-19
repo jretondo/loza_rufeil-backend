@@ -54,7 +54,8 @@ export const checkDataReqReceipt = (
         }
         return acc + tax.amount
     }, 0))
-
+    console.log('oundNumber(totalRecordedConcepts, 1) :>> ', roundNumber(totalRecordedConcepts, 1));
+    console.log('oundNumber(totalVatRecorded, 1)) :>> ', roundNumber(totalVatRecorded, 1));
     if (vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 1) !== roundNumber(totalVatRecorded, 1))) {
         throw new Error("No se validan los totales grabados!")
     }
@@ -160,7 +161,7 @@ export const checkDataReqReceipt = (
         return {
             date: headerReceipt.date,
             receipt_id: 0,
-            account_chart_id: tax.AccountChart?.id || 0,
+            account_chart_id: tax.AccountChart?.id || null,
             purchase_period_id: purchasePeriodId,
             description: tax.name,
             debit: tax.amount,

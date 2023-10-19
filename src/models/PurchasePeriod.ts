@@ -65,5 +65,6 @@ AccountingPeriod.belongsTo(AccountChart, {
     targetKey: Columns.accountCharts.id
 })
 
+PurchasePeriod.sync({ alter: true });
 
 export default PurchasePeriod;
