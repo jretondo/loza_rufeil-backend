@@ -30,7 +30,8 @@ export const listPurchasePeriods = async (req: Request, res: Response, next: Nex
 }
 
 export const getClientsParams = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (clientId: number, periodId: number) {
+    (async function (clientId: number, periodId: number, vat_condition?: number) {
+
         const clientVatParameters = await PurchaseParameter.findAll(
             { where: [{ client_id: clientId }, { is_vat: true }, { accounting_period_id: periodId }], include: [AccountChart] })
         const clientOthersParameters = await PurchaseParameter.findAll(
@@ -38,7 +39,7 @@ export const getClientsParams = async (req: Request, res: Response, next: NextFu
 
         const allClientVatParams = vatTaxes.map(vatTax => {
             const find = clientVatParameters.find(clientVatParam => clientVatParam.dataValues.type === vatTax.id)
-            if (find) {
+            if (find && vat_condition !== 20) {
                 return {
                     type: vatTax.id,
                     name: vatTax.name,
@@ -61,7 +62,7 @@ export const getClientsParams = async (req: Request, res: Response, next: NextFu
 
         const allClientOthersParams = othersTypes.map(otherType => {
             const find = clientOthersParameters.find(clientOtherParam => clientOtherParam.dataValues.type === otherType.id)
-            if (find) {
+            if (find && vat_condition !== 20) {
                 return {
                     type: otherType.id,
                     name: otherType.name,
@@ -81,12 +82,11 @@ export const getClientsParams = async (req: Request, res: Response, next: NextFu
                 }
             }
         })
-
         return {
             vat: allClientVatParams,
             others: allClientOthersParams
         }
-    })(Number(req.body.clientId), req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.body.clientId), req.body.periodId, Number(req.query.vat_condition)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const getPaymentsParametersClient = async (req: Request, res: Response, next: NextFunction) => {
@@ -153,7 +153,6 @@ export const insertPeriod = async (req: Request, res: Response, next: NextFuncti
 
 export const getReceipts = async (req: Request, res: Response, next: NextFunction) => {
     (async function (purchasePeriodId: number, page?: number, textSearched?: string) {
-        console.log('purchasePeriodId :>> ', purchasePeriodId);
         if (page) {
             const ITEMS_PER_PAGE = 10;
 

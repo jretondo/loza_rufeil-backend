@@ -29,8 +29,6 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
         page: number,
         text?: string
     ) {
-
-        console.log('isAdmin :>> ', isAdmin);
         const ITEMS_PER_PAGE = 10;
 
         const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
@@ -127,14 +125,15 @@ export const updatePermissions = (req: Request, res: Response, next: NextFunctio
 }
 
 export const clientTokenGenerator = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (clientId: number, userId: number, periodId?: number) {
+    (async function (clientId: number, userId: number, isAdmin: boolean, periodId?: number) {
         let period = null
         const client = await Client.findByPk(clientId, {
             include: {
                 model: AdminPermission,
                 where: {
                     user_id: userId
-                }
+                },
+                required: (isAdmin ? false : true)
             }
         })
         if (periodId) {
@@ -158,5 +157,5 @@ export const clientTokenGenerator = async (req: Request, res: Response, next: Ne
         } else {
             throw Error("No tiene permisos para el cliente")
         }
-    })(Number(req.query.clientId), req.body.user.id, Number(req.query.periodId)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.query.clientId), req.body.user.id, req.body.user.admin, Number(req.query.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }
