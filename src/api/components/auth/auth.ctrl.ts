@@ -71,8 +71,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     (async function (username: string, password: string) {
         const data3 = await AuthAdmin.findAll({ where: { user: username } });
         const data2 = await Admin.findAll({ where: { user: username } });
-        console.log('data2 :>> ', data2);
-        console.log('data3 :>> ', data3);
+
         const userData = data2[0]
         const data = {
             ...data2[0].dataValues,

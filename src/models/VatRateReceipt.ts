@@ -41,13 +41,13 @@ VatRateReceipt.init({
 Receipt.hasMany(VatRateReceipt, {
     foreignKey: Columns.vatRatePurchase.receipt_id,
     sourceKey: Columns.receipts.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 VatRateReceipt.belongsTo(Receipt, {
     foreignKey: Columns.vatRatePurchase.receipt_id,
     targetKey: Columns.receipts.id
 })
-
+Receipt.sync({ alter: true });
 export default VatRateReceipt;

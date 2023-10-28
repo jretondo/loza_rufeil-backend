@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express"
+import { NextFunction, Request, Response, text } from "express"
 import { IHeaderReceiptReq, IPaymentReceiptReq, IPaymentTypesParameters, IProviders, IPurchaseEntries, IPurchaseParameters, IReceiptConcept, IReceipts, ITaxesReceiptReq, IVatRatesReceipts } from "../../../interfaces/Tables"
 import PurchasePeriod from "../../../models/PurchasePeriod"
 import { success } from "../../../network/response"
@@ -12,6 +12,8 @@ import VatRateReceipt from "../../../models/VatRateReceipt"
 import { Op } from "sequelize"
 import { checkDataReqReceipt } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
+import ProviderParameter from "../../../models/ProviderParameter"
+import { isDate } from "moment"
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -152,18 +154,38 @@ export const insertPeriod = async (req: Request, res: Response, next: NextFuncti
 }
 
 export const getReceipts = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (purchasePeriodId: number, page?: number, textSearched?: string) {
+    (async function (purchasePeriodId: number, page?: number, textSearched?: string, provider?: string) {
         if (page) {
             const ITEMS_PER_PAGE = 10;
 
             const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
+            if (textSearched) {
+                console.log(textSearched)
+            }
             const { count, rows } = await Receipt.findAndCountAll({
-                where: { purchase_period_id: purchasePeriodId },
+                where: [(textSearched ? {
+                    [Op.or]: [
+                        textSearched ? { number: textSearched } : {},
+                        textSearched ? { sell_point: textSearched } : {},
+                        isDate(textSearched) ? { date: textSearched } : {},
+                    ]
+                } : {}), { purchase_period_id: purchasePeriodId }],
                 include: [VatRateReceipt, {
-                    model: Provider,
-                    required: false
+                    model: PurchaseEntry,
+                    required: true,
+                    include: [AccountChart]
+                }, {
+                        model: Provider,
+                        required: true,
+                        where: (provider ?
+                            {
+                                [Op.or]: [
+                                    provider ? { business_name: { [Op.like]: `%${provider}%` } } : {},
+                                    provider ? { document_number: { [Op.like]: `%${provider}%` } } : {},
+                                ]
+                            } : {})
 
-                }],
+                    }],
                 offset: offset,
                 limit: ITEMS_PER_PAGE
             });
@@ -175,10 +197,10 @@ export const getReceipts = async (req: Request, res: Response, next: NextFunctio
         } else {
             return await Receipt.findAll({
                 where: { purchase_period_id: purchasePeriodId },
-                include: [Provider, VatRateReceipt]
+                include: [Provider, VatRateReceipt, PurchaseEntry]
             })
         }
-    })(Number(req.query.purchasePeriodId), Number(req.params.page), String(req.query.textSearched)).then(data => success({ req, res, message: data })).catch(next)
+    })(Number(req.query.purchasePeriodId), Number(req.params.page), req.query.query && String(req.query.query), req.query.provider && String(req.query.provider)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const upsertReceipt = async (req: Request, res: Response, next: NextFunction) => {
@@ -188,6 +210,19 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
             VatRatesReceipts: IVatRatesReceipts[],
             purchaseEntries: IPurchaseEntries[]
         } = checkDataReqReceipt(receiptHeader, paymentsReceipt, taxesReceipt, conceptsReceipt, provider, purchasePeriodId, observations)
+        const providerAccount = await ProviderParameter.findAll({
+            where: [{ provider_id: provider.id }, { accounting_period_id: purchasePeriodId }]
+        })
+
+        if (providerAccount.length === 0) {
+            await ProviderParameter.create({
+                provider_id: provider.id || 0,
+                account_chart_id: conceptsReceipt[0].AccountChart?.id || 0,
+                accounting_period_id: conceptsReceipt[0].AccountChart?.accounting_period_id || 0,
+                active: true,
+                description: conceptsReceipt[0].description
+            })
+        }
 
         const newReceipt = await Receipt.create(newRecords.NewReceipt)
         if (newReceipt.dataValues.id) {
