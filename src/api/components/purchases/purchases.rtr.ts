@@ -12,7 +12,8 @@ import {
     getReceipts,
     upsertReceipt,
     deleteReceipt,
-    getReceipt
+    getReceipt,
+    createPurchaseTxt
 } from './purchases.ctrl';
 
 const router = Router();
@@ -23,6 +24,7 @@ router
     .get("/paymentsMethods", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getPaymentsParametersClient)
     .get("/receipt/:id", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getReceipt)
     .get("/receipts/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getReceipts)
+    .get("/receipts/txt/:purchaseId", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), createPurchaseTxt)
     .post("/params", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertClientsParams)
     .post("/paymentsMethods", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertPaymentsParametersClient)
     .post("/receipt", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsertReceipt)

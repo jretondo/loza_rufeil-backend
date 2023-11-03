@@ -35,7 +35,7 @@ export const file = (
     let file = fs.createReadStream(filePath);
     let stat = fs.statSync(filePath);
 
-    res.setHeader('dataJson', JSON.stringify(data));
+    data && res.setHeader('dataJson', JSON.stringify(data));
     res.setHeader('Content-Length', stat.size);
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', 'attachment; filename=' + fileName);

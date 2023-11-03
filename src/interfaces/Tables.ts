@@ -154,6 +154,9 @@ export interface IReceipts {
     observation: string,
     word: string,
     receipt_type: number,
+    Provider?: IProviders,
+    VatRatesReceipts?: IVatRatesReceipts[],
+    PurchaseEntries?: IPurchaseEntries[]
 }
 
 export interface IVatRatesReceipts {

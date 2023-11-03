@@ -1,5 +1,8 @@
 import roundNumber from "../../../utils/functions/roundNumber";
 import { IHeaderReceiptReq, IPaymentReceiptReq, IProviders, IPurchaseEntries, IReceiptConcept, IReceipts, ITaxesReceiptReq, IVatRatesReceipts } from "../../../interfaces/Tables";
+import Receipt from "../../../models/Receipts";
+import moment from "moment";
+import { stringFill } from "../../../utils/functions/stringFill";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -185,11 +188,96 @@ export const checkDataReqReceipt = (
     return { NewReceipt, VatRatesReceipts, purchaseEntries }
 }
 
-export const createReceiptReq = (
-    headerReceipt: IHeaderReceiptReq,
-    paymentReceipt: IPaymentReceiptReq[],
-    taxesReceipt: ITaxesReceiptReq[],
-    receiptConcepts: IReceiptConcept[]
-) => {
+export const createPurchaseTxtItems = (purchaseItems: Receipt[]) => {
+    let text = ""
+    purchaseItems.forEach((purchase, key) => {
+        if (key === purchaseItems.length - 1) {
+            text += createPurchaseTxtItem(purchase)
+        } else {
+            text += createPurchaseTxtItem(purchase) + "\n"
+        }
+    })
+    return text
+}
 
+export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
+    const date = stringFill(moment(purchaseItems.dataValues.date).format("YYYYMMDD"), 8)
+    const receiptType = stringFill(purchaseItems.dataValues.invoice_type_id.toString(), 3)
+    const sellPoint = stringFill(purchaseItems.dataValues.sell_point.toString(), 5)
+    const number = stringFill(purchaseItems.dataValues.number.toString(), 20)
+    const importClearance = stringFill(" ", 16, " ")
+    const providerDocType = stringFill(purchaseItems.dataValues.Provider?.document_type.toString() || "", 2)
+    const providerNumber = stringFill(purchaseItems.dataValues.Provider?.document_number.toString() || "", 20)
+    const providerName = stringFill(purchaseItems.dataValues.Provider?.business_name || "".toString(), 30, " ", false)
+    const total =
+        stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
+    const unrecorded =
+        stringFill((stringFill(purchaseItems.dataValues.unrecorded.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.unrecorded.toString().split(".")[1], 2)), 15, "0", false)
+    const exemptTransactions =
+        stringFill((stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[1], 2)), 15, "0", false)
+    const vatWithholdings =
+        stringFill((stringFill(purchaseItems.dataValues.vat_withholdings.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.vat_withholdings.toString().split(".")[1], 2)), 15, "0", false)
+    const nationalTaxWithholdings =
+        stringFill((stringFill(purchaseItems.dataValues.national_tax_withholdings.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.national_tax_withholdings.toString().split(".")[1], 2)), 15, "0", false)
+    const grossIncomeWithholdings =
+        stringFill((stringFill(purchaseItems.dataValues.gross_income_withholdings.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.gross_income_withholdings.toString().split(".")[1], 2)), 15, "0", false)
+    const localTaxWithholdings =
+        stringFill((stringFill(purchaseItems.dataValues.local_tax_withholdings.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.local_tax_withholdings.toString().split(".")[1], 2)), 15, "0", false)
+    const internalTax =
+        stringFill((stringFill(purchaseItems.dataValues.internal_tax.toString().split(".")[0], 13) +
+            stringFill(purchaseItems.dataValues.internal_tax.toString().split(".")[1], 2)), 15, "0", false)
+
+    const moneyCode = stringFill("PES", 3)
+    const exchangeRate = stringFill("1000000", 10)
+    const vatRatesQuantity = stringFill(purchaseItems.dataValues.vat_rates_quantity.toString(), 1)
+    const operationCode = stringFill(" ", 1)
+    const fiscalCredit = stringFill("0", 15)
+    const otherTributes = stringFill("0", 15)
+    const brokerDocument = stringFill("0", 11)
+    const brokerName = stringFill(" ", 30, " ")
+    const commissionVat = stringFill("0", 15)
+    const row = `${date}${receiptType}${sellPoint}${number}${importClearance}${providerDocType}${providerNumber}${providerName}${total}${unrecorded}${exemptTransactions}${vatWithholdings}${nationalTaxWithholdings}${grossIncomeWithholdings}${localTaxWithholdings}${internalTax}${moneyCode}${exchangeRate}${vatRatesQuantity}${operationCode}${fiscalCredit}${otherTributes}${brokerDocument}${brokerName}${commissionVat}`
+    return row
+}
+
+export const createPurchaseTxtVatRates = (purchaseItems: Receipt[]) => {
+    let text = ""
+    purchaseItems.forEach((purchase, key) => {
+        if (key === purchaseItems.length - 1) {
+            text += createPurchaseTxtVatRateItem(purchase)
+        } else {
+            text += createPurchaseTxtVatRateItem(purchase) + "\n"
+        }
+    })
+    return text
+}
+
+export const createPurchaseTxtVatRateItem = (purchaseItems: Receipt) => {
+    const vatRates = purchaseItems.dataValues.VatRatesReceipts
+    if (!vatRates) {
+        return []
+    }
+    return vatRates.map(vatRate => {
+        const receiptType = stringFill(purchaseItems.dataValues.invoice_type_id.toString(), 3)
+        const sellPoint = stringFill(purchaseItems.dataValues.sell_point.toString(), 5)
+        const number = stringFill(purchaseItems.dataValues.number.toString(), 20)
+        const providerDocType = stringFill(purchaseItems.dataValues.Provider?.document_type.toString() || "", 2)
+        const providerNumber = stringFill(purchaseItems.dataValues.Provider?.document_number.toString() || "", 20)
+        const recordedNet =
+            stringFill((stringFill(vatRate.recorded_net.toString().split(".")[0], 13) +
+                stringFill(vatRate.recorded_net.toString().split(".")[1], 2)), 15, "0", false)
+        const vatType = stringFill(vatRate.vat_type_id.toString(), 4)
+        const vatAmount =
+            stringFill((stringFill(vatRate.vat_amount.toString().split(".")[0], 13) +
+                stringFill(vatRate.vat_amount.toString().split(".")[1], 2)), 15, "0", false)
+        const row = `${receiptType}${sellPoint}${number}${providerDocType}${providerNumber}${recordedNet}${vatType}${vatAmount}`
+        return row
+    })
 }

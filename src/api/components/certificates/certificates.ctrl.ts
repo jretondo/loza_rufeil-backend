@@ -9,7 +9,7 @@ import { Op } from 'sequelize';
 import { IAfipCrt } from '../../../interfaces/Tables';
 import AfipCrt from '../../../models/AfipCrt';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
-import { success } from '../../../network/response';
+import { file, success } from '../../../network/response';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -135,7 +135,7 @@ export const generateCsr = async (req: Request, res: Response, next: NextFunctio
             console.error(error)
             throw Error("No se pudo generar la solicitus de certificado y tampoco la llave privada.")
         })
-    })(req.body.cuit, req.body.businessName, req.body.certificateName).then(data => success({ req, res, message: data })).catch(next)
+    })(req.body.cuit, req.body.businessName, req.body.certificateName).then(data => file(req, res, data.filePath, "application/x-gzip", data.fileName)).catch(next)
 }
 
 export const updateAttribute = async (req: Request, res: Response, next: NextFunction) => {

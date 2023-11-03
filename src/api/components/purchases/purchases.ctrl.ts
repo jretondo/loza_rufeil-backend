@@ -1,7 +1,21 @@
-import { NextFunction, Request, Response, text } from "express"
-import { IHeaderReceiptReq, IPaymentReceiptReq, IPaymentTypesParameters, IProviders, IPurchaseEntries, IPurchaseParameters, IReceiptConcept, IReceipts, ITaxesReceiptReq, IVatRatesReceipts } from "../../../interfaces/Tables"
+import { NextFunction, Request, Response } from "express"
+import compressing from 'compressing';
+import fs from 'fs';
+import path from 'path';
+import {
+    IHeaderReceiptReq,
+    IPaymentReceiptReq,
+    IPaymentTypesParameters,
+    IProviders,
+    IPurchaseEntries,
+    IPurchaseParameters,
+    IReceiptConcept,
+    IReceipts,
+    ITaxesReceiptReq,
+    IVatRatesReceipts
+} from "../../../interfaces/Tables"
 import PurchasePeriod from "../../../models/PurchasePeriod"
-import { success } from "../../../network/response"
+import { file, success } from "../../../network/response"
 import PurchaseParameter from "../../../models/PurchaseParameter"
 import { othersTypes, vatTaxes } from "./purchase.const"
 import AccountChart from "../../../models/AccountCharts"
@@ -10,10 +24,15 @@ import Receipt from "../../../models/Receipts"
 import Provider from "../../../models/Providers"
 import VatRateReceipt from "../../../models/VatRateReceipt"
 import { Op } from "sequelize"
-import { checkDataReqReceipt } from "./purchase.fn"
+import {
+    checkDataReqReceipt,
+    createPurchaseTxtItems,
+    createPurchaseTxtVatRates
+} from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
 import ProviderParameter from "../../../models/ProviderParameter"
 import { isDate } from "moment"
+import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -264,4 +283,50 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
             include: [Provider, VatRateReceipt]
         })
     })(Number(req.params.id)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const createPurchaseTxt = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (purchasePeriodId: number) {
+        const receipts = await Receipt.findAll({
+            where: { purchase_period_id: purchasePeriodId },
+            include: [Provider, VatRateReceipt, PurchaseEntry]
+        })
+        const purchasePeriod = await PurchasePeriod.findOne({ where: { id: purchasePeriodId } })
+        const receiptsTxt = createPurchaseTxtItems(receipts)
+        const vatTxt = createPurchaseTxtVatRates(receipts)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileNameReceipts = `compras_${purchasePeriod?.dataValues.month}_${purchasePeriod?.dataValues.year}_${uniqueSuffix}.txt`
+        const fileNameVat = `compras_iva_${purchasePeriod?.dataValues.month}_${purchasePeriod?.dataValues.year}_${uniqueSuffix}.txt`
+        if (!fs.existsSync(FILES_ADDRESS.purchase)) {
+            fs.mkdirSync(FILES_ADDRESS.purchase);
+        }
+        const newFolder = path.join(FILES_ADDRESS.purchase, `compras_${uniqueSuffix}`);
+        if (!fs.existsSync(newFolder)) {
+            fs.mkdirSync(newFolder);
+        }
+        const receiptFileRoute = path.join(newFolder, fileNameReceipts);
+        const vatFileRoute = path.join(newFolder, fileNameVat);
+        fs.writeFileSync(receiptFileRoute, receiptsTxt);
+        fs.writeFileSync(vatFileRoute, vatTxt);
+
+        return await compressing.tar.compressDir(newFolder, path.join(FILES_ADDRESS.purchase, `compras_${uniqueSuffix}.tar`)).then(() => {
+
+
+            setTimeout(() => {
+                fs.unlinkSync(path.join(FILES_ADDRESS.purchase, `compras_${uniqueSuffix}.tar`));
+                fs.unlinkSync(receiptFileRoute)
+                fs.unlinkSync(vatFileRoute);
+                fs.rmdirSync(path.join(newFolder), { recursive: true });
+            }, 5000);
+
+
+            return {
+                filePath: path.join(FILES_ADDRESS.purchase, `compras_${uniqueSuffix}.tar`),
+                fileName: `compras_${uniqueSuffix}.tar`
+            }
+        }).catch((error) => {
+            console.error(error)
+            throw Error("No se pudo generar la solicitus de certificado y tampoco la llave privada.")
+        })
+    })(Number(req.params.purchaseId)).then(data => file(req, res, data.filePath, "application/x-gzip", data.fileName)).catch(next)
 }
