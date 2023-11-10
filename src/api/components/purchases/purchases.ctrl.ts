@@ -349,6 +349,7 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                     let vatTypeId = 0
                     let taxRate: number = (data.totalVat > 0) ? ((data.totalVat * 100) / data.netRecorded) : 0
                     taxRate = taxRate > 0 ? Math.round(taxRate * 100) / 100 : 0
+
                     switch (taxRate) {
                         case 0:
                             vatTypeId = 3
