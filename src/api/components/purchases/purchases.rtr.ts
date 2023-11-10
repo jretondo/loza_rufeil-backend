@@ -13,8 +13,11 @@ import {
     upsertReceipt,
     deleteReceipt,
     getReceipt,
-    createPurchaseTxt
+    createPurchaseTxt,
+    importCVSAfip
 } from './purchases.ctrl';
+import uploadFile from '../../../middlewares/multer';
+import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
 
 const router = Router();
 
@@ -27,6 +30,7 @@ router
     .get("/receipts/txt/:purchaseId", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), createPurchaseTxt)
     .post("/params", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertClientsParams)
     .post("/paymentsMethods", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertPaymentsParametersClient)
+    .post("/receipt/import", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), uploadFile(FILES_ADDRESS.importsExcel, ["file"]), importCVSAfip)
     .post("/receipt", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), upsertReceipt)
     .post("/period", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), insertPeriod)
     .delete("/receipt/:id", secure(), checkClient(EPermissions.write), checkModule(EModules.purchases), deleteReceipt)

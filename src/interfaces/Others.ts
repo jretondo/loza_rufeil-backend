@@ -47,3 +47,22 @@ export interface IAccountChartsToFront extends IAccountCharts {
     principal: boolean,
     subAccounts: Array<IAccountChartsToFront>
 }
+
+export interface IDataSheetCVSPurchaseImport {
+    date: Date,
+    invoiceType: number,
+    sellPoint: number,
+    invoiceNumber: number,
+    cae: string,
+    providerDocumentType: number,
+    providerDocumentNumber: number,
+    providerName: string,
+    changeType: number,
+    changeSymbol: string,
+    netRecorded: number,
+    netNotRecorded: number,
+    exemptOperation: number,
+    otherTributes: number,
+    totalVat: number,
+    totalInvoice: number
+}

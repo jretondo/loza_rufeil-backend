@@ -1,8 +1,12 @@
 import { Request } from "express";
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 const uploadFile = (folderDest: string, fields?: Array<string>) => {
+    if (!fs.existsSync(folderDest)) {
+        fs.mkdirSync(folderDest);
+    }
     const storage = multer.diskStorage({
         destination: folderDest,
         filename: (req: Request, file: any, cb: any) => {

@@ -3,6 +3,10 @@ import { IHeaderReceiptReq, IPaymentReceiptReq, IProviders, IPurchaseEntries, IR
 import Receipt from "../../../models/Receipts";
 import moment from "moment";
 import { stringFill } from "../../../utils/functions/stringFill";
+import XLSX from 'xlsx';
+import { IDataSheetCVSPurchaseImport } from "../../../interfaces/Others";
+import utf8 from "utf8";
+import { ExcelDateToJSDate } from "../../../utils/functions/excelDateToDate";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -280,4 +284,40 @@ export const createPurchaseTxtVatRateItem = (purchaseItems: Receipt) => {
         const row = `${receiptType}${sellPoint}${number}${providerDocType}${providerNumber}${recordedNet}${vatType}${vatAmount}`
         return row
     })
+}
+
+export const getDataSheet = (fileUrl: string): any => {
+    const workBook = XLSX.readFile(fileUrl)
+    const sheets = workBook.SheetNames;
+    const sheet_1 = sheets[0]
+    return XLSX.utils.sheet_to_json(workBook.Sheets[sheet_1], { header: 1, raw: false, dateNF: "DD/MM/YYYY", rawNumbers: false })
+}
+
+export const jsonDataInvoiceGenerator = (dataSheet: Array<string[]>): IDataSheetCVSPurchaseImport[] => {
+    try {
+        const data = dataSheet.slice(1)
+        const jsonData = data.map((row: any) => {
+            const rowObject: any = {}
+            rowObject["date"] = moment(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1)).format("YYYY-MM-DD")
+            rowObject["invoiceType"] = row[1]
+            rowObject["sellPoint"] = row[2]
+            rowObject["invoiceNumber"] = row[3]
+            rowObject["cae"] = row[5]
+            rowObject["providerDocumentType"] = row[6]
+            rowObject["providerDocumentNumber"] = row[7]
+            rowObject["providerName"] = row[8]
+            rowObject["changeType"] = row[9]
+            rowObject["changeSymbol"] = row[10]
+            rowObject["netRecorded"] = parseFloat((row[11]).replace(",", "."))
+            rowObject["netNotRecorded"] = parseFloat(row[12].replace(",", "."))
+            rowObject["exemptOperation"] = parseFloat(row[13].replace(",", "."))
+            rowObject["otherTributes"] = parseFloat(row[14].replace(",", "."))
+            rowObject["totalVat"] = parseFloat(row[15].replace(",", "."))
+            rowObject["totalInvoice"] = parseFloat(row[16].replace(",", "."))
+            return rowObject
+        })
+        return jsonData
+    } catch (error) {
+        return []
+    }
 }

@@ -8,5 +8,6 @@ export const FILES_ADDRESS = {
     images: path.join(__dirname, "..", "..", "public", "images"),
     reportsPdf: path.join(__dirname, "..", "..", "public", "reports", "pdf"),
     reportsExcel: path.join(__dirname, "..", "..", "public", "reports", "excel"),
+    importsExcel: path.join(__dirname, "..", "..", "public", "imports", "excel"),
     purchase: path.join(__dirname, "..", "..", "public", "purchase"),
 }

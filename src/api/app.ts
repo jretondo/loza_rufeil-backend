@@ -23,6 +23,8 @@ import accounting from './components/accounting/accounting.rtr';
 import modules from './components/modules/modules.rtr';
 import purchases from './components/purchases/purchases.rtr';
 import views from './components/views/network';
+import morgan from 'morgan';
+
 import { config } from '../config';
 export class App {
     app: Application;
@@ -46,6 +48,7 @@ export class App {
             exposedHeaders: ['Content-Disposition']
         }));
         this.app.use(express.json());
+        this.app.use(morgan('dev'));
         this.app.use(express.urlencoded({ extended: true }));
     }
 

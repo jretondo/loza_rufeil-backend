@@ -27,12 +27,16 @@ import { Op } from "sequelize"
 import {
     checkDataReqReceipt,
     createPurchaseTxtItems,
-    createPurchaseTxtVatRates
+    createPurchaseTxtVatRates,
+    getDataSheet,
+    jsonDataInvoiceGenerator
 } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
 import ProviderParameter from "../../../models/ProviderParameter"
 import { isDate } from "moment"
 import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
+import IvaCondition from "../../../models/IvaCondition";
+import { clientDataTax } from "../../../utils/afip/dataTax";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -329,4 +333,92 @@ export const createPurchaseTxt = async (req: Request, res: Response, next: NextF
             throw Error("No se pudo generar la solicitus de certificado y tampoco la llave privada.")
         })
     })(Number(req.params.purchaseId)).then(data => file(req, res, data.filePath, "application/x-gzip", data.fileName)).catch(next)
+}
+
+export const importCVSAfip = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (files: { file: Express.Multer.File[] }, accountingPeriodId: number) {
+        if (files) {
+            const file = files.file[0];
+            const dataSheet: Array<string[]> = getDataSheet(file.path);
+            const dataProcessed = jsonDataInvoiceGenerator(dataSheet)
+            setTimeout(() => {
+                fs.unlinkSync(file.path);
+            }, 2500);
+            const dataInvoice: Promise<IReceipts[]> = Promise.all(
+                dataProcessed.map(async (data) => {
+                    let vatTypeId = 0
+                    let taxRate: number = (data.totalVat > 0) ? ((data.totalVat * 100) / data.netRecorded) : 0
+                    taxRate = taxRate > 0 ? Math.round(taxRate * 100) / 100 : 0
+                    switch (taxRate) {
+                        case 0:
+                            vatTypeId = 3
+                            break;
+                        case 10.5:
+                            vatTypeId = 4
+                            break;
+                        case 21:
+                            vatTypeId = 5
+                            break;
+                        case 27:
+                            vatTypeId = 6
+                            break;
+                        case 5:
+                            vatTypeId = 8
+                            break;
+                        case 2.5:
+                            vatTypeId = 9
+                            break;
+                        default:
+                            break;
+                    }
+                    let provider_ = ""
+                    let provider = await Provider.findOne({
+                        where: [{
+                            document_number: data.providerDocumentNumber,
+                        }],
+                        include: [IvaCondition, {
+                            model: ProviderParameter,
+                            where: [{ accounting_period_id: accountingPeriodId }],
+                            include: [AccountChart]
+                        }]
+                    })
+                    if (!provider) {
+                        provider_ = `${data.providerName} (${data.providerDocumentNumber})`
+                    }
+                    return {
+                        date: data.date,
+                        invoice_type_id: data.invoiceType,
+                        sell_point: data.sellPoint,
+                        number: data.invoiceNumber,
+                        total: data.totalInvoice,
+                        unrecorded: data.netNotRecorded,
+                        exempt_transactions: data.exemptOperation,
+                        vat_withholdings: 0,
+                        national_tax_withholdings: data.otherTributes,
+                        gross_income_withholdings: 0,
+                        local_tax_withholdings: 0,
+                        internal_tax: 0,
+                        vat_rates_quantity: 1,
+                        provider_id: 0,
+                        purchase_period_id: 0,
+                        observation: "",
+                        word: "",
+                        receipt_type: data.invoiceType,
+                        Provider: provider ? provider.dataValues : undefined,
+                        ProviderRaw: provider_ ? provider_ : undefined,
+                        VatRatesReceipts: [{
+                            receipt_id: 0,
+                            vat_type_id: vatTypeId,
+                            vat_amount: data.totalVat,
+                            recorded_net: data.netRecorded
+                        }],
+                    }
+                })
+            )
+
+            return dataInvoice;
+        } else {
+            throw new Error("No se encontró el archivo")
+        }
+    })(req.files as { file: Express.Multer.File[] }, req.body.accountingPeriodId).then(data => success({ req, res, message: data })).catch(next)
 }
