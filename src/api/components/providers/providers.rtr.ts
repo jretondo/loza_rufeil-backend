@@ -7,6 +7,7 @@ import {
     getClientDataTax,
     getProvidersParameters,
     getTaxProof,
+    importProviders,
     insertProviderParameter,
     list,
     remove,
@@ -19,6 +20,7 @@ router
     .get("/dataTaxProof", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getTaxProof)
     .get("/dataTax", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getClientDataTax)
     .get("/parameters", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getProvidersParameters)
+    .get("/import", importProviders)
     .get("/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), list)
     .get("/", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), allList)
     .delete("/:id", secure(), checkClient(EPermissions.totalControl), checkModule(EModules.purchases), remove)

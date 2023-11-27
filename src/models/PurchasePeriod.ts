@@ -44,8 +44,8 @@ PurchasePeriod.init({
 AccountingPeriod.hasMany(PurchasePeriod, {
     foreignKey: Columns.purchasePeriods.accounting_period_id,
     sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 PurchasePeriod.belongsTo(AccountingPeriod, {
@@ -56,8 +56,8 @@ PurchasePeriod.belongsTo(AccountingPeriod, {
 AccountChart.hasOne(AccountingPeriod, {
     foreignKey: Columns.paymentTypesParameters.account_chart_id,
     sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.SET_NULL,
+    onUpdate: Restrictions.SET_NULL
 })
 
 AccountingPeriod.belongsTo(AccountChart, {

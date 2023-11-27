@@ -11,12 +11,13 @@ const checkClientAuth = async (req: Request, res: Response, next: NextFunction, 
     const client = decoded.client
     const period = decoded.period
     const clientId = client.id
+
     const clientsUserPermissions = await AdminPermission.findAll({
-        where: {
-            client_id: clientId,
-            user_id: req.body.user.id,
-            permission_grade_id: { [Op.gte]: permissionGrade }
-        }
+        where: [
+            { client_id: clientId },
+            { user_id: req.body.user.id },
+            (!isAdmin ? { permission_grade_id: { [Op.gte]: permissionGrade } } : {})
+        ]
     })
 
     if (clientsUserPermissions.length > 0 || isAdmin) {

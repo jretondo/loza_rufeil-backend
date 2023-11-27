@@ -47,8 +47,8 @@ ProviderParameter.init({
 Provider.hasMany(ProviderParameter, {
     foreignKey: Columns.providersParameters.provider_id,
     sourceKey: Columns.providers.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 ProviderParameter.belongsTo(Provider, {
@@ -59,8 +59,8 @@ ProviderParameter.belongsTo(Provider, {
 AccountChart.hasMany(ProviderParameter, {
     foreignKey: Columns.providersParameters.account_chart_id,
     sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 ProviderParameter.belongsTo(AccountChart, {
@@ -71,8 +71,8 @@ ProviderParameter.belongsTo(AccountChart, {
 AccountingPeriod.hasOne(ProviderParameter, {
     foreignKey: Columns.providersParameters.accounting_period_id,
     sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 ProviderParameter.belongsTo(AccountingPeriod, {

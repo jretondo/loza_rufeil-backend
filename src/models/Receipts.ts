@@ -90,8 +90,8 @@ Receipt.init({
 PurchasePeriod.hasMany(Receipt, {
     foreignKey: Columns.receipts.purchase_period_id,
     sourceKey: Columns.purchasePeriods.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 Receipt.belongsTo(PurchasePeriod, {

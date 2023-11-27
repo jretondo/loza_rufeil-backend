@@ -46,8 +46,8 @@ PaymentTypeParameter.init({
 Client.hasOne(PaymentTypeParameter, {
     foreignKey: Columns.paymentTypesParameters.client_id,
     sourceKey: Columns.clients.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 PaymentTypeParameter.belongsTo(Client, {
@@ -70,8 +70,8 @@ PaymentTypeParameter.belongsTo(AccountChart, {
 AccountingPeriod.hasOne(PaymentTypeParameter, {
     foreignKey: Columns.paymentTypesParameters.accounting_period_id,
     sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 PaymentTypeParameter.belongsTo(AccountingPeriod, {
@@ -79,5 +79,5 @@ PaymentTypeParameter.belongsTo(AccountingPeriod, {
     targetKey: Columns.accountingPeriod.id
 })
 
-
+PaymentTypeParameter.sync({ alter: true })
 export default PaymentTypeParameter

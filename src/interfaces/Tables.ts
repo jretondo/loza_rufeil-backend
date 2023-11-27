@@ -50,7 +50,7 @@ export interface IProviders {
     iva_condition_id: number,
     direction: string,
     city: string,
-    activity_description: number
+    activity_description: string
 }
 
 export interface IIvaConditions {

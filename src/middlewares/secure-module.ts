@@ -14,7 +14,7 @@ const checkClientModule = async (req: Request, res: Response, next: NextFunction
         req.body.modulePermission = modulesPermission
         next()
     } else {
-        next(err("No tiene los token envíado"))
+        next(err("No tiene permisos para el módulo"))
     }
 }
 

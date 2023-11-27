@@ -10,13 +10,17 @@ const sign = (data: string) => {
 
 const check = {
     permission: async (req: Request, res: Response, next: NextFunction) => {
-        const decoded: any = decodeHeader(req, next)
-        const userId: number = decoded.id
-        const userData = await Admin.findByPk(userId)
-        if (userData) {
-            req.body.user = decoded
-            next()
-        } else {
+        try {
+            const decoded: any = decodeHeader(req, next)
+            const userId: number = decoded.id
+            const userData = await Admin.findByPk(userId)
+            if (userData) {
+                req.body.user = decoded
+                next()
+            } else {
+                next(err("No tiene los token envíado"))
+            }
+        } catch (error) {
             next(err("No tiene los token envíado"))
         }
     }

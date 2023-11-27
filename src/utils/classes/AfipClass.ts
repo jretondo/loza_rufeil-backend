@@ -85,7 +85,7 @@ export class AfipClass {
         } else {
             const response = {
                 status: resStatus.ok,
-                data: dataCUIT
+                data: dataCUIT as DataCUIT
             }
             return response;
         }
@@ -282,16 +282,14 @@ interface datosGenerales {
     tipoClave: string,
     tipoPersona: "FISICA" | "JURIDICA"
 }
-interface datGenPerFisica extends datosGenerales {
+interface datGenPerJuridica extends datosGenerales {
+    fechaContratoSocial: string,
+    razonSocial: string,
     apellido: string,
     nombre: string
 }
-interface datGenPerJuridica extends datosGenerales {
-    fechaContratoSocial: string,
-    razonSocial: string
-}
 export interface DataCUIT {
-    datosGenerales: datGenPerFisica | datGenPerJuridica,
+    datosGenerales: datGenPerJuridica,
     datosRegimenGeneral?: {
         actividad?: Array<{
             descripcionActividad: string,

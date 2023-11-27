@@ -7,6 +7,7 @@ import { file, success } from '../../../network/response';
 import { clientDataTax, clientDataTaxPDF } from '../../../utils/afip/dataTax';
 import ProviderParameter from '../../../models/ProviderParameter';
 import AccountChart from '../../../models/AccountCharts';
+import ProviderComprobantes from '../../../models2/Providers';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IProviders) {
@@ -112,4 +113,66 @@ export const getProvidersParameters = async (req: Request, res: Response, next: 
             include: [AccountChart]
         })
     })(Number(req.query.providerId), Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const importProviders = async (req: Request, res: Response, next: NextFunction) => {
+    (async function () {
+        const providersImport = await ProviderComprobantes.findAll()
+        const providersToImport = providersImport.filter((item, index, self) => {
+            return index === self.findIndex((t) => (
+                t.dataValues.Cuit === item.dataValues.Cuit
+            ))
+        })
+        const dataTaxProvider: IProviders[] = await new Promise(async (resolve, reject) => {
+            const providers: any[] = []
+            for (let i = 0; i < providersToImport.length; i++) {
+                try {
+                    const provider = providersToImport[i];
+                    const dataTax = await clientDataTax(provider.dataValues.Cuit)
+                    const taxes = dataTax.data?.datosRegimenGeneral?.impuesto || []
+                    const personType = dataTax.data?.datosGenerales.tipoPersona
+
+                    let ivaConditionId = 0
+                    taxes.map(item => {
+                        switch (item.idImpuesto) {
+                            case 30:
+                                ivaConditionId = item.idImpuesto
+                                break;
+                            case 32:
+                                ivaConditionId = item.idImpuesto
+                                break;
+                            case 20:
+                                ivaConditionId = item.idImpuesto
+                                break;
+                            case 33:
+                                ivaConditionId = item.idImpuesto
+                                break;
+                            case 34:
+                                ivaConditionId = item.idImpuesto
+                                break;
+                            default:
+                                break;
+                        }
+                    })
+
+                    const providerData: IProviders = {
+                        business_name: personType === "FISICA" ? dataTax.data?.datosGenerales.apellido + " " + dataTax.data?.datosGenerales.nombre : dataTax.data?.datosGenerales.razonSocial || "",
+                        fantasie_name: personType === "FISICA" ? dataTax.data?.datosGenerales.apellido + " " + dataTax.data?.datosGenerales.nombre : dataTax.data?.datosGenerales.razonSocial || "",
+                        document_number: String(provider.dataValues.Cuit),
+                        iva_condition_id: ivaConditionId,
+                        direction: dataTax.data?.datosGenerales.domicilioFiscal.direccion || "",
+                        document_type: 80,
+                        city: dataTax.data?.datosGenerales.domicilioFiscal.descripcionProvincia + ", " + dataTax.data?.datosGenerales.domicilioFiscal.localidad || "",
+                        activity_description: dataTax.data?.datosRegimenGeneral?.actividad ? dataTax.data?.datosRegimenGeneral?.actividad[0]?.descripcionActividad : "" || "",
+                    }
+                    console.log('providerData :>> ', providerData);
+                    ivaConditionId > 0 && providers.push(providerData)
+                } catch (error) {
+
+                }
+            }
+            resolve(providers)
+        })
+        return await Provider.bulkCreate(dataTaxProvider)
+    })().then(data => success({ req, res, message: data })).catch(next)
 }

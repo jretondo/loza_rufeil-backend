@@ -38,13 +38,13 @@ AccountingPeriod.init({
 Client.hasOne(AccountingPeriod, {
     foreignKey: Columns.accountingPeriod.client_id,
     sourceKey: Columns.clients.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 AccountingPeriod.belongsTo(Client, {
     foreignKey: Columns.accountingPeriod.client_id,
     targetKey: Columns.clients.id
 })
-
+AccountingPeriod.sync()
 export = AccountingPeriod

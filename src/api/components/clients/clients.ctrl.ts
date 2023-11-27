@@ -71,16 +71,18 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
 
 export const allList = async (req: Request, res: Response, next: NextFunction) => {
     (async function (userId?: number) {
+
         return await Client.findAll({
             include: [{
                 model: AdminPermission,
                 where: ((userId) ? [
                     { permission_grade_id: { [Op.gte]: 1 } },
                     { user_id: userId }
-                ] : {})
+                ] : {}),
+                required: ((userId) ? true : false)
             }]
         })
-    })(Number((!req.body.user.admin) && req.body.user.admin_id)).then(data => success({ req, res, message: data })).catch(next)
+    })((!req.body.user.admin) && req.body.user.admin_id).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {

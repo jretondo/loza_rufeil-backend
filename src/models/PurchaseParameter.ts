@@ -56,8 +56,8 @@ PurchaseParameter.init({
 Client.hasOne(PurchaseParameter, {
     foreignKey: Columns.purchaseParameters.client_id,
     sourceKey: Columns.clients.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 PurchaseParameter.belongsTo(Client, {
@@ -68,8 +68,8 @@ PurchaseParameter.belongsTo(Client, {
 AccountChart.hasOne(PurchaseParameter, {
     foreignKey: Columns.purchaseParameters.account_chart_id,
     sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.SET_NULL,
+    onUpdate: Restrictions.SET_NULL
 })
 
 PurchaseParameter.belongsTo(AccountChart, {
@@ -80,8 +80,8 @@ PurchaseParameter.belongsTo(AccountChart, {
 AccountingPeriod.hasOne(PurchaseParameter, {
     foreignKey: Columns.purchaseParameters.accounting_period_id,
     sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.RESTRICT,
-    onUpdate: Restrictions.RESTRICT
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
 })
 
 PurchaseParameter.belongsTo(AccountingPeriod, {
