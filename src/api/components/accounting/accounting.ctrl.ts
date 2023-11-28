@@ -196,3 +196,16 @@ export const getAttributableAccounts = async (req: Request, res: Response, next:
         })
     })(Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }
+
+export const allowImport = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accounting_period_id: number) {
+
+        const accountsCount = await AccountChart.count({ where: { accounting_period_id } })
+
+        if (accountsCount > 5) {
+            return 0
+        } else {
+            return 1
+        }
+    })(Number(req.query.accountingId)).then(data => success({ req, res, message: data })).catch(next)
+}

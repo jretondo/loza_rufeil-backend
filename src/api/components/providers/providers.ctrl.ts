@@ -165,7 +165,6 @@ export const importProviders = async (req: Request, res: Response, next: NextFun
                         city: dataTax.data?.datosGenerales.domicilioFiscal.descripcionProvincia + ", " + dataTax.data?.datosGenerales.domicilioFiscal.localidad || "",
                         activity_description: dataTax.data?.datosRegimenGeneral?.actividad ? dataTax.data?.datosRegimenGeneral?.actividad[0]?.descripcionActividad : "" || "",
                     }
-                    console.log('providerData :>> ', providerData);
                     ivaConditionId > 0 && providers.push(providerData)
                 } catch (error) {
 

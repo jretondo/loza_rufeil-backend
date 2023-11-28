@@ -156,6 +156,7 @@ export interface IReceipts {
     receipt_type: number,
     Provider?: IProviders,
     VatRatesReceipts?: IVatRatesReceipts[],
+    VatRateReceipts?: IVatRatesReceipts[],
     PurchaseEntries?: IPurchaseEntries[],
     ProviderAFIP?: any
 }

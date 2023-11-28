@@ -182,9 +182,7 @@ export const getReceipts = async (req: Request, res: Response, next: NextFunctio
             const ITEMS_PER_PAGE = 10;
 
             const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
-            if (textSearched) {
-                console.log(textSearched)
-            }
+
             const { count, rows } = await Receipt.findAndCountAll({
                 where: [(textSearched ? {
                     [Op.or]: [
@@ -422,4 +420,39 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
             throw new Error("No se encontró el archivo")
         }
     })(req.files as { file: Express.Multer.File[] }, req.body.accountingPeriodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getPeriodTotals = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (purchasePeriodId: number) {
+        const receipts = await Receipt.findAll({
+            where: { purchase_period_id: purchasePeriodId },
+            include: [Provider, VatRateReceipt, PurchaseEntry]
+        })
+        const total = receipts.reduce((total, receipt) => {
+            return {
+                Total: total.Total + Number(receipt.dataValues.total),
+                Total_No_Grabado: total.Total_No_Grabado + Number(receipt.dataValues.unrecorded),
+                Total_Grabado: total.Total_Grabado + Number(receipt.dataValues.VatRateReceipts?.map(vatRate => vatRate?.recorded_net).reduce((total, recorded) => total + (recorded || 0), 0) || 0),
+                Transacciones_Exentas: total.Transacciones_Exentas + Number(receipt.dataValues.exempt_transactions),
+                Percepciones_IVA: total.Percepciones_IVA + Number(receipt.dataValues.vat_withholdings),
+                Percepciones_Nacionales: total.Percepciones_Nacionales + Number(receipt.dataValues.national_tax_withholdings),
+                Percepciones_IIBB: total.Percepciones_IIBB + Number(receipt.dataValues.gross_income_withholdings),
+                Percepciones_Municipales: total.Percepciones_Municipales + Number(receipt.dataValues.local_tax_withholdings),
+                Impuestos_Internos: total.Impuestos_Internos + Number(receipt.dataValues.internal_tax),
+                Tota_IVA: total.Tota_IVA + Number((receipt.dataValues.VatRateReceipts?.map(vatRate => vatRate?.vat_amount).reduce((total, vatAmount) => total + (vatAmount || 0), 0) || 0))
+            }
+        }, {
+            Total: 0,
+            Total_No_Grabado: 0,
+            Total_Grabado: 0,
+            Transacciones_Exentas: 0,
+            Percepciones_IVA: 0,
+            Impuestos_Internos: 0,
+            Percepciones_IIBB: 0,
+            Percepciones_Municipales: 0,
+            Percepciones_Nacionales: 0,
+            Tota_IVA: 0,
+        })
+        return total
+    })(Number(req.query.purchasePeriodId)).then(data => success({ req, res, message: data })).catch(next)
 }

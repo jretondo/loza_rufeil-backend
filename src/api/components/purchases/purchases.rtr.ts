@@ -14,7 +14,8 @@ import {
     deleteReceipt,
     getReceipt,
     createPurchaseTxt,
-    importCVSAfip
+    importCVSAfip,
+    getPeriodTotals
 } from './purchases.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -22,6 +23,7 @@ import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
 const router = Router();
 
 router
+    .get("/period/total", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getPeriodTotals)
     .get("/period", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), listPurchasePeriods)
     .get("/params", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getClientsParams)
     .get("/paymentsMethods", secure(), checkClient(EPermissions.read), checkModule(EModules.purchases), getPaymentsParametersClient)

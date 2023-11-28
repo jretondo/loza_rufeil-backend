@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { EModules, EPermissions } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import {
+    allowImport,
     copyPasteAccountsChart,
     deleteAccountChart,
     getAccountList,
@@ -16,6 +17,7 @@ const router = Router();
 
 router
     .get("/period", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), periodList)
+    .get("/allowImport", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), allowImport)
     .get("/accountingCharts", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountList)
     .get("/accountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getNewChildren)
     .get("/attributableAccountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAttributableAccounts)
