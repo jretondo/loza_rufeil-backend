@@ -5,6 +5,7 @@ import { DataTypes, Optional, Model } from 'sequelize';
 import sequelize from '../database';
 import Admin from './Admin';
 import Client from './Client';
+import Module from './Module';
 
 type AdminPermissionCreationAttributes = Optional<IAdminPermission, 'id'>;
 
@@ -24,6 +25,9 @@ AdminPermission.init({
         type: DataTypes.INTEGER
     },
     permission_grade_id: {
+        type: DataTypes.INTEGER
+    },
+    module_id: {
         type: DataTypes.INTEGER
     }
 }, {
@@ -56,5 +60,16 @@ AdminPermission.belongsTo(Client, {
     targetKey: Columns.clients.id,
 })
 
+Module.hasMany(AdminPermission, {
+    foreignKey: Columns.adminPermissions.module_id,
+    sourceKey: Columns.modules.id,
+    onDelete: Restrictions.CASCADE,
+    onUpdate: Restrictions.CASCADE
+})
+
+AdminPermission.belongsTo(Module, {
+    foreignKey: Columns.adminPermissions.module_id,
+    targetKey: Columns.modules.id,
+})
 
 export = AdminPermission

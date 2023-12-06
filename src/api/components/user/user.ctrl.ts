@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { IPermissions } from '../../../interfaces/Others';
+import { IPermissionsRequest } from '../../../interfaces/Others';
 import { IAdminPermission, IAuth, IUser } from '../../../interfaces/Tables';;
 import Admin from '../../../models/Admin';
 import AdminPermission from '../../../models/AdminPermission';
@@ -8,6 +8,7 @@ import { authUpsert } from '../auth/auth.ctrl';
 import { success } from '../../../network/response';
 import { userPermissions } from './user.fn';
 import Client from '../../../models/Client';
+import Module from '../../../models/Module';
 
 export const list = async (req: Request, res: Response, next: NextFunction) => {
     (async function (page?: number, item?: string, itemsPerPage?: number) {
@@ -105,14 +106,17 @@ export const getMyUserData = async (req: Request, res: Response, next: NextFunct
 }
 
 export const upsertUserPermissions = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (userId: number, permissionsList: Array<IPermissions>) {
+    (async function (userId: number, permissionsList: Array<IPermissionsRequest>) {
         await AdminPermission.destroy({ where: { user_id: userId } })
         const permissions: Array<IAdminPermission> = []
         permissionsList.map(permission => {
-            permissions.push({
-                user_id: userId,
-                client_id: permission.client_id,
-                permission_grade_id: permission.permission_grade_id,
+            permission.permissions.map(permissionItem => {
+                permissions.push({
+                    user_id: userId,
+                    client_id: permission.client_id,
+                    permission_grade_id: permissionItem.permission_grade_id,
+                    module_id: permissionItem.module_id
+                })
             })
         })
         return await AdminPermission.bulkCreate(permissions)
@@ -130,15 +134,24 @@ export const getUserClients = async (req: Request, res: Response, next: NextFunc
         const userClients = await AdminPermission.findAll({
             where: [
                 { user_id: userId }
-            ]
+            ],
+            include: [Module]
         })
         const allClients = await Client.findAll()
+        const allModules = await Module.findAll()
         return allClients.map(client => {
-            const userClient = userClients.find(userClient => userClient.dataValues.client_id === client.dataValues.id)
+            const userClient = userClients.filter(userClient => userClient.dataValues.client_id === client.dataValues.id)
             return {
                 client_id: client.dataValues.id,
                 business_name: client.dataValues.business_name,
-                permission_grade_id: userClient ? userClient.dataValues.permission_grade_id : 0
+                permissions: allModules.map(module => {
+                    const moduleFound = userClient.find(moduleClient => moduleClient.dataValues.module_id === module.dataValues.id)
+                    return {
+                        module_id: module.dataValues.id,
+                        module_name: module.dataValues.module_name,
+                        permission_grade_id: moduleFound?.dataValues.permission_grade_id || 0
+                    }
+                })
             }
         })
     })(Number(req.query.idUser)).then(data => success({ req, res, message: data })).catch(next)

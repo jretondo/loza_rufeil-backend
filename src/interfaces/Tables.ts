@@ -101,7 +101,8 @@ export interface IAdminPermission {
     id?: number,
     user_id: number,
     client_id: number,
-    permission_grade_id: number
+    permission_grade_id: number,
+    module_id: number
 }
 
 export interface IAccountingPeriod {

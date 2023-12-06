@@ -34,9 +34,15 @@ export interface INewPermission {
 export interface IPermissions {
     client_id: number,
     business_name: string,
-    permission_grade_id: number
+    permission_grade_id: number,
+    module_id: number
 }
 
+export interface IPermissionsRequest {
+    client_id: number,
+    business_name: string,
+    permissions: Array<IPermissions>
+}
 export interface IModulesPermissions {
     module_id: number,
     module_name: string,

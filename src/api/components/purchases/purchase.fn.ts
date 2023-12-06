@@ -62,6 +62,7 @@ export const checkDataReqReceipt = (
         return acc + tax.amount
     }, 0))
 
+
     if (vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 1) !== roundNumber(totalVatRecorded, 1))) {
         throw new Error("No se validan los totales grabados!")
     }

@@ -11,6 +11,7 @@ import ClientPermission from '../../../models/ClientsPermissions';
 import { getClientsPermissions } from '../modules/modules.fn';
 import { config } from '../../../config';
 import AccountingPeriod from '../../../models/AccountingPeriod';
+import Module from '../../../models/Module';
 
 export const upsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (client: IClients) {
@@ -71,7 +72,6 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
 
 export const allList = async (req: Request, res: Response, next: NextFunction) => {
     (async function (userId?: number) {
-
         return await Client.findAll({
             include: [{
                 model: AdminPermission,
@@ -79,7 +79,11 @@ export const allList = async (req: Request, res: Response, next: NextFunction) =
                     { permission_grade_id: { [Op.gte]: 1 } },
                     { user_id: userId }
                 ] : {}),
-                required: ((userId) ? true : false)
+                required: ((userId) ? true : false),
+                include: [{
+                    model: Module,
+                    required: false
+                }]
             }]
         })
     })((!req.body.user.admin) && req.body.user.admin_id).then(data => success({ req, res, message: data })).catch(next)

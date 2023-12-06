@@ -19,7 +19,8 @@ enum AdminPermission {
     id = "id",
     user_id = "user_id",
     client_id = "client_id",
-    permission_grade_id = "permission_grade_id"
+    permission_grade_id = "permission_grade_id",
+    module_id = "module_id"
 }
 
 enum Modules {
