@@ -231,8 +231,9 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
             VatRatesReceipts: IVatRatesReceipts[],
             purchaseEntries: IPurchaseEntries[]
         } = checkDataReqReceipt(receiptHeader, paymentsReceipt, taxesReceipt, conceptsReceipt, provider, purchasePeriodId, observations)
+        const accountingPeriod = await PurchasePeriod.findOne({ where: { id: purchasePeriodId } })
         const providerAccount = await ProviderParameter.findAll({
-            where: [{ provider_id: provider.id }, { accounting_period_id: purchasePeriodId }]
+            where: [{ provider_id: provider.id }, { accounting_period_id: accountingPeriod?.dataValues.accounting_period_id}]
         })
 
         if (providerAccount.length === 0) {

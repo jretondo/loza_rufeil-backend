@@ -1,12 +1,19 @@
 import roundNumber from "../../../utils/functions/roundNumber";
-import { IHeaderReceiptReq, IPaymentReceiptReq, IProviders, IPurchaseEntries, IReceiptConcept, IReceipts, ITaxesReceiptReq, IVatRatesReceipts } from "../../../interfaces/Tables";
+import { 
+    IHeaderReceiptReq, 
+    IPaymentReceiptReq, 
+    IProviders,
+    IPurchaseEntries,
+    IReceiptConcept, 
+    IReceipts, 
+    ITaxesReceiptReq, 
+    IVatRatesReceipts 
+    } from "../../../interfaces/Tables";
 import Receipt from "../../../models/Receipts";
 import moment from "moment";
 import { stringFill } from "../../../utils/functions/stringFill";
 import XLSX from 'xlsx';
 import { IDataSheetCVSPurchaseImport } from "../../../interfaces/Others";
-import utf8 from "utf8";
-import { ExcelDateToJSDate } from "../../../utils/functions/excelDateToDate";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -44,26 +51,9 @@ export const checkDataReqReceipt = (
 
     const totalInternalTax = roundNumber(taxesReceipt.filter(tax => tax.type === 16).reduce((acc, tax) => acc + tax.amount, 0))
 
-    const totalVatRecorded = roundNumber(taxesReceipt.filter(tax => tax.is_vat).reduce((acc, tax) => {
-        switch (tax.type) {
-            case 4:
-                return acc + (tax.amount) / (0.105)
-            case 5:
-                return acc + (tax.amount) / (0.21)
-            case 6:
-                return acc + (tax.amount) / (0.27)
-            case 8:
-                return acc + (tax.amount) / (0.05)
-            case 9:
-                return acc + (tax.amount) / (0.025)
-            default:
-                break;
-        }
-        return acc + tax.amount
-    }, 0))
+    const totalVatRecorded = roundNumber(taxesReceipt.reduce((acc, tax) => acc + tax.recorded, 0))
 
-
-    if (vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 1) !== roundNumber(totalVatRecorded, 1))) {
+    if (vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 2) !== roundNumber(totalVatRecorded, 2))) {
         throw new Error("No se validan los totales grabados!")
     }
 
@@ -127,7 +117,7 @@ export const checkDataReqReceipt = (
     }
 
     const VatRatesReceipts: IVatRatesReceipts[] = vatTaxes.map(tax => {
-        const recorded = () => {
+        const calculatedRecorded = () => {
             switch (tax.type) {
                 case 4:
                     return (tax.amount) / (0.105)
@@ -144,8 +134,15 @@ export const checkDataReqReceipt = (
             }
             return tax.amount
         }
+
+        const recorded = roundNumber(calculatedRecorded(), 0)
+
+        if (recorded !== roundNumber(tax.recorded, 0)) {
+            throw new Error("No se validan los totales grabados!")
+        }
+
         return {
-            recorded_net: roundNumber(recorded()),
+            recorded_net: tax.recorded,
             vat_type_id: tax.type,
             vat_amount: tax.amount,
             receipt_id: 0
@@ -177,6 +174,7 @@ export const checkDataReqReceipt = (
     })
 
     const purchaseEntriesPayment: IPurchaseEntries[] = paymentReceipt.map(payment => {
+
         return {
             date: headerReceipt.date,
             receipt_id: 0,

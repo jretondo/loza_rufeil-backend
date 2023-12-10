@@ -226,7 +226,8 @@ export interface ITaxesReceiptReq {
     amount: number,
     is_vat: boolean,
     name: string,
-    AccountChart?: IAccountCharts
+    AccountChart?: IAccountCharts,
+    recorded: number
 }
 
 export interface IReceiptConcept {
