@@ -239,8 +239,8 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
         if (providerAccount.length === 0) {
             await ProviderParameter.create({
                 provider_id: provider.id || 0,
-                account_chart_id: conceptsReceipt[0].AccountChart?.id || 0,
-                accounting_period_id: conceptsReceipt[0].AccountChart?.accounting_period_id || 0,
+                account_chart_id: conceptsReceipt[0].AccountChart?.id || null,
+                accounting_period_id: conceptsReceipt[0].AccountChart?.accounting_period_id || null,
                 active: true,
                 description: conceptsReceipt[0].description
             })

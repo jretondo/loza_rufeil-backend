@@ -57,11 +57,11 @@ ProviderParameter.belongsTo(Provider, {
 })
 
 AccountChart.hasMany(ProviderParameter, {
-    foreignKey: Columns.providersParameters.account_chart_id,
-    sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
+  foreignKey: Columns.providersParameters.account_chart_id,
+  sourceKey: Columns.accountCharts.id,
+  onDelete: Restrictions.SET_NULL,
+  onUpdate: Restrictions.SET_NULL,
+});
 
 ProviderParameter.belongsTo(AccountChart, {
     foreignKey: Columns.providersParameters.account_chart_id,
@@ -69,11 +69,11 @@ ProviderParameter.belongsTo(AccountChart, {
 })
 
 AccountingPeriod.hasOne(ProviderParameter, {
-    foreignKey: Columns.providersParameters.accounting_period_id,
-    sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
+  foreignKey: Columns.providersParameters.accounting_period_id,
+  sourceKey: Columns.accountingPeriod.id,
+  onDelete: Restrictions.SET_NULL,
+  onUpdate: Restrictions.SET_NULL,
+});
 
 ProviderParameter.belongsTo(AccountingPeriod, {
     foreignKey: Columns.providersParameters.accounting_period_id,

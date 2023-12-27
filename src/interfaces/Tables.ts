@@ -197,8 +197,8 @@ export interface IProvidersParameters {
     provider_id: number,
     active: boolean,
     description: string,
-    account_chart_id: number,
-    accounting_period_id: number,
+    account_chart_id: number | null,
+    accounting_period_id: number | null,
     AccountChart?: IAccountCharts
 }
 

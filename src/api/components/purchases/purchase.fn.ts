@@ -153,7 +153,7 @@ export const checkDataReqReceipt = (
         return {
             date: headerReceipt.date,
             receipt_id: 0,
-            account_chart_id: concept.account_chart_id,
+            account_chart_id: concept.account_chart_id || null,
             purchase_period_id: purchasePeriodId,
             description: concept.description,
             debit: concept.amount,
@@ -178,7 +178,7 @@ export const checkDataReqReceipt = (
         return {
             date: headerReceipt.date,
             receipt_id: 0,
-            account_chart_id: payment.account_chart_id,
+            account_chart_id: payment.account_chart_id || null,
             purchase_period_id: purchasePeriodId,
             description: payment.name,
             debit: 0,

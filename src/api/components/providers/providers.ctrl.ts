@@ -91,7 +91,7 @@ export const insertProviderParameter = async (req: Request, res: Response, next:
                     provider_id: providerId,
                     active: param.active,
                     description: param.description,
-                    account_chart_id: param.account_chart_id,
+                    account_chart_id: param.account_chart_id || null,
                     accounting_period_id: periodId,
                 }
             })
