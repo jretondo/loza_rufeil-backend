@@ -16,7 +16,7 @@ import { checkClient, checkModule } from '../../../middlewares/secureMiddlewares
 const router = Router();
 
 router
-    .get("/period", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), periodList)
+    .get("/period", secure(), checkClient(EPermissions.read),  periodList)
     .get("/allowImport", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), allowImport)
     .get("/accountingCharts", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountList)
     .get("/accountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getNewChildren)
