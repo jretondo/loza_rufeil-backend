@@ -56,9 +56,7 @@ export const allList = async (req: Request, res: Response, next: NextFunction) =
                 model: ProviderParameter,
                 where: { accounting_period_id: accountingPeriodId },
                 required: false,
-            }],
-
-        })
+            }] })
     })(req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
 }
 

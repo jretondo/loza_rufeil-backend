@@ -295,7 +295,7 @@ export const getDataSheet = (fileUrl: string): any => {
 export const jsonDataInvoiceGenerator = (dataSheet: Array<string[]>): IDataSheetCVSPurchaseImport[] => {
     try {
         const data = dataSheet.slice(1)
-        const jsonData = data.map((row: any) => {
+        const jsonData = data.map((row: any, key: number) => {
             const rowObject: any = {}
             rowObject["date"] = moment(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1)).format("YYYY-MM-DD")
             rowObject["invoiceType"] = row[1]

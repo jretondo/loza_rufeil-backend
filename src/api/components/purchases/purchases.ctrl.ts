@@ -224,6 +224,43 @@ export const getReceipts = async (req: Request, res: Response, next: NextFunctio
     })(Number(req.query.purchasePeriodId), Number(req.params.page), req.query.query && String(req.query.query), req.query.provider && String(req.query.provider)).then(data => success({ req, res, message: data })).catch(next)
 }
 
+export const checkReceipt = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    (async function (
+        receiptHeader: IHeaderReceiptReq,
+        paymentsReceipt: IPaymentReceiptReq[],
+        taxesReceipt: ITaxesReceiptReq[],
+        conceptsReceipt: IReceiptConcept[],
+        purchasePeriodId: number,
+        provider: IProviders,
+        observations: string
+    ) {
+        return checkDataReqReceipt(
+            receiptHeader,
+            paymentsReceipt,
+            taxesReceipt,
+            conceptsReceipt,
+            provider,
+            purchasePeriodId,
+            observations
+        );
+    })(
+        req.body.header,
+        req.body.payments,
+        req.body.taxes,
+        req.body.concepts,
+        req.body.purchasePeriodId,
+        req.body.provider,
+        req.body.observations
+    )
+        .then((data) => success({ req, res, message: data }))
+        .catch(next);
+};
+
+
 export const upsertReceipt = async (req: Request, res: Response, next: NextFunction) => {
     (async function (receiptHeader: IHeaderReceiptReq, paymentsReceipt: IPaymentReceiptReq[], taxesReceipt: ITaxesReceiptReq[], conceptsReceipt: IReceiptConcept[], purchasePeriodId: number, provider: IProviders, observations: string) {
         const newRecords: {
@@ -233,7 +270,7 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
         } = checkDataReqReceipt(receiptHeader, paymentsReceipt, taxesReceipt, conceptsReceipt, provider, purchasePeriodId, observations)
         const accountingPeriod = await PurchasePeriod.findOne({ where: { id: purchasePeriodId } })
         const providerAccount = await ProviderParameter.findAll({
-            where: [{ provider_id: provider.id }, { accounting_period_id: accountingPeriod?.dataValues.accounting_period_id}]
+            where: [{ provider_id: provider.id }, { accounting_period_id: accountingPeriod?.dataValues.accounting_period_id }]
         })
 
         if (providerAccount.length === 0) {
@@ -272,6 +309,113 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
         }
     })(req.body.header, req.body.payments, req.body.taxes, req.body.concepts, req.body.purchasePeriodId, req.body.provider, req.body.observations).then(data => success({ req, res, message: data })).catch(next)
 }
+
+export const upsertReceipts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    (async function (
+        receipts: {
+            header: IHeaderReceiptReq;
+            payments: IPaymentReceiptReq[];
+            taxes: ITaxesReceiptReq[];
+            concepts: IReceiptConcept[];
+            provider: IProviders;
+            observation: string;
+        }[], purchase_period_id: number) {
+        let receiptsError: any = []
+        return receipts.map(async (receipt, key) => {
+            try {
+
+                const newRecords: {
+                    NewReceipt: IReceipts;
+                    VatRatesReceipts: IVatRatesReceipts[];
+                    purchaseEntries: IPurchaseEntries[];
+                } = checkDataReqReceipt(
+                    receipt.header,
+                    receipt.payments,
+                    receipt.taxes,
+                    receipt.concepts,
+                    receipt.provider,
+                    purchase_period_id,
+                    receipt.observation
+                );
+
+                const accountingPeriod = await PurchasePeriod.findOne({
+                    where: { id: purchase_period_id },
+                });
+                const providerAccount = await ProviderParameter.findAll({
+                    where: [
+                        { provider_id: receipt.provider.id },
+                        {
+                            accounting_period_id:
+                                accountingPeriod?.dataValues.accounting_period_id || null,
+                        },
+                    ],
+                });
+
+                if (providerAccount.length === 0) {
+                    await ProviderParameter.create({
+                        provider_id: receipt.provider.id || 0,
+                        account_chart_id: receipt.concepts[0].AccountChart?.id || null,
+                        accounting_period_id:
+                            receipt.concepts[0].AccountChart?.accounting_period_id || null,
+                        active: true,
+                        description: receipt.concepts[0].description,
+                    });
+                }
+
+                const newReceipt = await Receipt.create(newRecords.NewReceipt);
+                console.log('newReceipt :>> ', newReceipt);
+                if (newReceipt.dataValues.id) {
+                    const newVatRates =
+                        newRecords.VatRatesReceipts.length > 0
+                            ? await VatRateReceipt.bulkCreate(
+                                newRecords.VatRatesReceipts.map((vatRate) => {
+                                    return {
+                                        ...vatRate,
+                                        receipt_id: newReceipt.dataValues.id || 0,
+                                    };
+                                })
+                            )
+                            : [{}];
+
+                    const newPurchaseEntries = await PurchaseEntry.bulkCreate(
+                        newRecords.purchaseEntries.map((purchaseEntry) => {
+                            return {
+                                ...purchaseEntry,
+                                receipt_id: newReceipt.dataValues.id || 0,
+                            };
+                        })
+                    );
+                    if (newVatRates.length > 0 && newPurchaseEntries.length > 0) {
+                        //return "Guardado con éxito!";
+                    } else {
+                        Receipt.destroy({ where: { id: newReceipt.dataValues.id } });
+                        throw new Error("Hubo un error al querer guardar el recibo");
+                    }
+                } else {
+                    throw new Error("Hubo un error al querer guardar el recibo");
+                }
+            } catch (error) {
+                console.log('error :>> ', error);
+                receiptsError.push({
+                    index: key,
+                    error: error
+                })
+            }
+            if (key === receipts.length - 1) {
+                return receiptsError as any
+            }
+        })
+    })(
+        req.body.receipts,
+        req.body.purchase_period_id
+    )
+        .then((data) => success({ req, res, message: data }))
+        .catch(next);
+};
 
 export const deleteReceipt = async (req: Request, res: Response, next: NextFunction) => {
     (async function (receiptId: number) {
@@ -378,14 +522,85 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         }],
                         include: [IvaCondition, {
                             model: ProviderParameter,
+                            required: false,
                             where: [{ accounting_period_id: accountingPeriodId }],
                             include: [AccountChart]
                         }]
                     })
+
                     if (!provider) {
-                        provider_ = `${data.providerName} (${data.providerDocumentNumber})`
+                        const providerData = await clientDataTax(
+                            data.providerDocumentNumber
+                        );
+                        console.log('providerData.data?.datosRegimenGeneral?.impuesto :>> ', providerData.data?.datosRegimenGeneral?.actividad);
+                        const taxes =
+                            providerData.data?.datosRegimenGeneral?.impuesto || [];
+                        let vatTax = 30
+                        taxes.map((item) => {
+                            switch (item.idImpuesto) {
+                                case 30:
+                                    vatTax = 30;
+                                    break;
+                                case 32:
+                                    vatTax = 32;
+                                    break;
+                                case 20:
+                                    vatTax = 20;
+                                    break;
+                                case 33:
+                                    vatTax = 33;
+                                    break;
+                                case 34:
+                                    vatTax = 34;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        });
+                        const newProvider: IProviders = {
+                            document_type: 80,
+                            document_number: String(data.providerDocumentNumber),
+                            business_name:
+                                providerData.data?.datosGenerales.tipoPersona ===
+                                    "FISICA"
+                                    ? providerData.data.datosGenerales.apellido +
+                                    " " +
+                                    providerData.data.datosGenerales.nombre
+                                    : providerData.data?.datosGenerales.razonSocial ||
+                                    "",
+                            fantasie_name:
+                                providerData.data?.datosGenerales.tipoPersona ===
+                                    "FISICA"
+                                    ? providerData.data.datosGenerales.apellido +
+                                    " " +
+                                    providerData.data.datosGenerales.nombre
+                                    : providerData.data?.datosGenerales.razonSocial ||
+                                    "",
+                            iva_condition_id: vatTax,
+                            direction:
+                                providerData.data?.datosGenerales.domicilioFiscal
+                                    .direccion || "",
+                            city:
+                                providerData.data?.datosGenerales.domicilioFiscal
+                                    .descripcionProvincia || "",
+                            activity_description:
+                                providerData.data?.datosRegimenGeneral?.actividad ? providerData.data?.datosRegimenGeneral?.actividad[0].descripcionActividad : "",
+                        };
+                        const newProvInserted = await Provider.create(newProvider)
+                        console.log('newProvInserted :>> ', newProvInserted);
+                        provider = await Provider.findOne({
+                            where: { id: newProvInserted.dataValues.id },
+                            include: [
+                                IvaCondition,
+                                {
+                                    model: ProviderParameter,
+                                    required: false,
+                                },
+                            ],
+                        });
                     }
                     return {
+                        checked: false,
                         date: data.date,
                         invoice_type_id: data.invoiceType,
                         sell_point: data.sellPoint,
@@ -406,6 +621,8 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         receipt_type: data.invoiceType,
                         Provider: provider ? provider.dataValues : undefined,
                         ProviderRaw: provider_ ? provider_ : undefined,
+                        provider_name: data.providerName,
+                        provider_document: data.providerDocumentNumber,
                         VatRatesReceipts: [{
                             receipt_id: 0,
                             vat_type_id: vatTypeId,
