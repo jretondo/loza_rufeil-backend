@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize } from 'sequelize';
-import { IAccountCharts, IAccountingPeriod } from '../../../interfaces/Tables';
+import { Op, Sequelize, where } from 'sequelize';
+import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
 import { error, success } from '../../../network/response';
 import { Columns } from '../../../constant/TABLES';
@@ -9,10 +9,13 @@ import { IAccountChartsToFront } from '../../../interfaces/Others';
 import { accountControl } from '../../../utils/classes/AccountControl';
 import {
     accountChartItem,
+    checkDetails,
     newDefaultAccountCharts,
     nextChildrenAccount,
     periodListFn
 } from './accounting.fn';
+import AccountingEntries from '../../../models/AccountingEntry';
+import AccountingEntriesDetails from '../../../models/AccountingEntryDetail';
 
 export const periodUpsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -208,4 +211,249 @@ export const allowImport = async (req: Request, res: Response, next: NextFunctio
             return 1
         }
     })(Number(req.query.accountingId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const lastEntryData = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accounting_period_id: number, entryNumber?: number) {
+        const lastEntry = await AccountingEntries.findOne({
+            attributes: [[Sequelize.fn("MAX", Sequelize.col(`${Columns.accountingEntries.number}`)), "lastEntry"]],
+            where: { accounting_period_id }
+        })
+        const accountingPeriod = await AccountingPeriod.findOne({
+            where: { id: accounting_period_id }
+        })
+        let lastDate
+        let firstDate
+        if (entryNumber) {
+            lastDate = await AccountingEntries.findOne({
+                attributes: [[Sequelize.fn("MAX", Sequelize.col(`${Columns.accountingEntries.date}`)), "lastDate"]],
+                where: [{ accounting_period_id }, { number: { [Op.gt]: entryNumber } }]
+            }).then((data) => data?.dataValues.lastDate)
+
+            firstDate = await AccountingEntries.findOne({
+                attributes: [[Sequelize.fn("MIN", Sequelize.col(`${Columns.accountingEntries.date}`)), "firstDate"]],
+                where: [{ accounting_period_id }, { number: { [Op.lt]: entryNumber } }]
+            }).then((data) => data?.dataValues.firstDate)
+
+        } else {
+            lastDate = accountingPeriod?.dataValues.to_date
+
+            firstDate = await AccountingEntries.findOne({
+                attributes: [[Sequelize.fn("MAX", Sequelize.col(`${Columns.accountingEntries.date}`)), "firstDate"]],
+                where: [{ accounting_period_id }]
+            }).then((data) => data?.dataValues.firstDate)
+        }
+
+        return {
+            lastNumber: (lastEntry?.dataValues.lastEntry || 0) + 1,
+            minLimitDate: firstDate || accountingPeriod?.dataValues.from_date,
+            maxLimitDate: lastDate || accountingPeriod?.dataValues.to_date
+        }
+    })(Number(req.body.periodId), Number(req.query.entryNumber)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const newAccountingEntry = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountingEntry: IAccountingEntries, accounting_period_id: number) {
+        if (!await checkDetails(accountingEntry, accounting_period_id)) {
+            throw Error("La entrada contable no está balanceada.")
+        }
+
+        const {
+            date,
+            description,
+            debit,
+            credit,
+            number
+        } = accountingEntry
+        const accountingEntryData = await AccountingEntries.create({
+            date,
+            accounting_period_id,
+            description,
+            debit,
+            credit,
+            number
+        })
+
+        if (accountingEntryData) {
+            if (accountingEntry.AccountingEntriesDetails) {
+                const entriesDetails = await AccountingEntriesDetails.bulkCreate(accountingEntry.AccountingEntriesDetails.map((entryDetail) => {
+                    return {
+                        ...entryDetail,
+                        accounting_entry_id: accountingEntryData.dataValues.id || 0
+                    }
+                }))
+
+                if (entriesDetails) {
+                    return {
+                        ...accountingEntryData.dataValues,
+                        AccountingEntriesDetails: entriesDetails
+                    }
+                } else {
+                    throw Error("No se pudo crear el detalle de la entrada contable.")
+                }
+            }
+        } else {
+            throw Error("No se pudo crear la entrada contable.")
+        }
+
+    })(req.body, req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const updateAccountingEntry = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountingEntry: IAccountingEntries, accounting_period_id: number) {
+        if (!await checkDetails(accountingEntry, accounting_period_id)) {
+            throw Error("La entrada contable no está balanceada.")
+        }
+
+        const {
+            id,
+            date,
+            description,
+            debit,
+            credit,
+            number
+        } = accountingEntry
+        const accountingEntryData = await AccountingEntries.update({
+            date,
+            accounting_period_id,
+            description,
+            debit,
+            credit,
+            number
+        }, { where: { id } })
+
+        if (accountingEntryData) {
+            await AccountingEntriesDetails.destroy({ where: { accounting_entry_id: id } })
+            if (accountingEntry.AccountingEntriesDetails) {
+                const entriesDetails = await AccountingEntriesDetails.bulkCreate(accountingEntry.AccountingEntriesDetails.map((entryDetail) => {
+                    return {
+                        ...entryDetail,
+                        accounting_entry_id: id || 0
+                    }
+                }))
+
+                if (entriesDetails) {
+                    return {
+                        ...accountingEntry,
+                        AccountingEntriesDetails: entriesDetails
+                    }
+                } else {
+                    throw Error("No se pudo crear el detalle de la entrada contable.")
+                }
+            }
+        } else {
+            throw Error("No se pudo crear la entrada contable.")
+        }
+
+    })(req.body, req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getAccountingEntries = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (page: number, filters: {
+        dateFrom: string,
+        dateTo: string,
+        account: IAccountCharts,
+        text: string,
+        amountFrom: number,
+        amountTo: number,
+        number: number
+    }, accounting_period_id: number) {
+        const { dateFrom, dateTo, account, text, amountFrom, amountTo, number } = filters
+        if (page) {
+            const ITEMS_PER_PAGE = 10;
+            const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
+            const { count, rows } = await AccountingEntries.findAndCountAll({
+                where: [
+                    accounting_period_id ? { accounting_period_id } : {},
+                    dateFrom ? {
+                        date: {
+                            [Op.gte]: dateFrom
+                        }
+                    } : {},
+                    dateTo ? {
+                        date: {
+                            [Op.lte]: dateTo
+                        }
+                    } : {},
+                    number ? { number } : {},
+                    text ? {
+                        [Op.or]: [
+                            { description: { [Op.substring]: text } }
+                        ]
+                    } : {},
+                    amountFrom ? {
+                        [Op.or]: [
+                            { debit: { [Op.gte]: amountFrom } },
+                            { credit: { [Op.gte]: amountFrom } }
+                        ]
+                    } : {},
+                    amountTo ? {
+                        [Op.or]: [
+                            { debit: { [Op.lte]: amountTo } },
+                            { credit: { [Op.lte]: amountTo } }
+                        ]
+                    } : {},
+                ],
+                order: [[Columns.accountingEntries.number, "ASC"]],
+                include: [{
+                    model: AccountingEntriesDetails,
+                    order: [Columns.accountingEntriesDetails.id, "ASC"],
+                    where: account ? { account_chart_id: account.id } : {},
+                    include: [{
+                        model: AccountChart
+                    }]
+                }],
+                limit: ITEMS_PER_PAGE,
+                offset: offset
+            })
+            return {
+                totalItems: count,
+                itemsPerPage: ITEMS_PER_PAGE,
+                items: rows
+            }
+        } else {
+            return await AccountingEntries.findAll({
+                where: [
+                    accounting_period_id ? { accounting_period_id } : {},
+                    dateFrom ? {
+                        date: {
+                            [Op.gte]: dateFrom
+                        }
+                    } : {},
+                    dateTo ? {
+                        date: {
+                            [Op.lte]: dateTo
+                        }
+                    } : {},
+                    number ? { number } : {},
+                    text ? {
+                        [Op.or]: [
+                            { description: { [Op.substring]: text } }
+                        ]
+                    } : {},
+                    amountFrom ? {
+                        [Op.or]: [
+                            { debit: { [Op.gte]: amountFrom } },
+                            { credit: { [Op.gte]: amountFrom } }
+                        ]
+                    } : {},
+                    amountTo ? {
+                        [Op.or]: [
+                            { debit: { [Op.lte]: amountTo } },
+                            { credit: { [Op.lte]: amountTo } }
+                        ]
+                    } : {},
+                ],
+                order: [[Columns.accountingEntries.number, "ASC"]],
+                include: [{
+                    model: AccountingEntriesDetails,
+                    order: [Columns.accountingEntriesDetails.id, "ASC"],
+                    where: account ? { account_chart_id: account.id } : {},
+                    include: [{
+                        model: AccountChart
+                    }]
+                }]
+            })
+        }
+    })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

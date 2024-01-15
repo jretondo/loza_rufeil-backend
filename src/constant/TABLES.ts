@@ -200,6 +200,24 @@ enum PurchaseEntries {
     credit = "credit"
 }
 
+enum AccountingEntries {
+    id = "id",
+    date = "date",
+    accounting_period_id = "accounting_period_id",
+    description = "description",
+    debit = "debit",
+    credit = "credit",
+    number = "number",
+}
+
+enum AccountingEntriesDetails {
+    id = "id",
+    accounting_entry_id = "accounting_entry_id",
+    account_chart_id = "account_chart_id",
+    debit = "debit",
+    credit = "credit"
+}
+
 export enum Tables {
     ADMIN = "admins",
     AUTH_ADMIN = "auth_admin",
@@ -221,7 +239,9 @@ export enum Tables {
     PURCHASE_PARAMETERS = "purchase_parameters",
     PAYMENT_TYPES_PARAMETERS = "payment_types_parameters",
     PROVIDERS_PARAMETERS = "providers_parameters",
-    PURCHASE_ENTRIES = "purchase_entries"
+    PURCHASE_ENTRIES = "purchase_entries",
+    ENTRIES = "entries",
+    ENTRIES_DETAILS = "entries_details"
 }
 
 export const Columns = {
@@ -246,5 +266,7 @@ export const Columns = {
     vatRatePurchase: VatRatePurchase,
     paymentTypesParameters: PaymentTypesParameters,
     providersParameters: ProvidersParameters,
-    purchaseEntries: PurchaseEntries
+    purchaseEntries: PurchaseEntries,
+    accountingEntries: AccountingEntries,
+    accountingEntriesDetails: AccountingEntriesDetails
 }

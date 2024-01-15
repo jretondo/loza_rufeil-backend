@@ -31,7 +31,6 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
         text?: string
     ) {
         const ITEMS_PER_PAGE = 10;
-
         const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
         const { count, rows } = await Client.findAndCountAll({
             where: {

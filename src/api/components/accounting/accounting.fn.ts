@@ -1,7 +1,7 @@
 import { Op, Sequelize } from "sequelize"
 import { Columns } from "../../../constant/TABLES"
 import { IAccountChartsToFront } from "../../../interfaces/Others"
-import { IAccountCharts } from "../../../interfaces/Tables"
+import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from "../../../interfaces/Tables"
 import AccountChart from "../../../models/AccountCharts"
 import AccountingPeriod from "../../../models/AccountingPeriod"
 import Client from "../../../models/Client"
@@ -217,4 +217,40 @@ export const periodListFn = async (clientId: number, fromDate?: Date, toDate?: D
         order: [[`${Columns.accountingPeriod.from_date}`, 'DESC']],
         include: Client
     });
+}
+
+export const checkDetails = async (entry: IAccountingEntries, accounting_period_id: number) => {
+
+    const debitDetails = entry.AccountingEntriesDetails?.reduce((acc, detail) => {
+        return acc + detail.debit
+    }, 0)
+
+    const creditDetails = entry.AccountingEntriesDetails?.reduce((acc, detail) => {
+        return acc + detail.credit
+    }, 0)
+
+    if (entry.debit !== debitDetails || entry.credit !== creditDetails) {
+        return false
+    }
+
+    if (entry.debit === 0 && entry.credit === 0) {
+        return false
+    }
+
+    if (entry.debit !== entry.credit || debitDetails !== creditDetails) {
+        return false
+    }
+
+    const validCharts = await AccountChart.findAll({
+        where: [
+            { id: { [Op.in]: entry.AccountingEntriesDetails?.map(detail => detail.account_chart_id) } },
+            { accounting_period_id: accounting_period_id }
+        ]
+    })
+
+    if (validCharts.length !== entry.AccountingEntriesDetails?.length) {
+        return false
+    }
+
+    return true
 }

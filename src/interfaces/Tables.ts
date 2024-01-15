@@ -249,3 +249,25 @@ export interface IPurchaseEntries {
     debit: number,
     credit: number
 }
+
+export interface IAccountingEntries {
+    id?: number,
+    date: Date,
+    accounting_period_id: number,
+    description: string,
+    debit: number,
+    credit: number,
+    number: number,
+    lastEntry?: number,
+    lastDate?: Date,
+    firstDate?: Date,
+    AccountingEntriesDetails?: IAccountingEntryDetail[]
+}
+
+export interface IAccountingEntryDetail {
+    id?: number,
+    account_chart_id: number,
+    debit: number,
+    credit: number,
+    accounting_entry_id: number
+}

@@ -367,7 +367,6 @@ export const upsertReceipts = async (
                 }
 
                 const newReceipt = await Receipt.create(newRecords.NewReceipt);
-                console.log('newReceipt :>> ', newReceipt);
                 if (newReceipt.dataValues.id) {
                     const newVatRates =
                         newRecords.VatRatesReceipts.length > 0
@@ -532,7 +531,6 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         const providerData = await clientDataTax(
                             data.providerDocumentNumber
                         );
-                        console.log('providerData.data?.datosRegimenGeneral?.impuesto :>> ', providerData.data?.datosRegimenGeneral?.actividad);
                         const taxes =
                             providerData.data?.datosRegimenGeneral?.impuesto || [];
                         let vatTax = 30
@@ -587,7 +585,6 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                                 providerData.data?.datosRegimenGeneral?.actividad ? providerData.data?.datosRegimenGeneral?.actividad[0].descripcionActividad : "",
                         };
                         const newProvInserted = await Provider.create(newProvider)
-                        console.log('newProvInserted :>> ', newProvInserted);
                         provider = await Provider.findOne({
                             where: { id: newProvInserted.dataValues.id },
                             include: [
