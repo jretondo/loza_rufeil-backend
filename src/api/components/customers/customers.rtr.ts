@@ -11,7 +11,7 @@ import {
     list,
     remove,
     upsert
-} from './providers.ctrl';
+} from './customers.ctrl';
 const router = Router();
 
 //Routes

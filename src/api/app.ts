@@ -18,6 +18,7 @@ import routes from './components/routes/routes.rtr';
 import activity from './components/activity/activity.rtr';
 import clients from './components/clients/clients.rtr';
 import providers from './components/providers/providers.rtr';
+import customers from './components/customers/customers.rtr';
 import certificates from './components/certificates/certificates.rtr';
 import accounting from './components/accounting/accounting.rtr';
 import modules from './components/modules/modules.rtr';
@@ -62,6 +63,7 @@ export class App {
         this.app.use("/api/views", views)
         this.app.use("/api/clients", clients)
         this.app.use("/api/providers", providers)
+        this.app.use("/api/customers", customers)
         this.app.use("/api/certificates", certificates)
         this.app.use("/api/accounting", accounting)
         this.app.use("/api/purchases", purchases)

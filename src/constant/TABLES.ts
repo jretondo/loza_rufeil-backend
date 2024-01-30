@@ -49,6 +49,20 @@ enum Clients {
     activity_description = "activity_description",
 }
 
+enum Customers {
+    id = "id",
+    document_type = "document_type",
+    document_number = "document_number",
+    business_name = "business_name",
+    fantasie_name = "fantasie_name",
+    email = "email",
+    iva_condition_id = "iva_condition_id",
+    direction = "direction",
+    phone = "phone",
+    city = "city",
+    activity_description = "activity_description",
+}
+
 enum Providers {
     id = "id",
     document_type = "document_type",
@@ -189,6 +203,15 @@ enum ProvidersParameters {
     accounting_period_id = "accounting_period_id"
 }
 
+enum CustomersParameters {
+    id = "id",
+    customer_id = "provider_id",
+    active = "active",
+    description = "description",
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
+}
+
 enum PurchaseEntries {
     id = "id",
     date = "date",
@@ -231,6 +254,7 @@ export enum Tables {
     IVA_TYPES = "iva_types",
     AFIP_CRT = "afip_crt",
     PROVIDERS = "providers",
+    CUSTOMERS = "customers",
     ACCOUNTING_PERIOD = "accounting_period",
     ACCOUNT_CHARTS = "account_charts",
     RECEIPTS = "receipts",
@@ -239,6 +263,7 @@ export enum Tables {
     PURCHASE_PARAMETERS = "purchase_parameters",
     PAYMENT_TYPES_PARAMETERS = "payment_types_parameters",
     PROVIDERS_PARAMETERS = "providers_parameters",
+    CUSTOMERS_PARAMETERS = "customers_parameters",
     PURCHASE_ENTRIES = "purchase_entries",
     ENTRIES = "entries",
     ENTRIES_DETAILS = "entries_details"
@@ -268,5 +293,7 @@ export const Columns = {
     providersParameters: ProvidersParameters,
     purchaseEntries: PurchaseEntries,
     accountingEntries: AccountingEntries,
-    accountingEntriesDetails: AccountingEntriesDetails
+    accountingEntriesDetails: AccountingEntriesDetails,
+    customers: Customers,
+    customersParameters: CustomersParameters
 }

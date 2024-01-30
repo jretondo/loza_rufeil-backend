@@ -53,6 +53,18 @@ export interface IProviders {
     activity_description: string
 }
 
+export interface ICostumers {
+    id?: number,
+    document_type: number,
+    document_number: string,
+    business_name: string,
+    fantasie_name: string,
+    iva_condition_id: number,
+    direction: string,
+    city: string,
+    activity_description: string
+}
+
 export interface IIvaConditions {
     id?: number,
     description: string
@@ -195,6 +207,16 @@ export interface IPaymentTypesParameters {
 export interface IProvidersParameters {
     id?: number,
     provider_id: number,
+    active: boolean,
+    description: string,
+    account_chart_id: number | null,
+    accounting_period_id: number | null,
+    AccountChart?: IAccountCharts
+}
+
+export interface ICustomersParameters {
+    id?: number,
+    customer_id: number,
     active: boolean,
     description: string,
     account_chart_id: number | null,
