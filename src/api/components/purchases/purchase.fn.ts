@@ -1,14 +1,14 @@
 import roundNumber from "../../../utils/functions/roundNumber";
-import { 
-    IHeaderReceiptReq, 
-    IPaymentReceiptReq, 
+import {
+    IHeaderReceiptReq,
+    IPaymentReceiptReq,
     IProviders,
     IPurchaseEntries,
-    IReceiptConcept, 
-    IReceipts, 
-    ITaxesReceiptReq, 
-    IVatRatesReceipts 
-    } from "../../../interfaces/Tables";
+    IReceiptConcept,
+    IReceipts,
+    ITaxesReceiptReq,
+    IVatRatesReceipts
+} from "../../../interfaces/Tables";
 import Receipt from "../../../models/Receipts";
 import moment from "moment";
 import { stringFill } from "../../../utils/functions/stringFill";
@@ -308,15 +308,22 @@ export const jsonDataInvoiceGenerator = (dataSheet: Array<string[]>): IDataSheet
             rowObject["changeType"] = row[9]
             rowObject["changeSymbol"] = row[10]
             rowObject["netRecorded"] = parseFloat((row[11]).replace(",", "."))
+
             rowObject["netNotRecorded"] = parseFloat(row[12].replace(",", "."))
+
             rowObject["exemptOperation"] = parseFloat(row[13].replace(",", "."))
+
             rowObject["otherTributes"] = parseFloat(row[14].replace(",", "."))
+
             rowObject["totalVat"] = parseFloat(row[15].replace(",", "."))
+
             rowObject["totalInvoice"] = parseFloat(row[16].replace(",", "."))
+
             return rowObject
         })
         return jsonData
     } catch (error) {
+        console.log('error :>> ', error);
         return []
     }
 }

@@ -50,9 +50,7 @@ Customer.init({
 
 IvaCondition.hasMany(Customer, {
     foreignKey: Columns.customers.iva_condition_id,
-    sourceKey: Columns.ivaConditions.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
+    sourceKey: Columns.ivaConditions.id
 })
 
 Customer.belongsTo(IvaCondition, {

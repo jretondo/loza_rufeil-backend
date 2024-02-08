@@ -555,35 +555,50 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                                     break;
                             }
                         });
-                        const newProvider: IProviders = {
-                            document_type: 80,
-                            document_number: String(data.providerDocumentNumber),
-                            business_name:
-                                providerData.data?.datosGenerales.tipoPersona ===
-                                    "FISICA"
-                                    ? providerData.data.datosGenerales.apellido +
-                                    " " +
-                                    providerData.data.datosGenerales.nombre
-                                    : providerData.data?.datosGenerales.razonSocial ||
-                                    "",
-                            fantasie_name:
-                                providerData.data?.datosGenerales.tipoPersona ===
-                                    "FISICA"
-                                    ? providerData.data.datosGenerales.apellido +
-                                    " " +
-                                    providerData.data.datosGenerales.nombre
-                                    : providerData.data?.datosGenerales.razonSocial ||
-                                    "",
-                            iva_condition_id: vatTax,
-                            direction:
-                                providerData.data?.datosGenerales.domicilioFiscal
-                                    .direccion || "",
-                            city:
-                                providerData.data?.datosGenerales.domicilioFiscal
-                                    .descripcionProvincia || "",
-                            activity_description:
-                                providerData.data?.datosRegimenGeneral?.actividad ? providerData.data?.datosRegimenGeneral?.actividad[0].descripcionActividad : "",
-                        };
+                        let newProvider: IProviders
+                        if (providerData.data?.datosGenerales) {
+                            newProvider = {
+                                document_type: 80,
+                                document_number: String(data.providerDocumentNumber),
+                                business_name:
+                                    providerData.data?.datosGenerales.tipoPersona ===
+                                        "FISICA"
+                                        ? providerData.data.datosGenerales.apellido +
+                                        " " +
+                                        providerData.data.datosGenerales.nombre
+                                        : providerData.data?.datosGenerales.razonSocial ||
+                                        "",
+                                fantasie_name:
+                                    providerData.data?.datosGenerales.tipoPersona ===
+                                        "FISICA"
+                                        ? providerData.data.datosGenerales.apellido +
+                                        " " +
+                                        providerData.data.datosGenerales.nombre
+                                        : providerData.data?.datosGenerales.razonSocial ||
+                                        "",
+                                iva_condition_id: vatTax,
+                                direction:
+                                    providerData.data?.datosGenerales.domicilioFiscal
+                                        .direccion || "",
+                                city:
+                                    providerData.data?.datosGenerales.domicilioFiscal
+                                        .descripcionProvincia || "",
+                                activity_description:
+                                    providerData.data?.datosRegimenGeneral?.actividad ? providerData.data?.datosRegimenGeneral?.actividad[0].descripcionActividad : "",
+                            };
+                        } else {
+                            newProvider = {
+                                document_type: 80,
+                                document_number: String(data.providerDocumentNumber),
+                                business_name: data.providerName,
+                                fantasie_name: data.providerName,
+                                iva_condition_id: 30,
+                                direction: "",
+                                city: "",
+                                activity_description: ""
+                            }
+                        }
+
                         const newProvInserted = await Provider.create(newProvider)
                         provider = await Provider.findOne({
                             where: { id: newProvInserted.dataValues.id },
