@@ -25,13 +25,13 @@ export const checkDataReqReceipt = (
     observations: string
 ) => {
     const { total } = headerReceipt
-    const totalPayment = paymentReceipt.reduce((acc, payment) => acc + payment.amount, 0)
-    const totalTaxes = taxesReceipt.reduce((acc, tax) => acc + tax.amount, 0)
-    const totalConcepts = receiptConcepts.reduce((acc, concept) => acc + concept.amount, 0)
+    const totalPayment = roundNumber(paymentReceipt.reduce((acc, payment) => acc + payment.amount, 0), 2)
+    const totalTaxes = roundNumber(taxesReceipt.reduce((acc, tax) => acc + tax.amount, 0), 2)
+    const totalConcepts = roundNumber(receiptConcepts.reduce((acc, concept) => acc + concept.amount, 0), 2)
 
     const vatTaxes = taxesReceipt.filter(tax => tax.is_vat)
 
-    if (total !== totalPayment || total !== (totalTaxes + totalConcepts)) {
+    if (roundNumber(total, 2) !== roundNumber(totalPayment, 2) || roundNumber(total, 2) !== roundNumber(totalTaxes + totalConcepts, 2)) {
         throw new Error("No se validan los totales!")
     }
 
