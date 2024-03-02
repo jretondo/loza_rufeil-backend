@@ -13,7 +13,7 @@ import Receipt from "../../../models/Receipts";
 import moment from "moment";
 import { stringFill } from "../../../utils/functions/stringFill";
 import XLSX from 'xlsx';
-import { IDataSheetCVSPurchaseImport } from "../../../interfaces/Others";
+import { IDataSheetCVSPurchaseImport, IDataSheetCVSPurchaseImportComplete } from "../../../interfaces/Others";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -267,7 +267,7 @@ export const createPurchaseTxtVatRateItem = (purchaseItems: Receipt) => {
     if (!vatRates) {
         return []
     }
-    return vatRates.map(vatRate => {
+    return vatRates.map((vatRate: any) => {
         const receiptType = stringFill(purchaseItems.dataValues.invoice_type_id.toString(), 3)
         const sellPoint = stringFill(purchaseItems.dataValues.sell_point.toString(), 5)
         const number = stringFill(purchaseItems.dataValues.number.toString(), 20)
@@ -295,7 +295,7 @@ export const getDataSheet = (fileUrl: string): any => {
 export const jsonDataInvoiceGenerator = (dataSheet: Array<string[]>): IDataSheetCVSPurchaseImport[] => {
     try {
         const data = dataSheet.slice(1)
-        const jsonData = data.map((row: any, key: number) => {
+        const jsonData = data.map((row: any) => {
             const rowObject: any = {}
             rowObject["date"] = moment(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1)).format("YYYY-MM-DD")
             rowObject["invoiceType"] = row[1]
@@ -308,16 +308,62 @@ export const jsonDataInvoiceGenerator = (dataSheet: Array<string[]>): IDataSheet
             rowObject["changeType"] = row[9]
             rowObject["changeSymbol"] = row[10]
             rowObject["netRecorded"] = parseFloat((row[11]).replace(",", "."))
-
             rowObject["netNotRecorded"] = parseFloat(row[12].replace(",", "."))
-
             rowObject["exemptOperation"] = parseFloat(row[13].replace(",", "."))
-
             rowObject["otherTributes"] = parseFloat(row[14].replace(",", "."))
-
             rowObject["totalVat"] = parseFloat(row[15].replace(",", "."))
-
             rowObject["totalInvoice"] = parseFloat(row[16].replace(",", "."))
+            return rowObject
+        })
+        return jsonData
+    } catch (error) {
+        console.log('error :>> ', error);
+        return []
+    }
+}
+
+export const jsonDataInvoiceGeneratorComplete = (dataSheet: Array<string[]>): IDataSheetCVSPurchaseImportComplete[] => {
+    try {
+        const data = dataSheet.slice(1)
+        const jsonData = data.map((row: any) => {
+            for (let i = 0; i < row.length; i++) {
+                if (!row[i]) {
+                    row[i] = '0,00'
+                }
+            }
+            const rowObject: any = {}
+            rowObject["date"] = moment(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1)).format("YYYY-MM-DD")
+            rowObject["invoiceType"] = row[1]
+            rowObject["sellPoint"] = row[2]
+            rowObject["invoiceNumber"] = row[3]
+            rowObject["documentType"] = row[4]
+            rowObject["documentNumber"] = row[5]
+            rowObject["providerName"] = row[6]
+            rowObject["totalInvoice"] = parseFloat(row[7].replace(",", "."))
+            //row[8]
+            //row[9]
+            rowObject["unrecorded"] = parseFloat(row[10].replace(",", "."))
+            rowObject["exemptOperation"] = parseFloat(row[11].replace(",", "."))
+            //row[12]
+            rowObject["nationalTaxes"] = parseFloat(row[13].replace(",", "."))
+            rowObject["grossIncome"] = parseFloat(row[14].replace(",", "."))
+            rowObject["localTaxes"] = parseFloat(row[15].replace(",", "."))
+            rowObject["vatWithholdings"] = parseFloat(row[16].replace(",", "."))
+            rowObject["internalTaxes"] = parseFloat(row[17].replace(",", "."))
+            rowObject["otherTributes"] = parseFloat(row[18].replace(",", "."))
+            rowObject["0_00VatBase"] = parseFloat(row[19].replace(",", "."))
+            rowObject["2_50VatBase"] = parseFloat(row[20].replace(",", "."))
+            rowObject["2_50Vat"] = parseFloat(row[21].replace(",", "."))
+            rowObject["5_00VatBase"] = parseFloat(row[22].replace(",", "."))
+            rowObject["5_00Vat"] = parseFloat(row[23].replace(",", "."))
+            rowObject["10_50VatBase"] = parseFloat(row[24].replace(",", "."))
+            rowObject["10_50Vat"] = parseFloat(row[25].replace(",", "."))
+            rowObject["21_00VatBase"] = parseFloat(row[26].replace(",", "."))
+            rowObject["21_00Vat"] = parseFloat(row[27].replace(",", "."))
+            rowObject["27_00VatBase"] = parseFloat(row[28].replace(",", "."))
+            rowObject["27_00Vat"] = parseFloat(row[29].replace(",", "."))
+            rowObject["totalRecorded"] = parseFloat(row[30].replace(",", "."))
+            rowObject["totalVat"] = parseFloat(row[31].replace(",", "."))
 
             return rowObject
         })

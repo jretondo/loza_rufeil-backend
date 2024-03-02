@@ -1,5 +1,4 @@
 import { Tables, Columns } from '../constant/TABLES';
-import { Restrictions } from '../constant/OTHERS';
 import { ICostumers } from '../interfaces/Tables';
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database';

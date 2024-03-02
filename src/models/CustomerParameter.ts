@@ -39,7 +39,7 @@ CustomerParameter.init({
         allowNull: true
     }
 }, {
-    tableName: Tables.PROVIDERS_PARAMETERS,
+    tableName: Tables.CUSTOMERS_PARAMETERS,
     timestamps: false,
     sequelize
 })

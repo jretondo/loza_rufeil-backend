@@ -29,7 +29,7 @@ import {
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
     getDataSheet,
-    jsonDataInvoiceGenerator
+    jsonDataInvoiceGeneratorComplete
 } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
 import ProviderParameter from "../../../models/ProviderParameter"
@@ -482,54 +482,32 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
         if (files) {
             const file = files.file[0];
             const dataSheet: Array<string[]> = getDataSheet(file.path);
-            const dataProcessed = jsonDataInvoiceGenerator(dataSheet)
+            //const dataProcessed = jsonDataInvoiceGenerator(dataSheet)
+            const dataProcessed = jsonDataInvoiceGeneratorComplete(dataSheet)
+
             setTimeout(() => {
                 fs.unlinkSync(file.path);
             }, 2500);
             const dataInvoice: Promise<IReceipts[]> = Promise.all(
                 dataProcessed.map(async (data) => {
-                    let vatTypeId = 0
-                    let taxRate: number = (data.totalVat > 0) ? ((data.totalVat * 100) / data.netRecorded) : 0
-                    taxRate = taxRate > 0 ? Math.round(taxRate * 100) / 100 : 0
 
-                    switch (taxRate) {
-                        case 0:
-                            vatTypeId = 3
-                            break;
-                        case 10.5:
-                            vatTypeId = 4
-                            break;
-                        case 21:
-                            vatTypeId = 5
-                            break;
-                        case 27:
-                            vatTypeId = 6
-                            break;
-                        case 5:
-                            vatTypeId = 8
-                            break;
-                        case 2.5:
-                            vatTypeId = 9
-                            break;
-                        default:
-                            break;
-                    }
                     let provider_ = ""
                     let provider = await Provider.findOne({
                         where: [{
-                            document_number: data.providerDocumentNumber,
+                            document_number: data.documentNumber,
                         }],
-                        include: [IvaCondition, {
-                            model: ProviderParameter,
-                            required: false,
-                            where: [{ accounting_period_id: accountingPeriodId }],
-                            include: [AccountChart]
-                        }]
+                        include: [IvaCondition,
+                            {
+                                model: ProviderParameter,
+                                required: false,
+                                where: [{ accounting_period_id: accountingPeriodId }],
+                                include: [AccountChart]
+                            }]
                     })
 
                     if (!provider) {
                         const providerData = await clientDataTax(
-                            data.providerDocumentNumber
+                            data.documentNumber
                         );
                         const taxes =
                             providerData.data?.datosRegimenGeneral?.impuesto || [];
@@ -559,7 +537,7 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         if (providerData.data?.datosGenerales) {
                             newProvider = {
                                 document_type: 80,
-                                document_number: String(data.providerDocumentNumber),
+                                document_number: String(data.documentNumber),
                                 business_name:
                                     providerData.data?.datosGenerales.tipoPersona ===
                                         "FISICA"
@@ -589,7 +567,7 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         } else {
                             newProvider = {
                                 document_type: 80,
-                                document_number: String(data.providerDocumentNumber),
+                                document_number: String(data.documentNumber),
                                 business_name: data.providerName,
                                 fantasie_name: data.providerName,
                                 iva_condition_id: 30,
@@ -618,7 +596,7 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         sell_point: data.sellPoint,
                         number: data.invoiceNumber,
                         total: data.totalInvoice,
-                        unrecorded: data.netNotRecorded,
+                        unrecorded: data.totalInvoice - data.totalRecorded,
                         exempt_transactions: data.exemptOperation,
                         vat_withholdings: 0,
                         national_tax_withholdings: data.otherTributes,
@@ -634,17 +612,78 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                         Provider: provider ? provider.dataValues : undefined,
                         ProviderRaw: provider_ ? provider_ : undefined,
                         provider_name: data.providerName,
-                        provider_document: data.providerDocumentNumber,
-                        VatRatesReceipts: [{
-                            receipt_id: 0,
-                            vat_type_id: vatTypeId,
-                            vat_amount: data.totalVat,
-                            recorded_net: data.netRecorded
-                        }],
+                        provider_document: data.documentNumber,
+                        VatRatesReceipts: [
+                            data["0_00VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 3,
+                                vat_amount: 0,
+                                recorded_net: data["0_00VatBase"]
+                            },
+                            data["2_50VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 9,
+                                vat_amount: data["2_50Vat"],
+                                recorded_net: data["2_50VatBase"]
+                            },
+                            data["5_00VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 8,
+                                vat_amount: data["5_00Vat"],
+                                recorded_net: data["5_00VatBase"]
+                            },
+                            data["10_50VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 4,
+                                vat_amount: data["10_50Vat"],
+                                recorded_net: data["10_50VatBase"]
+                            },
+                            data["21_00VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 5,
+                                vat_amount: data["21_00Vat"],
+                                recorded_net: data["21_00VatBase"]
+                            },
+                            data["27_00VatBase"] && {
+                                receipt_id: 0,
+                                vat_type_id: 5,
+                                vat_amount: data["27_00Vat"],
+                                recorded_net: data["27_00VatBase"]
+                            },
+                            data["vatWithholdings"] && {
+                                receipt_id: 0,
+                                vat_type_id: 12,
+                                vat_amount: data["vatWithholdings"],
+                                recorded_net: 0
+                            },
+                            data["nationalTaxes"] && {
+                                receipt_id: 0,
+                                vat_type_id: 13,
+                                vat_amount: data["nationalTaxes"],
+                                recorded_net: 0
+                            },
+                            data["grossIncome"] && {
+                                receipt_id: 0,
+                                vat_type_id: 14,
+                                vat_amount: data["grossIncome"],
+                                recorded_net: 0
+                            },
+                            data["localTaxes"] && {
+                                receipt_id: 0,
+                                vat_type_id: 15,
+                                vat_amount: data["localTaxes"],
+                                recorded_net: 0
+                            },
+                            data["internalTaxes"] && {
+                                receipt_id: 0,
+                                vat_type_id: 16,
+                                vat_amount: data["internalTaxes"],
+                                recorded_net: 0
+                            }
+                        ],
                     }
                 })
             )
-
             return dataInvoice;
         } else {
             throw new Error("No se encontró el archivo")
