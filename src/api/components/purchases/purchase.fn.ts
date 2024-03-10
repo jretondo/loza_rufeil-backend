@@ -216,7 +216,7 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
         stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
     const unrecorded =
-        stringFill((stringFill(purchaseItems.dataValues.unrecorded.toString().split(".")[0], 13) +
+        stringFill((stringFill((purchaseItems.dataValues.total - purchaseItems.dataValues.unrecorded).toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.unrecorded.toString().split(".")[1], 2)), 15, "0", false)
     const exemptTransactions =
         stringFill((stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[0], 13) +
