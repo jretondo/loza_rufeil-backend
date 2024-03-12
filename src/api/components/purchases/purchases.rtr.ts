@@ -3,21 +3,22 @@ import { checkClient, checkModule } from './../../../middlewares/secureMiddlewar
 import { Router } from 'express';
 import secure from '../../../auth/secure';
 import {
-    getClientsParams,
-    getPaymentsParametersClient,
-    insertClientsParams,
-    insertPaymentsParametersClient,
-    listPurchasePeriods,
-    insertPeriod,
-    getReceipts,
-    upsertReceipt,
-    deleteReceipt,
-    getReceipt,
-    createPurchaseTxt,
-    importCVSAfip,
-    getPeriodTotals,
-    checkReceipt,
-    upsertReceipts
+  getClientsParams,
+  getPaymentsParametersClient,
+  insertClientsParams,
+  insertPaymentsParametersClient,
+  listPurchasePeriods,
+  insertPeriod,
+  getReceipts,
+  upsertReceipt,
+  deleteReceipt,
+  getReceipt,
+  createPurchaseTxt,
+  importCVSAfip,
+  getPeriodTotals,
+  checkReceipt,
+  upsertReceipts,
+  getExcelReceips
 } from './purchases.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -102,6 +103,13 @@ router
     checkModule(EModules.purchases),
     uploadFile(FILES_ADDRESS.importsExcel, ["file"]),
     importCVSAfip
+  )
+  .post(
+    "/receipts/export",
+    secure(),
+    checkClient(EPermissions.write),
+    checkModule(EModules.purchases),
+    getExcelReceips
   )
   .post(
     "/receipt",

@@ -5,6 +5,7 @@ import { Columns, Tables } from '../constant/TABLES';
 import PurchasePeriod from './PurchasePeriod';
 import { Restrictions } from '../constant/OTHERS';
 import Provider from './Providers';
+import InvoiceType from './InvoiceTypes';
 
 type ReceiptCreationAttributes = Optional<IReceipts, 'id'>;
 

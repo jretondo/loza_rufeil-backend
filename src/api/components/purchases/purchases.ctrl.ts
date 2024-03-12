@@ -29,7 +29,8 @@ import {
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
     getDataSheet,
-    jsonDataInvoiceGeneratorComplete
+    jsonDataInvoiceGeneratorComplete,
+    receiptsExcelGenerator
 } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
 import ProviderParameter from "../../../models/ProviderParameter"
@@ -37,6 +38,7 @@ import { isDate } from "moment"
 import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
 import IvaCondition from "../../../models/IvaCondition";
 import { clientDataTax } from "../../../utils/afip/dataTax";
+import InvoiceType from "../../../models/InvoiceTypes";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -194,7 +196,8 @@ export const getReceipts = async (req: Request, res: Response, next: NextFunctio
                 include: [VatRateReceipt, {
                     model: PurchaseEntry,
                     required: true,
-                    include: [AccountChart]
+                    include: [AccountChart],
+                    separate: true,
                 }, {
                         model: Provider,
                         required: true,
@@ -724,4 +727,18 @@ export const getPeriodTotals = async (req: Request, res: Response, next: NextFun
         })
         return total
     })(Number(req.query.purchasePeriodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getExcelReceips = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (purchasePeriodId: number) {
+        const receipts = await Receipt.findAll({
+            where: { purchase_period_id: purchasePeriodId },
+            include: [Provider, VatRateReceipt, PurchaseEntry]
+        }).then(receipts => receipts.map(receipt => receipt.dataValues))
+        return receiptsExcelGenerator(receipts)
+    })(Number(req.body.purchasePeriodId))
+        .then(data => file(req, res, data.excelAddress,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            data.fileName))
+        .catch(next)
 }

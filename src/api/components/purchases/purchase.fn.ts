@@ -1,4 +1,6 @@
 import roundNumber from "../../../utils/functions/roundNumber";
+import path from 'path';
+import fs from 'fs';
 import {
     IHeaderReceiptReq,
     IPaymentReceiptReq,
@@ -371,5 +373,117 @@ export const jsonDataInvoiceGeneratorComplete = (dataSheet: Array<string[]>): ID
     } catch (error) {
         console.log('error :>> ', error);
         return []
+    }
+}
+
+export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
+    console.log('receipts :>> ', receipts);
+    const receiptsTraslated = receipts.map(receipt => {
+        const invoiceType = invoiceTypeConvert(receipt.invoice_type_id)
+        return {
+            Fecha: moment(receipt.date).format("DD/MM/YYYY"),
+            Tipo: invoiceType,
+            Punto_de_Venta: receipt.sell_point,
+            Número: receipt.number,
+            Proveedor: receipt.Provider?.business_name,
+            Cuit_Proveedor: receipt.Provider?.document_number,
+            Ingresos_Brutos: receipt.gross_income_withholdings,
+            Operaciones_Exentas: roundNumber(receipt.exempt_transactions),
+            Percepciones_de_IVA: roundNumber(receipt.vat_withholdings),
+            Percepciones_de_impuestos_nacionales: roundNumber(receipt.national_tax_withholdings),
+            Percepciones_de_ingresos_brutos: roundNumber(receipt.gross_income_withholdings),
+            Percepciones_municipales: roundNumber(receipt.local_tax_withholdings),
+            Impuestos_internos: roundNumber(receipt.internal_tax),
+            Total_Iva_0: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)?.recorded_net || 0 : 0,
+            Total_Iva_2_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)?.recorded_net || 0 : 0,
+            Total_Iva_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)?.recorded_net || 0 : 0,
+            Total_Iva_10_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)?.recorded_net || 0 : 0,
+            Total_Iva_21: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)?.recorded_net || 0 : 0,
+            Total_Iva_27: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 10)?.recorded_net || 0 : 0,
+            Total: roundNumber(receipt.total),
+            Observaciones: receipt.observation
+        }
+    })
+    const workBook = XLSX.utils.book_new()
+    const workSheet = XLSX.utils.json_to_sheet(receiptsTraslated)
+    XLSX.utils.book_append_sheet(workBook, workSheet, "Compras")
+    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
+    const excelAddress = path.join(__dirname, "..", "..", "..", "..", "public", "reports", "excel", uniqueSuffix + "-Compras.xlsx")
+    XLSX.writeFile(workBook, excelAddress)
+    setTimeout(() => {
+        fs.unlinkSync(excelAddress)
+    }, 2500);
+    return {
+        excelAddress,
+        fileName: uniqueSuffix + "-Compras.xlsx"
+    }
+}
+
+function invoiceTypeConvert(invoiceType: number) {
+    switch (invoiceType) {
+        case 1:
+            return "Factura A";
+        case 2:
+            return "Nota de debito A";
+        case 3:
+            return "Nota de credito A";
+        case 4:
+            return "Recibo A"
+        case 6:
+            return "Factura B";
+        case 7:
+            return "Nota de debito B";
+        case 8:
+            return "Nota de credito B";
+        case 9:
+            return "Recibo B";
+        case 11:
+            return "Factura C";
+        case 12:
+            return "Nota de debito C";
+        case 13:
+            return "Nota de credito C";
+        case 15:
+            return "Recibo C";
+        case 51:
+            return "Factura M";
+        case 52:
+            return "Nota de debito M";
+        case 53:
+            return "Nota de credito M";
+        case 54:
+            return "Recibo M";
+        case 81:
+            return "Tique factura A - Controlador Fiscal";
+        case 82:
+            return "Tique factura B - Controlador Fiscal";
+        case 83:
+            return "Tique";
+        case 109:
+            return "Tique C"
+        case 110:
+            return "Tique nota de credito"
+        case 111:
+            return "Tique fcatura C"
+        case 112:
+            return "Tique nota de crédito A"
+        case 113:
+            return "Tique nota de crédito B"
+        case 114:
+            return "Tique nota de crédito C"
+        case 115:
+            return "Tique nota de debito A"
+        case 116:
+            return "Tique nota de debito B"
+        case 117:
+            return "Tique nota de debito C"
+        case 118:
+            return "Tique factura M"
+        case 119:
+            return "Tique nota de credito M"
+        case 120:
+            return "Tique nota de debito M"
+        default:
+            return "";
     }
 }
