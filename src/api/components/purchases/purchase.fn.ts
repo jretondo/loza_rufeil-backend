@@ -214,12 +214,13 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const providerDocType = stringFill(purchaseItems.dataValues.Provider?.document_type.toString() || "", 2)
     const providerNumber = stringFill(purchaseItems.dataValues.Provider?.document_number.toString() || "", 20)
     const providerName = stringFill(purchaseItems.dataValues.Provider?.business_name || "".toString(), 30, " ", false)
+    const diference = "0.00"
     const total =
         stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
     const unrecorded =
-        stringFill((stringFill((purchaseItems.dataValues.total - purchaseItems.dataValues.unrecorded).toString().split(".")[0], 13) +
-            stringFill(purchaseItems.dataValues.unrecorded.toString().split(".")[1], 2)), 15, "0", false)
+        stringFill((stringFill(diference.toString().split(".")[0], 13) +
+            stringFill(diference.toString().split(".")[1], 2)), 15, "0", false)
     const exemptTransactions =
         stringFill((stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[1], 2)), 15, "0", false)
