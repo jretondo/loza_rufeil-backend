@@ -1,0 +1,125 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <%- style %>
+        <header class="header">
+            <div class="summary">
+                LISTADO DE COMPRAS <%- period %>
+            </div>
+        </header>
+        <div class="resumen">
+            <div class="user-data">
+                <div class="pv">
+                    <div class="data">
+                        <span>
+                            <font style="font-weight: bold;">Contribuyente:</font>
+                            <%- clientData %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="main">
+            <div class="tasks">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Comprobante</th>
+                            <th>Denominación</th>
+                            <th>CUIT</th>
+                            <th>Neto No gravado</th>
+                            <th>Neto</th>
+                            <% if (exempt_transactions>0) {%>
+                                <th>Op. Exentas</th>
+                                <% } %>
+                                    <% if (internal_tax>0) { %>
+                                        <th>Imp. Internos</th>
+                                        <% } %>
+                                            <% if (vat_21>0) { %>
+                                                <th>IVA 21%</th>
+                                                <% } %>
+                                                    <% if (vat_105>0) { %>
+                                                        <th>IVA 10.5%</th>
+                                                        <% } %>
+                                                            <% if (vat_27>0) { %>
+                                                                <th>IVA 27%</th>
+                                                                <% } %>
+                                                                    <% if (vat_5>0) { %>
+                                                                        <th>IVA 5%</th>
+                                                                        <% } %>
+                                                                            <% if (vat_25>0) { %>
+                                                                                <th>IVA 2.5%</th>
+                                                                                <% } %>
+                                                                                    <th>Percepción IVA</th>
+                                                                                    <th>Percepción IIBB</th>
+                                                                                    <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% purchases.forEach(function(item){ %>
+                            <tr>
+                                <td><%- item.date %></td>
+                                <td><%- item.receipt %></td>
+                                <td><%- item.business_name %></td>
+                                <td><%- item.document_number %></td>
+                                <td><%- item.unrecorded %></td>
+                                <td><%- item.total_net %></td>
+                                <% if (exempt_transactions>0) {%>
+                                    <td><%- item.exempt_transactions %></td>
+                                    <% } %>
+                                        <% if (internal_tax>0) {%>
+                                            <td><%- item.internal_tax %></td>
+                                            <% } %>
+                                                <% if (vat_21>0 ) { %>
+                                                    <td><%- item.vat_21 %></td>
+                                                    <% } %>
+                                                        <% if (vat_105>0) { %>
+                                                            <td><%- item.vat_105 %></td>
+                                                            <% } %>
+                                                                <% if (vat_27>0) { %>
+                                                                    <td><%- item.vat_27 %></td>
+                                                                    <% } %>
+                                                                        <% if (vat_5>0) {%>
+                                                                            <td><%- item.vat_5 %></td>
+                                                                            <% } %>
+                                                                                <% if (vat_25>0) { %>
+                                                                                    <td><%- item.vat_25 %></td>
+                                                                                    <% } %>
+                                                                                        <td><%- item.vat_withholdings %>
+                                                                                        </td>
+                                                                                        <td><%- item.gross_income_withholdings
+                                                                                                %></td>
+                                                                                        <td><%- item.total %></td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+                <div class="resumen">
+                    <div class="totales">
+                        <div class="listado">
+                            <% totalsList.forEach(function(item){ %>
+                                <div class="totalItem">
+                                    <div class="title">
+                                        <span>Total <%- item.name %> : </span>
+                                    </div>
+                                    <div class="import">
+                                        <span>$ <%- item.value %> </span>
+                                    </div>
+                                </div>
+                                <% }); %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+</body>
+
+</html>

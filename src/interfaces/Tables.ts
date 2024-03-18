@@ -144,7 +144,8 @@ export interface IPurchasePeriods {
     month: number,
     year: number,
     accounting_period_id: number,
-    closed?: boolean
+    closed?: boolean,
+    AccountingPeriod?: IAccountingPeriod
 }
 
 export interface IReceipts {

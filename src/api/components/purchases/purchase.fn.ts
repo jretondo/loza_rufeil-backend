@@ -16,6 +16,14 @@ import moment from "moment";
 import { stringFill } from "../../../utils/functions/stringFill";
 import XLSX from 'xlsx';
 import { IDataSheetCVSPurchaseImport, IDataSheetCVSPurchaseImportComplete } from "../../../interfaces/Others";
+import PurchasePeriod from "../../../models/PurchasePeriod";
+import { monthToStr } from "../../../utils/functions/monthStr";
+import Client from "../../../models/Client";
+import AccountingPeriod from "../../../models/AccountingPeriod";
+import { zfill } from "../../../utils/functions/fillZeros";
+import JsReport from "jsreport-core";
+import { promisify } from "util";
+import ejs from 'ejs';
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -378,7 +386,6 @@ export const jsonDataInvoiceGeneratorComplete = (dataSheet: Array<string[]>): ID
 }
 
 export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
-    console.log('receipts :>> ', receipts);
     const receiptsTraslated = receipts.map(receipt => {
         const invoiceType = invoiceTypeConvert(receipt.invoice_type_id)
         return {
@@ -418,6 +425,214 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
         excelAddress,
         fileName: uniqueSuffix + "-Compras.xlsx"
     }
+}
+
+export const resumeDataGenerator = async (receipts: IReceipts[]) => {
+    let clientId = 0
+    const period = await PurchasePeriod.findOne({
+        where: {
+            id: receipts[0].purchase_period_id
+        },
+        include: [AccountingPeriod]
+    }).then(periodData => {
+        clientId = periodData?.dataValues.AccountingPeriod?.client_id || 0
+        const month = monthToStr(periodData?.dataValues.month as number)
+        return `${month}/${periodData?.dataValues.year}`
+    })
+
+    const clientData = await Client.findOne({
+        where: { id: clientId }
+    }).then(client => {
+        return `${client?.dataValues.business_name} (CUIT: ${client?.dataValues.document_number})`
+    })
+    const total = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.total), 0))
+    const exempt_transactions = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.exempt_transactions), 0))
+    const vat_withholdings = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.vat_withholdings), 0))
+    const national_tax_withholdings = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.national_tax_withholdings), 0))
+    const gross_income_withholdings = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.gross_income_withholdings), 0))
+    const local_tax_withholdings = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.local_tax_withholdings), 0))
+    const internal_tax = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.internal_tax), 0))
+    const unrecorded = roundNumber(receipts.reduce((acc, receipt) => acc + Number(receipt.unrecorded), 0))
+
+    const neto_0: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 3)?.recorded_net || 0));
+    }, 0));
+
+    const neto_21: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 5)?.recorded_net || 0));
+    }, 0));
+
+    const vat_21: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 5)?.vat_amount || 0));
+    }, 0));
+
+    const neto_27: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 6)?.recorded_net || 0));
+    }, 0));
+
+    const vat_27: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 6)?.vat_amount || 0));
+    }, 0));
+
+    const neto_10_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 4)?.recorded_net || 0));
+    }, 0));
+
+    const vat_10_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 4)?.vat_amount || 0));
+    }, 0));
+
+
+    const neto_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 8)?.recorded_net || 0));
+    }, 0));
+
+    const vat_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 8)?.vat_amount || 0));
+    }, 0));
+
+
+    const neto_2_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.recorded_net || 0));
+    }, 0));
+
+    const vat_2_5: number = roundNumber(receipts.reduce((acc, receipt) => {
+        return acc + (Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0));
+    }, 0));
+
+
+    const totals = [
+        { name: "Total", value: total },
+        { name: "Operaciones Exentas", value: exempt_transactions },
+        { name: "Percepciones de IVA", value: vat_withholdings },
+        { name: "Percepciones de impuestos nacionales", value: national_tax_withholdings },
+        { name: "Percepciones de ingresos brutos", value: gross_income_withholdings },
+        { name: "Percepciones municipales", value: local_tax_withholdings },
+        { name: "Impuestos internos", value: internal_tax },
+        { name: "No grabado", value: unrecorded },
+        { name: "Total IVA 21%", value: vat_21 },
+        { name: "Total IVA 27%", value: vat_27 },
+        { name: "Total IVA 10.5%", value: vat_10_5 },
+        { name: "Total IVA 5%", value: vat_5 },
+        { name: "Total IVA 2.5%", value: vat_2_5 }
+    ]
+    const totalsList = totals.filter(total => total.value !== 0)
+    const purchases = receipts.map(receipt => {
+        return {
+            date: moment(receipt.date).format("DD/MM/YYYY"),
+            receipt: `${invoiceTypeConvert(receipt.invoice_type_id)} ${zfill(receipt.sell_point, 5)}-${zfill(receipt.number, 8)}`,
+            business_name: receipt.Provider?.business_name,
+            document_number: receipt.Provider?.document_number,
+            unrecorded: receipt.unrecorded,
+            total_net: roundNumber(receipt.VatRateReceipts ? receipt.VatRateReceipts.reduce((acc: any, vat: { recorded_net: any; }) => acc + Number(vat.recorded_net), 0) : 0),
+            exempt_transactions: receipt.exempt_transactions,
+            internal_tax: receipt.internal_tax,
+            local_tax_withholdings: receipt.local_tax_withholdings,
+            vat_21: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 5)?.vat_amount || 0)),
+            vat_27: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 6)?.vat_amount || 0)),
+            vat_105: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 4)?.vat_amount || 0)),
+            vat_5: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 8)?.vat_amount || 0)),
+            vat_25: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0)),
+            vat_withholdings: receipt.vat_withholdings,
+            gross_income_withholdings: receipt.gross_income_withholdings,
+            total: receipt.total
+        }
+    })
+
+    return {
+        period,
+        clientData,
+        totalsList,
+        purchases,
+        exempt_transactions: roundNumber(exempt_transactions),
+        internal_tax: roundNumber(internal_tax),
+        vat_21: roundNumber(vat_21),
+        vat_27: roundNumber(vat_27),
+        vat_105: roundNumber(vat_10_5),
+        vat_5: roundNumber(vat_5),
+        vat_25: roundNumber(vat_2_5),
+    }
+}
+
+export const receiptsPdfGenerator = async (receiptData: any): Promise<{
+    pdfAddress: string,
+    fileName: string
+}> => {
+    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
+    const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Compras.pdf")
+    return new Promise(async (resolve, reject) => {
+        //const productos = await productController.pricesProd()
+
+        function base64_encode(file: any) {
+            // read binary data
+            var bitmap: Buffer = fs.readFileSync(file);
+            // convert binary data to base64 encoded string
+            return Buffer.from(bitmap).toString('base64');
+        }
+
+        const logo = base64_encode(path.join("public", "images", "logo.png"))
+        const estilo = fs.readFileSync(path.join("views", "reports", "purchasesList", "styles.css"), 'utf8')
+
+        const datos = {
+            ...receiptData,
+            logo: 'data:image/png;base64,' + logo,
+            style: "<style>" + estilo + "</style>",
+        }
+
+        const jsreport = JsReport({
+            extensions: {
+                "chrome-pdf": {
+                    "launchOptions": {
+                        "args": ["--no-sandbox"]
+                    }
+                }
+            }
+        })
+
+        jsreport.use(require('jsreport-chrome-pdf')())
+
+        const writeFileAsync = promisify(fs.writeFile)
+        await ejs.renderFile(path.join("views", "reports", "purchasesList", "index.ejs"), datos, async (err, data) => {
+            if (err) {
+                console.log('err', err);
+                throw new Error("Algo salio mal")
+            }
+
+            await jsreport.init()
+
+            jsreport.render({
+                template: {
+                    content: data,
+                    name: 'lista',
+                    engine: 'none',
+                    recipe: 'chrome-pdf',
+                    chrome: {
+                        "landscape": true,
+                        "format": "legal",
+                        "scale": 0.8,
+                        displayHeaderFooter: false,
+                        marginBottom: "3.35cm",
+
+                        marginTop: "0.5cm",
+                        headerTemplate: ""
+                    },
+
+                },
+            })
+                .then(async (out) => {
+                    await writeFileAsync(pdfAddress, out.content)
+                    await jsreport.close()
+                    const dataFact = {
+                        pdfAddress,
+                        fileName: uniqueSuffix + "-Compras.xlsx"
+                    }
+                    resolve(dataFact)
+                })
+                .catch((e) => {
+                    reject(e)
+                });
+        })
+    })
 }
 
 function invoiceTypeConvert(invoiceType: number) {

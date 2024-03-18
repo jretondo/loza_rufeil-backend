@@ -18,7 +18,8 @@ import {
   getPeriodTotals,
   checkReceipt,
   upsertReceipts,
-  getExcelReceips
+  getExcelReceips,
+  getReport
 } from './purchases.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -110,6 +111,13 @@ router
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
     getExcelReceips
+  )
+  .post(
+    "/receipts/report",
+    secure(),
+    checkClient(EPermissions.write),
+    checkModule(EModules.purchases),
+    getReport
   )
   .post(
     "/receipt",

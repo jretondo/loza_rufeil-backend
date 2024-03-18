@@ -30,7 +30,9 @@ import {
     createPurchaseTxtVatRates,
     getDataSheet,
     jsonDataInvoiceGeneratorComplete,
-    receiptsExcelGenerator
+    receiptsExcelGenerator,
+    receiptsPdfGenerator,
+    resumeDataGenerator
 } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
 import ProviderParameter from "../../../models/ProviderParameter"
@@ -739,6 +741,21 @@ export const getExcelReceips = async (req: Request, res: Response, next: NextFun
     })(Number(req.body.purchasePeriodId))
         .then(data => file(req, res, data.excelAddress,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            data.fileName))
+        .catch(next)
+}
+
+export const getReport = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (purchasePeriodId: number) {
+        const receipts = await Receipt.findAll({
+            where: { purchase_period_id: purchasePeriodId },
+            include: [Provider, VatRateReceipt, PurchaseEntry]
+        }).then(receipts => receipts.map(receipt => receipt.dataValues))
+        const dataInvoice = await resumeDataGenerator(receipts)
+        return await receiptsPdfGenerator(dataInvoice)
+    })(Number(req.body.purchasePeriodId))
+        .then(data => file(req, res, data.pdfAddress,
+            'application/pdf',
             data.fileName))
         .catch(next)
 }
