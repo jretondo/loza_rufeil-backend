@@ -8,6 +8,7 @@ import {
     getAccountList,
     getAccountingEntries,
     getAttributableAccounts,
+    getJournalList,
     getNewChildren,
     lastEntryData,
     newAccountingEntry,
@@ -23,6 +24,7 @@ router
     .get("/period", secure(), checkClient(EPermissions.read), periodList)
     .get("/allowImport", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), allowImport)
     .get("/entries/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountingEntries)
+    .get("/journal/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getJournalList)
     .get("/lastEntryData", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), lastEntryData)
     .get("/accountingCharts", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountList)
     .get("/accountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getNewChildren)

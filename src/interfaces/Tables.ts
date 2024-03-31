@@ -284,6 +284,10 @@ export interface IAccountingEntries {
     lastEntry?: number,
     lastDate?: Date,
     firstDate?: Date,
+    totalDebit?: number,
+    totalCredit?: number,
+    perviousCredit?: number,
+    perviousDebit?: number,
     AccountingEntriesDetails?: IAccountingEntryDetail[]
 }
 

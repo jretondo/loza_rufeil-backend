@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, where } from 'sequelize';
+import { Op, Sequelize, WhereOptions, literal, where } from 'sequelize';
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
 import { error, success } from '../../../network/response';
-import { Columns } from '../../../constant/TABLES';
+import { Columns, Tables } from '../../../constant/TABLES';
 import AccountChart from '../../../models/AccountCharts';
 import { IAccountChartsToFront } from '../../../interfaces/Others';
 import { accountControl } from '../../../utils/classes/AccountControl';
@@ -16,6 +16,7 @@ import {
 } from './accounting.fn';
 import AccountingEntries from '../../../models/AccountingEntry';
 import AccountingEntriesDetails from '../../../models/AccountingEntryDetail';
+import { Where } from 'sequelize/types/utils';
 
 export const periodUpsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -396,8 +397,8 @@ export const getAccountingEntries = async (req: Request, res: Response, next: Ne
                 ],
                 order: [[Columns.accountingEntries.number, "ASC"]],
                 include: [{
+                    separate: account ? false : true,
                     model: AccountingEntriesDetails,
-                    order: [Columns.accountingEntriesDetails.id, "ASC"],
                     where: account ? { account_chart_id: account.id } : {},
                     include: [{
                         model: AccountChart
@@ -446,14 +447,145 @@ export const getAccountingEntries = async (req: Request, res: Response, next: Ne
                 ],
                 order: [[Columns.accountingEntries.number, "ASC"]],
                 include: [{
+                    separate: account ? false : true,
                     model: AccountingEntriesDetails,
-                    order: [Columns.accountingEntriesDetails.id, "ASC"],
                     where: account ? { account_chart_id: account.id } : {},
                     include: [{
                         model: AccountChart
                     }]
-                }]
+                }],
             })
+        }
+    })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getJournalList = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        page: number,
+        filters: {
+            dateFrom: string,
+            dateTo: string,
+            account: IAccountCharts,
+            text: string,
+            amountFrom: number,
+            amountTo: number,
+            number: number
+        },
+        accounting_period_id: number
+    ) {
+        const { dateFrom, dateTo, account, text, amountFrom, amountTo, number } = filters
+        const where: WhereOptions = [
+            accounting_period_id ? { accounting_period_id } : {},
+            dateFrom ? {
+                date: {
+                    [Op.gte]: dateFrom
+                }
+            } : {},
+            dateTo ? {
+                date: {
+                    [Op.lte]: dateTo
+                }
+            } : {},
+            number ? { number } : {},
+            text ? {
+                [Op.or]: [
+                    { description: { [Op.substring]: text } }
+                ]
+            } : {},
+            amountFrom ? {
+                [Op.or]: [
+                    { debit: { [Op.gte]: amountFrom } },
+                    { credit: { [Op.gte]: amountFrom } }
+                ]
+            } : {},
+            amountTo ? {
+                [Op.or]: [
+                    { debit: { [Op.lte]: amountTo } },
+                    { credit: { [Op.lte]: amountTo } }
+                ]
+            } : {},
+        ]
+
+        if (page) {
+            const ITEMS_PER_PAGE = 10;
+            const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
+            let { count, rows } = await AccountingEntries.findAndCountAll({
+                where,
+                order: [[Columns.accountingEntries.number, "ASC"]],
+                include: [{
+                    separate: account ? false : true,
+                    model: AccountingEntriesDetails,
+                    where: account ? { account_chart_id: account.id } : {},
+                    include: [{
+                        model: AccountChart
+                    }]
+                }],
+                limit: ITEMS_PER_PAGE,
+                offset: offset
+            })
+            if (page > 1) {
+                const previousBalances = await AccountingEntries.findAll({
+                    attributes: [
+                        [literal(`SUM(${Columns.accountingEntries.debit})`), "totalDebit"],
+                        [literal(`SUM(${Columns.accountingEntries.credit})`), "totalCredit"],
+                    ],
+                    where,
+                    order: [[Columns.accountingEntries.number, "ASC"]],
+                    include: [{
+                        separate: account ? false : true,
+                        model: AccountingEntriesDetails,
+                        where: account ? { account_chart_id: account.id } : {},
+                        include: [{
+                            model: AccountChart
+                        }]
+                    }],
+                    limit: (page - 1) * ITEMS_PER_PAGE
+                }).then((data) => data.map((entry) => ({
+                    totalDebit: Number(entry.dataValues.totalDebit),
+                    totalCredit: Number(entry.dataValues.totalCredit)
+                })))
+                let totalDebit = previousBalances[0].totalDebit || 0
+                let totalCredit = previousBalances[0].totalCredit || 0
+                let previousCredit = previousBalances[0].totalCredit || 0
+                let previousDebit = previousBalances[0].totalDebit || 0
+                const data = rows.map((entry, key) => {
+                    previousCredit = key > 0 ? previousCredit + rows[key - 1].dataValues.credit : previousCredit
+                    previousDebit = key > 0 ? previousDebit + rows[key - 1].dataValues.debit : previousDebit
+                    return {
+                        ...entry.dataValues,
+                        perviousCredit: previousCredit,
+                        perviousDebit: previousDebit,
+                        totalDebit: totalDebit += entry.dataValues.debit,
+                        totalCredit: totalCredit += entry.dataValues.credit,
+                    }
+                })
+                return {
+                    totalItems: count,
+                    itemsPerPage: ITEMS_PER_PAGE,
+                    items: data
+                }
+            } else {
+                let totalDebit = 0
+                let totalCredit = 0
+                let previousCredit = 0
+                let previousDebit = 0
+                const data = rows.map((entry, key) => {
+                    previousCredit = key > 0 ? previousCredit + rows[key - 1].dataValues.credit : previousCredit
+                    previousDebit = key > 0 ? previousDebit + rows[key - 1].dataValues.debit : previousDebit
+                    return {
+                        ...entry.dataValues,
+                        perviousCredit: previousCredit,
+                        perviousDebit: previousDebit,
+                        totalDebit: totalDebit += entry.dataValues.debit,
+                        totalCredit: totalCredit += entry.dataValues.credit,
+                    }
+                })
+                return {
+                    totalItems: count,
+                    itemsPerPage: ITEMS_PER_PAGE,
+                    items: data
+                }
+            }
         }
     })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }
