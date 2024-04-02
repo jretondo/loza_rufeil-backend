@@ -5,10 +5,14 @@ import {
     allowImport,
     copyPasteAccountsChart,
     deleteAccountChart,
+    downloadExcel,
+    downloadPDF,
     getAccountList,
     getAccountingEntries,
     getAttributableAccounts,
+    getBalance,
     getJournalList,
+    getLedger,
     getNewChildren,
     lastEntryData,
     newAccountingEntry,
@@ -25,7 +29,11 @@ router
     .get("/allowImport", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), allowImport)
     .get("/entries/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountingEntries)
     .get("/journal/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getJournalList)
+    .get("/ledger/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getLedger)
+    .get("/balance/:page", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getBalance)
     .get("/lastEntryData", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), lastEntryData)
+    .get("/accountingCharts/Excel/:periodId", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), downloadExcel)
+    .get("/accountingCharts/PDF/:periodId", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), downloadPDF)
     .get("/accountingCharts", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountList)
     .get("/accountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getNewChildren)
     .get("/attributableAccountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAttributableAccounts)

@@ -1,14 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, WhereOptions, literal, where } from 'sequelize';
+import { Op, Sequelize, WhereOptions, col, fn, literal } from 'sequelize';
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
-import { error, success } from '../../../network/response';
+import { error, file, success } from '../../../network/response';
 import { Columns, Tables } from '../../../constant/TABLES';
 import AccountChart from '../../../models/AccountCharts';
 import { IAccountChartsToFront } from '../../../interfaces/Others';
 import { accountControl } from '../../../utils/classes/AccountControl';
 import {
     accountChartItem,
+    accountListExcel,
+    accountListPDF,
     checkDetails,
     newDefaultAccountCharts,
     nextChildrenAccount,
@@ -16,7 +18,8 @@ import {
 } from './accounting.fn';
 import AccountingEntries from '../../../models/AccountingEntry';
 import AccountingEntriesDetails from '../../../models/AccountingEntryDetail';
-import { Where } from 'sequelize/types/utils';
+import Client from '../../../models/Client';
+import moment from 'moment';
 
 export const periodUpsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -586,6 +589,298 @@ export const getJournalList = async (req: Request, res: Response, next: NextFunc
                     items: data
                 }
             }
+        }
+    })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const downloadPDF = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountPeriodId: number, contain?: string) {
+        const accountingList = await AccountChart.findAll({
+            where: [
+                { accounting_period_id: accountPeriodId },
+                { name: { [Op.like]: `%${contain}%` } }
+            ],
+            order: [[`${Columns.accountCharts.code}`, "ASC"]]
+        })
+        const accountingPeriod = await AccountingPeriod.findOne({
+            where: { id: accountPeriodId },
+            include: [Client]
+        })
+
+        const control = new accountControl()
+
+        let list: Array<IAccountChartsToFront> = []
+
+        accountingList.map((account) => {
+            if (control.last.genre < account.dataValues.genre) {
+                list.push(accountChartItem(account.dataValues, true))
+                control.lastGenre(account.dataValues.genre)
+                control.addCountGenre()
+            } else if (control.last.group < account.dataValues.group) {
+                list[control.count.genre - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastGroup(account.dataValues.group)
+                control.addCountGroup()
+            } else if (control.last.caption < account.dataValues.caption) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastCaption(account.dataValues.caption)
+                control.addCountCaption()
+            } else if (control.last.account < account.dataValues.account) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts[control.count.caption - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastAccount(account.dataValues.account)
+                control.addCountAccount()
+            } else if (control.last.subAccount < account.dataValues.sub_account) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts[control.count.caption - 1]
+                    .subAccounts[control.count.account - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastSubAccount(account.dataValues.sub_account)
+                control.addCountSubAccount()
+            }
+        })
+        return accountListPDF(list, `${accountingPeriod?.dataValues.Client?.business_name} (${accountingPeriod?.dataValues.Client?.document_number})`, `${moment(accountingPeriod?.dataValues.from_date).format("DD/MM/YYYY")} - ${moment(accountingPeriod?.dataValues.to_date).format("DD/MM/YYYY")}`)
+    })(
+        Number(req.params.periodId),
+        String(req.query.contain ? req.query.contain : "")
+    ).then(data => file(req, res, data.pdfAddress,
+        'application/pdf',
+        data.fileName))
+        .catch(next)
+}
+
+
+export const downloadExcel = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountPeriodId: number, contain?: string) {
+        const accountingList = await AccountChart.findAll({
+            where: [
+                { accounting_period_id: accountPeriodId },
+                { name: { [Op.like]: `%${contain}%` } }
+            ],
+            order: [[`${Columns.accountCharts.code}`, "ASC"]]
+        })
+
+        const control = new accountControl()
+
+        let list: Array<IAccountChartsToFront> = []
+
+        accountingList.map((account) => {
+            if (control.last.genre < account.dataValues.genre) {
+                list.push(accountChartItem(account.dataValues, true))
+                control.lastGenre(account.dataValues.genre)
+                control.addCountGenre()
+            } else if (control.last.group < account.dataValues.group) {
+                list[control.count.genre - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastGroup(account.dataValues.group)
+                control.addCountGroup()
+            } else if (control.last.caption < account.dataValues.caption) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastCaption(account.dataValues.caption)
+                control.addCountCaption()
+            } else if (control.last.account < account.dataValues.account) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts[control.count.caption - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastAccount(account.dataValues.account)
+                control.addCountAccount()
+            } else if (control.last.subAccount < account.dataValues.sub_account) {
+                list[control.count.genre - 1]
+                    .subAccounts[control.count.group - 1]
+                    .subAccounts[control.count.caption - 1]
+                    .subAccounts[control.count.account - 1]
+                    .subAccounts.push(accountChartItem(account.dataValues, false))
+                control.lastSubAccount(account.dataValues.sub_account)
+                control.addCountSubAccount()
+            }
+        })
+        return accountListExcel(list)
+    })(
+        Number(req.params.periodId),
+        String(req.query.contain ? req.query.contain : "")
+    ).then(data => file(req, res, data.excelAddress,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        data.fileName))
+        .catch(next)
+}
+
+export const getLedger = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        page: number,
+        filters: {
+            dateFrom: string,
+            dateTo: string,
+            account: number
+        },
+        accounting_period_id: number
+    ) {
+        const { dateFrom, dateTo, account } = filters
+
+        if (!account) {
+            return {
+                totalItems: 0,
+                itemsPerPage: 0,
+                items: []
+            }
+        }
+        const ITEMS_PER_PAGE = 10;
+        const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
+
+        const entriesWhere: WhereOptions = [
+            accounting_period_id ? { accounting_period_id } : {},
+            dateFrom ? {
+                date: {
+                    [Op.gte]: dateFrom
+                }
+            } : {},
+            dateTo ? {
+                date: {
+                    [Op.lte]: dateTo
+                }
+            } : {}
+        ]
+        const entryDetailWhere: WhereOptions = [
+            { id: account }
+        ]
+
+        const { count, rows } = await AccountingEntriesDetails.findAndCountAll({
+            order: [[Columns.accountingEntriesDetails.id, "ASC"]],
+            include: [
+                {
+                    model: AccountingEntries,
+                    where: entriesWhere
+                },
+                {
+                    model: AccountChart,
+                    where: entryDetailWhere
+                }],
+            limit: ITEMS_PER_PAGE,
+            offset: offset
+        })
+
+        const previousBalances = await AccountingEntriesDetails.findAll({
+            attributes: [
+                [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.debit})`), "totalDebit"],
+                [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.credit})`), "totalCredit"],
+                [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.debit} - AccountingEntriesDetails.${Columns.accountingEntriesDetails.credit})`), "balance"],
+            ],
+            order: [[Columns.accountingEntriesDetails.id, "ASC"]],
+            include: [
+                {
+                    model: AccountingEntries,
+                    where: {
+                        date: {
+                            [Op.lt]: dateFrom
+                        }
+                    },
+                    attributes: []
+                },
+                {
+                    model: AccountChart,
+                    where: entryDetailWhere,
+                    attributes: []
+                }]
+        }).then((data) => data.map((entry) => ({
+            totalDebit: Number(entry.dataValues.totalDebit),
+            totalCredit: Number(entry.dataValues.totalCredit),
+            balance: Number(entry.dataValues.balance)
+        })))
+        let totalDebit = previousBalances[0].totalDebit || 0
+        let totalCredit = previousBalances[0].totalCredit || 0
+        let totalBalance = previousBalances[0].balance || 0
+        let previousCredit = previousBalances[0].totalCredit || 0
+        let previousDebit = previousBalances[0].totalDebit || 0
+        let previousBalance = previousBalances[0].balance || 0
+
+        const data = rows.map((entry, key) => {
+            previousCredit = key > 0 ? previousCredit + rows[key - 1].dataValues.credit : previousCredit
+            previousDebit = key > 0 ? previousDebit + rows[key - 1].dataValues.debit : previousDebit
+            previousBalance = key > 0 ? previousBalance + rows[key - 1].dataValues.debit - rows[key - 1].dataValues.credit : previousBalance
+            return {
+                ...entry.dataValues,
+                perviousCredit: previousCredit,
+                perviousDebit: previousDebit,
+                perviousBalance: previousBalance,
+                totalDebit: totalDebit += entry.dataValues.debit,
+                totalCredit: totalCredit += entry.dataValues.credit,
+                totalBalance: totalBalance += (entry.dataValues.debit - entry.dataValues.credit)
+            }
+        })
+        return {
+            totalItems: count,
+            itemsPerPage: ITEMS_PER_PAGE,
+            items: data
+        }
+    })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getBalance = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        page: number,
+        filters: {
+            dateFrom: string,
+            dateTo: string,
+            accountFrom: string,
+            accountTo: string
+        },
+        accounting_period_id: number
+    ) {
+        const { dateFrom, dateTo, accountFrom, accountTo } = filters
+        const ITEMS_PER_PAGE = 10;
+        const offset = ((page || 1) - 1) * (ITEMS_PER_PAGE);
+
+        const entriesWhere: WhereOptions = [
+            { accounting_period_id },
+            dateFrom ? {
+                date: {
+                    [Op.gte]: dateFrom
+                }
+            } : {},
+            dateTo ? {
+                date: {
+                    [Op.lte]: dateTo
+                }
+            } : {}
+        ]
+        const entryDetailWhere: WhereOptions = [
+            accountFrom ? { code: { [Op.gte]: accountFrom } } : {},
+            accountTo ? { code: { [Op.lte]: accountTo } } : {}
+        ]
+
+        const { count, rows } = await AccountingEntriesDetails.findAndCountAll({
+            attributes: {
+                include: [
+                    [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.debit})`), "totalDebit"],
+                    [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.credit})`), "totalCredit"],
+                    [literal(`SUM(AccountingEntriesDetails.${Columns.accountingEntriesDetails.debit} - AccountingEntriesDetails.${Columns.accountingEntriesDetails.credit})`), "balance"],
+                ]
+            },
+            order: [literal(`AccountChart.${Columns.accountCharts.code}`)],
+            group: [`AccountChart.${Columns.accountCharts.code}`],
+            include: [
+                {
+                    model: AccountingEntries,
+                    where: entriesWhere
+                },
+                {
+                    model: AccountChart,
+                    where: entryDetailWhere
+                }],
+            limit: ITEMS_PER_PAGE,
+            offset: offset
+        })
+        return {
+            totalItems: count.length,
+            itemsPerPage: ITEMS_PER_PAGE,
+            items: rows
         }
     })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

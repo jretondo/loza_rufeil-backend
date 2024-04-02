@@ -66,10 +66,10 @@
                     <tbody>
                         <% purchases.forEach(function(item){ %>
                             <tr>
-                                <td><%- item.date %></td>
-                                <td><%- item.receipt %></td>
-                                <td><%- item.business_name %></td>
-                                <td><%- item.document_number %></td>
+                                <td style="text-align: center;"><%- item.date %></td>
+                                <td style="text-align: center;"><%- item.receipt %></td>
+                                <td class="name"><%- item.business_name %></td>
+                                <td style="text-align: center;"><%- item.document_number %></td>
                                 <td><%- item.unrecorded %></td>
                                 <td><%- item.total_net %></td>
                                 <% if (exempt_transactions>0) {%>
@@ -97,7 +97,8 @@
                                                                                         </td>
                                                                                         <td><%- item.gross_income_withholdings
                                                                                                 %></td>
-                                                                                        <td><%- item.total %></td>
+                                                                                        <td style="text-align: right;">
+                                                                                            <%- item.total %></td>
                             </tr>
                             <% }); %>
                     </tbody>

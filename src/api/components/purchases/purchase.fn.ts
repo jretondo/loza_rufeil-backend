@@ -24,6 +24,7 @@ import { zfill } from "../../../utils/functions/fillZeros";
 import JsReport from "jsreport-core";
 import { promisify } from "util";
 import ejs from 'ejs';
+import { formatMoney } from "../../../utils/functions/formatMoney";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -516,26 +517,31 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
         { name: "Total IVA 5%", value: vat_5 },
         { name: "Total IVA 2.5%", value: vat_2_5 }
     ]
-    const totalsList = totals.filter(total => total.value !== 0)
+    const totalsList = totals.filter(total => total.value !== 0).map(total => {
+        return {
+            name: total.name,
+            value: formatMoney(total.value)
+        }
+    })
     const purchases = receipts.map(receipt => {
         return {
             date: moment(receipt.date).format("DD/MM/YYYY"),
             receipt: `${invoiceTypeConvert(receipt.invoice_type_id)} ${zfill(receipt.sell_point, 5)}-${zfill(receipt.number, 8)}`,
             business_name: receipt.Provider?.business_name,
             document_number: receipt.Provider?.document_number,
-            unrecorded: receipt.unrecorded,
-            total_net: roundNumber(receipt.VatRateReceipts ? receipt.VatRateReceipts.reduce((acc: any, vat: { recorded_net: any; }) => acc + Number(vat.recorded_net), 0) : 0),
-            exempt_transactions: receipt.exempt_transactions,
-            internal_tax: receipt.internal_tax,
-            local_tax_withholdings: receipt.local_tax_withholdings,
-            vat_21: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 5)?.vat_amount || 0)),
-            vat_27: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 6)?.vat_amount || 0)),
-            vat_105: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 4)?.vat_amount || 0)),
-            vat_5: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 8)?.vat_amount || 0)),
-            vat_25: roundNumber(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0)),
-            vat_withholdings: receipt.vat_withholdings,
-            gross_income_withholdings: receipt.gross_income_withholdings,
-            total: receipt.total
+            unrecorded: formatMoney(receipt.unrecorded),
+            total_net: formatMoney(receipt.VatRateReceipts ? receipt.VatRateReceipts.reduce((acc: any, vat: { recorded_net: any; }) => acc + Number(vat.recorded_net), 0) : 0),
+            exempt_transactions: formatMoney(receipt.exempt_transactions),
+            internal_tax: formatMoney(receipt.internal_tax),
+            local_tax_withholdings: formatMoney(receipt.local_tax_withholdings),
+            vat_21: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 5)?.vat_amount || 0)),
+            vat_27: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 6)?.vat_amount || 0)),
+            vat_105: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 4)?.vat_amount || 0)),
+            vat_5: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 8)?.vat_amount || 0)),
+            vat_25: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0)),
+            vat_withholdings: formatMoney(receipt.vat_withholdings),
+            gross_income_withholdings: formatMoney(receipt.gross_income_withholdings),
+            total: formatMoney(receipt.total)
         }
     })
 
@@ -544,13 +550,13 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
         clientData,
         totalsList,
         purchases,
-        exempt_transactions: roundNumber(exempt_transactions),
-        internal_tax: roundNumber(internal_tax),
-        vat_21: roundNumber(vat_21),
-        vat_27: roundNumber(vat_27),
-        vat_105: roundNumber(vat_10_5),
-        vat_5: roundNumber(vat_5),
-        vat_25: roundNumber(vat_2_5),
+        exempt_transactions: formatMoney(exempt_transactions),
+        internal_tax: formatMoney(internal_tax),
+        vat_21: formatMoney(vat_21),
+        vat_27: formatMoney(vat_27),
+        vat_105: formatMoney(vat_10_5),
+        vat_5: formatMoney(vat_5),
+        vat_25: formatMoney(vat_2_5),
     }
 }
 

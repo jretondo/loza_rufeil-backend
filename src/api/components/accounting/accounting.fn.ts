@@ -5,6 +5,13 @@ import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from "../../../
 import AccountChart from "../../../models/AccountCharts"
 import AccountingPeriod from "../../../models/AccountingPeriod"
 import Client from "../../../models/Client"
+import moment from "moment"
+import path from 'path';
+import fs from 'fs';
+import JsReport from "jsreport-core"
+import { promisify } from "util"
+import ejs from "ejs"
+import { utils, write } from "xlsx"
 
 export const nextChildrenAccount = async (accountData: AccountChart | null): Promise<AccountChart | null> => {
     if (accountData?.dataValues.group === 0) {
@@ -253,4 +260,112 @@ export const checkDetails = async (entry: IAccountingEntries, accounting_period_
     }
 
     return true
+}
+
+
+export const accountListPDF = async (accountList: any, client: string, periodStr: string): Promise<{
+    pdfAddress: string,
+    fileName: string
+}> => {
+    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
+    const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Plan-Cuentas.xlsx")
+    return new Promise(async (resolve, reject) => {
+        const datos = {
+            cuentas: accountList,
+            bussinesName: client,
+            periodStr: periodStr
+        }
+
+        const jsreport = JsReport({
+            extensions: {
+                "chrome-pdf": {
+                    "launchOptions": {
+                        "args": ["--no-sandbox"]
+                    }
+                }
+            }
+        })
+
+        jsreport.use(require('jsreport-chrome-pdf')())
+
+        const writeFileAsync = promisify(fs.writeFile)
+        await ejs.renderFile(path.join("views", "reports", "accountList", "index.ejs"), datos, async (err, data) => {
+            if (err) {
+                console.log('err', err);
+                throw new Error("Algo salio mal")
+            }
+
+            await jsreport.init()
+
+            jsreport.render({
+                template: {
+                    content: data,
+                    name: 'lista',
+                    engine: 'none',
+                    recipe: 'chrome-pdf',
+                    chrome: {
+                        "landscape": false,
+                        "format": "A4",
+                        "scale": 0.8,
+                        displayHeaderFooter: true,
+                        marginBottom: "3.35cm",
+                        marginTop: "0.5cm",
+                        headerTemplate: '<div></div>',
+                        footerTemplate: '<footer>Página <span class="pageNumber"></span> de <span class="pageCount"></span></footer>',
+                    },
+
+                },
+            })
+                .then(async (out) => {
+                    await writeFileAsync(pdfAddress, out.content)
+                    await jsreport.close()
+                    const dataFact = {
+                        pdfAddress,
+                        fileName: uniqueSuffix + "-Plan-Cuentas.xlsx"
+                    }
+                    resolve(dataFact)
+                })
+                .catch((e) => {
+                    reject(e)
+                });
+        })
+    })
+}
+
+export const accountListExcel = (accountList: any) => {
+    const wb = utils.book_new();
+    const ws = utils.aoa_to_sheet([
+        ['ID', 'Código', 'Nombre', 'Imputable', 'Ajuste por inflación']
+    ]);
+    agregarCuentas(ws, accountList, 1);
+    utils.book_append_sheet(wb, ws, 'Cuentas');
+
+    const excelBuffer = write(wb, { bookType: 'xlsx', type: 'buffer' });
+    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
+    const excelAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Plan-Cuentas.pdf")
+    fs.writeFileSync(excelAddress, excelBuffer);
+
+    return {
+        excelAddress,
+        fileName: uniqueSuffix + "-Plan-Cuentas.xlsx"
+    }
+}
+
+function agregarCuentas(ws: any, cuentas: any, rowNum: any) {
+    cuentas.forEach((cuenta: any) => {
+        const rowData = [
+            cuenta.id,
+            cuenta.code,
+            cuenta.name,
+            cuenta.attributable,
+            cuenta.inflation_adjustment
+        ];
+        utils.sheet_add_aoa(ws, [rowData], { origin: rowNum++ });
+
+        if (cuenta.subAccounts && cuenta.subAccounts.length > 0) {
+            rowNum = agregarCuentas(ws, cuenta.subAccounts, rowNum);
+        }
+    });
+
+    return rowNum;
 }

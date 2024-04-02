@@ -18,11 +18,10 @@ body {
 .title-box {}
 
 .header {
-    margin-bottom: 25px;
     position: relative;
     display: flex;
-    color: white;
-    background-color: #3573B0;
+    color: black;
+    padding: 0%;
 }
 
 .header::after {
@@ -42,7 +41,7 @@ body {
 
 .summary {
     flex: 1;
-    font-size: 24px;
+    font-size: 20px;
     text-align: center;
     padding: 8px 30px;
     margin: auto;
@@ -223,8 +222,7 @@ body {
 }
 
 .resumen .user-data {
-    width: 65%;
-    margin-top: 5px;
+    width: 100%;
     margin-bottom: 5px;
 }
 
@@ -247,10 +245,9 @@ body {
 }
 
 .resumen .user-data .data .user {
-    width: 40%;
-    padding: 15px;
+    padding: 5px;
     border: 1px solid #3573B0;
-    margin: 15px;
+    width: 100%;
 }
 
 .resumen .user-data .data .date {
@@ -294,16 +291,4 @@ body {
     width: 60%;
     text-align: left;
     padding: 15px;
-}
-
-tr td {
-    text-align: right;
-}
-
-tr td .name {
-    text-align: left;
-}
-
-tr td .data {
-    text-align: center;
 }

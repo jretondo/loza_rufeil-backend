@@ -122,7 +122,8 @@ export interface IAccountingPeriod {
     from_date: Date,
     to_date: Date,
     client_id: number,
-    closed: boolean
+    closed: boolean,
+    Client?: IClients
 }
 
 export interface IAccountCharts {
@@ -296,5 +297,8 @@ export interface IAccountingEntryDetail {
     account_chart_id: number,
     debit: number,
     credit: number,
-    accounting_entry_id: number
+    accounting_entry_id: number,
+    balance?: number,
+    totalDebit?: number,
+    totalCredit?: number,
 }

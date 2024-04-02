@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Cuentas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .cuenta-madre {
+            font-weight: bold;
+        }
+
+        .nivel1 {
+            padding-left: 20px;
+        }
+
+        .nivel2 {
+            padding-left: 40px;
+        }
+
+        .nivel3 {
+            padding-left: 60px;
+        }
+
+        .nivel4 {
+            padding-left: 80px;
+        }
+
+        .nivel5 {
+            padding-left: 100px;
+        }
+
+        .cabecera {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cabecera">
+        <h1>Plan de Cuentas</h1>
+        <p><%- bussinesName %></p>
+        <p>Período: <%- periodStr %></p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Código</th>
+                <th style="width: 60%;">Nombre</th>
+                <th style="width: 10%;">Imputable</th>
+                <th style="width: 10%;">Ajuste por Inflación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% const renderCuentas=(cuentas, nivel)=> {
+                cuentas.forEach((cuenta) => { %>
+                <tr>
+                    <td>
+                        <%= cuenta.code %>
+                    </td>
+                    <td class="nivel<%= nivel %>">
+                        <%= cuenta.name %>
+                    </td>
+                    <td>
+                        <%= cuenta.attributable ? 'Si' : 'No' %>
+                    </td>
+                    <td>
+                        <%= cuenta.inflation_adjustment ? 'Si' : 'No' %>
+                    </td>
+                </tr>
+                <% if (cuenta.subAccounts && cuenta.subAccounts.length> 0) {
+                    renderCuentas(cuenta.subAccounts, nivel + 1);
+                    } %>
+                    <% }); }; renderCuentas(cuentas, 1); %>
+        </tbody>
+    </table>
+</body>
+
+</html>
