@@ -630,7 +630,7 @@ export const receiptsPdfGenerator = async (receiptData: any): Promise<{
                     await jsreport.close()
                     const dataFact = {
                         pdfAddress,
-                        fileName: uniqueSuffix + "-Compras.xlsx"
+                        fileName: uniqueSuffix + "-Compras.pdf"
                     }
                     resolve(dataFact)
                 })
