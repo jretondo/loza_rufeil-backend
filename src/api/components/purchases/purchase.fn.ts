@@ -386,6 +386,124 @@ export const jsonDataInvoiceGeneratorComplete = (dataSheet: Array<string[]>): ID
     }
 }
 
+export const generateUncheckedReceiptsCVS = (receipts: {
+    checked: boolean,
+    date: Date,
+    invoice_type_id: number,
+    sell_point: number,
+    number: number,
+    total: number,
+    unrecorded: number,
+    exempt_transactions: number,
+    vat_withholdings: number,
+    national_tax_withholdings: number,
+    gross_income_withholdings: number,
+    local_tax_withholdings: number,
+    internal_tax: number,
+    vat_rates_quantity: number,
+    provider_id: number,
+    purchase_period_id: number,
+    observation: string,
+    word: string,
+    receipt_type: number,
+    Provider: IProviders | undefined,
+    ProviderRaw: IProviders | undefined,
+    provider_name: string,
+    provider_document: Number,
+    VatRatesReceipts: IVatRatesReceipts[]
+}[]) => {
+    const workBook = XLSX.utils.book_new()
+    const data: {
+        fecha: string,
+        tipo: number,
+        punto_de_venta: number,
+        numero: number,
+        tipo_documento: number,
+        numero_documento: string,
+        denominacion: string,
+        imp_total: number,
+        moneda: "PES",
+        tipo_cambio: 1,
+        imp_no_grabado: number,
+        imp_exento: number,
+        cred_fiscal: number,
+        imp_pago_ctas: number,
+        imp_percepciones_iibb: number,
+        imp_percepciones_municipales: number,
+        imp_cta_iva: number,
+        imp_internos: number,
+        imp_otros_tributos: number,
+        neto_iva_0: number,
+        neto_iva_2_5: number,
+        iva_2_5: number,
+        neto_iva_5: number,
+        iva_5: number,
+        neto_iva_10_5: number,
+        iva_10_5: number,
+        neto_iva_21: number,
+        iva_21: number,
+        neto_iva_27: number,
+        iva_27: number,
+        neto_gravado: number,
+        iva_total: number
+    }[] = receipts.map(receipt => {
+        const invoiceType = Number(receipt.invoice_type_id)
+        const totalVat: number = Number((receipt.VatRatesReceipts ? receipt.VatRatesReceipts.reduce((acc, vat) => acc + Number(vat.vat_amount ?
+            vat.vat_type_id < 10 ? vat.vat_amount : 0 : 0), 0) : 0).toFixed(2))
+        const totalNet: number = Number((receipt.VatRatesReceipts ? receipt.VatRatesReceipts.reduce((acc, vat) => acc + Number(vat.recorded_net ?
+            vat.vat_type_id < 10 ? vat.recorded_net : 0 : 0), 0) : 0).toFixed(2))
+
+        return {
+            fecha: moment(receipt.date).format("DD/MM/YYYY"),
+            tipo: invoiceType,
+            punto_de_venta: receipt.sell_point,
+            numero: receipt.number,
+            tipo_documento: receipt.Provider?.document_type || 80,
+            numero_documento: receipt.Provider?.document_number || "",
+            denominacion: receipt.Provider?.business_name || "",
+            imp_total: receipt.total,
+            moneda: "PES",
+            tipo_cambio: 1,
+            imp_no_grabado: Number(receipt.unrecorded.toFixed(2)) - totalVat,
+            imp_exento: receipt.exempt_transactions,
+            cred_fiscal: totalVat,
+            imp_pago_ctas: receipt.national_tax_withholdings,
+            imp_percepciones_iibb: receipt.gross_income_withholdings,
+            imp_percepciones_municipales: receipt.local_tax_withholdings,
+            imp_cta_iva: receipt.vat_withholdings,
+            imp_internos: receipt.internal_tax,
+            imp_otros_tributos: 0,
+            neto_iva_0: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 3)?.recorded_net || 0 : 0,
+            neto_iva_2_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)?.recorded_net || 0 : 0,
+            iva_2_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0 : 0,
+            neto_iva_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)?.recorded_net || 0 : 0,
+            iva_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)?.vat_amount || 0 : 0,
+            neto_iva_10_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)?.recorded_net || 0 : 0,
+            iva_10_5: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)?.vat_amount || 0 : 0,
+            neto_iva_21: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)?.recorded_net || 0 : 0,
+            iva_21: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)?.vat_amount || 0 : 0,
+            neto_iva_27: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)?.recorded_net || 0 : 0,
+            iva_27: receipt.VatRatesReceipts ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)?.vat_amount || 0 : 0,
+            neto_gravado: totalNet,
+            iva_total: totalVat
+        }
+    })
+
+
+    const workSheet = XLSX.utils.json_to_sheet(data)
+    XLSX.utils.book_append_sheet(workBook, workSheet, "Compras")
+    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
+    const excelAddress = path.join(__dirname, "..", "..", "..", "..", "public", "reports", "excel", uniqueSuffix + "-Compras.xlsx")
+    XLSX.writeFile(workBook, excelAddress);
+    setTimeout(() => {
+        fs.unlinkSync(excelAddress)
+    }, 2500);
+    return {
+        excelAddress,
+        fileName: uniqueSuffix + "-Compras.xlsx"
+    }
+}
+
 export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
     const receiptsTraslated = receipts.map(receipt => {
         const invoiceType = invoiceTypeConvert(receipt.invoice_type_id)

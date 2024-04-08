@@ -28,6 +28,7 @@ import {
     checkDataReqReceipt,
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
+    generateUncheckedReceiptsCVS,
     getDataSheet,
     jsonDataInvoiceGeneratorComplete,
     receiptsExcelGenerator,
@@ -694,6 +695,41 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
             throw new Error("No se encontró el archivo")
         }
     })(req.files as { file: Express.Multer.File[] }, req.body.accountingPeriodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const generateUncheckedReceipts = (req: Request, res: Response, next: NextFunction) => {
+    (async function (receipts: {
+        checked: boolean,
+        date: Date,
+        invoice_type_id: number,
+        sell_point: number,
+        number: number,
+        total: number,
+        unrecorded: number,
+        exempt_transactions: number,
+        vat_withholdings: number,
+        national_tax_withholdings: number,
+        gross_income_withholdings: number,
+        local_tax_withholdings: number,
+        internal_tax: number,
+        vat_rates_quantity: number,
+        provider_id: number,
+        purchase_period_id: number,
+        observation: string,
+        word: string,
+        receipt_type: number,
+        Provider: IProviders | undefined,
+        ProviderRaw: IProviders | undefined,
+        provider_name: string,
+        provider_document: Number,
+        VatRatesReceipts: IVatRatesReceipts[]
+    }[]) {
+        return generateUncheckedReceiptsCVS(receipts)
+    })(req.body.receipts)
+        .then(data => file(req, res, data.excelAddress,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            data.fileName))
+        .catch(next)
 }
 
 export const getPeriodTotals = async (req: Request, res: Response, next: NextFunction) => {

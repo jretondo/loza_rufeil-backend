@@ -19,7 +19,8 @@ import {
   checkReceipt,
   upsertReceipts,
   getExcelReceips,
-  getReport
+  getReport,
+  generateUncheckedReceipts
 } from './purchases.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -111,6 +112,13 @@ router
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
     getExcelReceips
+  )
+  .post(
+    "/receipt/unchecked",
+    secure(),
+    checkClient(EPermissions.write),
+    checkModule(EModules.purchases),
+    generateUncheckedReceipts
   )
   .post(
     "/receipts/report",

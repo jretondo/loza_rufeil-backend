@@ -25,6 +25,7 @@ import modules from './components/modules/modules.rtr';
 import purchases from './components/purchases/purchases.rtr';
 import views from './components/views/network';
 import morgan from 'morgan';
+import bodyParser from 'body-parser';
 
 import { config } from '../config';
 export class App {
@@ -39,6 +40,8 @@ export class App {
     }
 
     private settings() {
+        this.app.use(bodyParser.json({ limit: '10mb' }));
+        this.app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
         this.app.set('port', this.port);
         this.app.set('views', path.join('views'));
         this.app.set('view engine', 'ejs');
