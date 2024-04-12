@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, WhereOptions, col, fn, literal } from 'sequelize';
+import { Op, Sequelize, UpdateOptions, WhereOptions, col, fn, literal } from 'sequelize';
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
 import { error, file, success } from '../../../network/response';
@@ -12,6 +12,7 @@ import {
     accountListExcel,
     accountListPDF,
     checkDetails,
+    getUpdateAttributes,
     newDefaultAccountCharts,
     nextChildrenAccount,
     periodListFn
@@ -883,4 +884,94 @@ export const getBalance = async (req: Request, res: Response, next: NextFunction
             items: rows
         }
     })(Number(req.params.page), req.query as any, Number(req.body.periodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const checkEntryNumberChange = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        accounting_period_id: number,
+        entryNumber: number,
+        newEntryNumber: number,
+    ) {
+        const type = entryNumber > newEntryNumber ? 1 : entryNumber < newEntryNumber ? 2 : 0;
+        const lastEntryNumber = await AccountingEntries.findOne({
+            attributes: [[fn("MAX", col(`${Columns.accountingEntries.number}`)), "lastEntry"]],
+            where: { accounting_period_id }
+        }).then((data) => data?.dataValues.lastEntry)
+        if (lastEntryNumber && entryNumber > lastEntryNumber) {
+            throw Error("El número de entrada contable no puede ser mayor al último número de entrada contable.")
+        }
+        if (lastEntryNumber && entryNumber < 1) {
+            throw Error("El número de entrada contable no puede ser menor a 1.")
+        }
+
+        const minDateEntry = await AccountingEntries.findOne({
+            attributes: [Columns.accountingEntries.date],
+            where: [
+                { accounting_period_id },
+                { number: type === 2 ? newEntryNumber : newEntryNumber - 1 }
+            ]
+        }).then((data) => data?.dataValues.date)
+
+        const maxDateEntry = await AccountingEntries.findOne({
+            attributes: [Columns.accountingEntries.date],
+            where: [
+                { accounting_period_id },
+                { number: type === 1 ? newEntryNumber : newEntryNumber + 1 }
+            ]
+        }).then((data) => data?.dataValues.date)
+
+        return {
+            minLimitDate: minDateEntry,
+            maxLimitDate: maxDateEntry
+        }
+    })(
+        Number(req.params.periodId),
+        Number(req.params.number),
+        Number(req.params.newNumber)
+    ).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const reorderEntries = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        accounting_period_id: number,
+        entryNumber: number,
+        entryId: number,
+        newEntryNumber: number,
+        newEntryDate: string
+    ) {
+        const entry = await AccountingEntries.findOne({
+            where: [
+                { accounting_period_id },
+                { number: entryNumber },
+                { id: entryId }
+            ]
+        })
+        if (entry) {
+            const type = entryNumber > newEntryNumber ? 1 : entryNumber < newEntryNumber ? 2 : 0;
+            const { updateAll, attributesAll } = getUpdateAttributes(type, accounting_period_id, entryId, newEntryNumber, entryNumber);
+
+            if (updateAll) {
+                await AccountingEntries.update(updateAll, attributesAll);
+            }
+
+            return await AccountingEntries.update({
+                number: newEntryNumber,
+                date: moment(newEntryDate)
+            }, {
+                where: [
+                    { id: entryId },
+                    { accounting_period_id }
+                ]
+            });
+        } else {
+            throw Error("No se encontró la entrada contable.");
+        }
+    }
+    )(
+        req.body.periodId,
+        req.body.number,
+        req.body.id,
+        req.body.newNumber,
+        req.body.newDate
+    ).then(data => success({ req, res, message: data })).catch(next)
 }

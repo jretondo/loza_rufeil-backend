@@ -3,6 +3,7 @@ import { EModules, EPermissions } from '../../../constant/OTHERS';
 import secure from '../../../auth/secure';
 import {
     allowImport,
+    checkEntryNumberChange,
     copyPasteAccountsChart,
     deleteAccountChart,
     downloadExcel,
@@ -18,6 +19,7 @@ import {
     newAccountingEntry,
     periodList,
     periodUpsert,
+    reorderEntries,
     updateAccountingEntry,
     upsertAccountChart
 } from './accounting.ctrl';
@@ -34,11 +36,13 @@ router
     .get("/lastEntryData", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), lastEntryData)
     .get("/accountingCharts/Excel/:periodId", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), downloadExcel)
     .get("/accountingCharts/PDF/:periodId", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), downloadPDF)
+    .get("/accountingEntry/reorder/check/:periodId/:number/:newNumber", secure(), checkClient(EPermissions.write), checkModule(EModules.accounting), checkEntryNumberChange)
     .get("/accountingCharts", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAccountList)
     .get("/accountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getNewChildren)
     .get("/attributableAccountingChart", secure(), checkClient(EPermissions.read), checkModule(EModules.accounting), getAttributableAccounts)
     .post("/period", secure(), checkClient(EPermissions.write), periodUpsert)
     .put("/period", secure(), checkClient(EPermissions.update), checkModule(EModules.accounting), copyPasteAccountsChart)
+    .put("/accountingEntry/reorder", secure(), checkClient(EPermissions.write), checkModule(EModules.accounting), reorderEntries)
     .put("/accountingEntry", secure(), checkClient(EPermissions.write), checkModule(EModules.accounting), updateAccountingEntry)
     .post("/accountingEntry", secure(), checkClient(EPermissions.write), checkModule(EModules.accounting), newAccountingEntry)
     .post("/accountingChart", secure(), checkClient(EPermissions.write), checkModule(EModules.accounting), upsertAccountChart)

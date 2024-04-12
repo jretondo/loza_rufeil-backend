@@ -276,7 +276,7 @@ export interface IPurchaseEntries {
 
 export interface IAccountingEntries {
     id?: number,
-    date: Date,
+    date: Date | string,
     accounting_period_id: number,
     description: string,
     debit: number,

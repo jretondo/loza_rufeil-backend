@@ -1,4 +1,4 @@
-import { Op, Sequelize } from "sequelize"
+import { Op, Sequelize, UpdateOptions, literal } from "sequelize"
 import { Columns } from "../../../constant/TABLES"
 import { IAccountChartsToFront } from "../../../interfaces/Others"
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from "../../../interfaces/Tables"
@@ -369,3 +369,35 @@ function agregarCuentas(ws: any, cuentas: any, rowNum: any) {
 
     return rowNum;
 }
+
+export const getUpdateAttributes = (type: number, accounting_period_id: number, entryId: number, newEntryNumber: number, entryNumber: number) => {
+    let updateAll = undefined;
+    let attributesAll: UpdateOptions = {
+        fields: [Columns.accountingEntries.date],
+        where: [{ accounting_period_id }, { id: entryId }],
+        validate: true,
+    };
+    switch (type) {
+        case 1:
+            attributesAll.where = [
+                { number: { [Op.gte]: newEntryNumber } },
+                { number: { [Op.lt]: entryNumber } },
+                { accounting_period_id }
+            ];
+            attributesAll.fields = [Columns.accountingEntries.number, Columns.accountingEntries.date];
+            updateAll = { number: literal(`${Columns.accountingEntries.number} + 1`) };
+            break;
+        case 2:
+            attributesAll.where = [
+                { number: { [Op.gt]: entryNumber } },
+                { number: { [Op.lte]: newEntryNumber } },
+                { accounting_period_id }
+            ];
+            attributesAll.fields = [Columns.accountingEntries.number, Columns.accountingEntries.date];
+            updateAll = { number: literal(`${Columns.accountingEntries.number} - 1`) };
+            break;
+        default:
+            break;
+    }
+    return { updateAll, attributesAll };
+};
