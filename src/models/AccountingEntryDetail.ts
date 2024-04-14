@@ -21,10 +21,10 @@ AccountingEntriesDetails.init({
         type: DataTypes.INTEGER
     },
     debit: {
-        type: DataTypes.INTEGER
+        type: DataTypes.DECIMAL(12, 2),
     },
     credit: {
-        type: DataTypes.INTEGER
+        type: DataTypes.DECIMAL(12, 2),
     },
     accounting_entry_id: {
         type: DataTypes.INTEGER

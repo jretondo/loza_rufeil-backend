@@ -26,10 +26,10 @@ AccountingEntries.init({
         type: DataTypes.STRING
     },
     debit: {
-        type: DataTypes.INTEGER
+        type: DataTypes.DECIMAL(12, 2),
     },
     credit: {
-        type: DataTypes.INTEGER
+        type: DataTypes.DECIMAL(12, 2),
     },
     number: {
         type: DataTypes.INTEGER

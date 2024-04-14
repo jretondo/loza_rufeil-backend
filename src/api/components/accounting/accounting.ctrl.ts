@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, UpdateOptions, WhereOptions, col, fn, literal } from 'sequelize';
+import { Op, Sequelize, WhereOptions, col, fn, literal } from 'sequelize';
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
 import { error, file, success } from '../../../network/response';
-import { Columns, Tables } from '../../../constant/TABLES';
+import { Columns } from '../../../constant/TABLES';
 import AccountChart from '../../../models/AccountCharts';
 import { IAccountChartsToFront } from '../../../interfaces/Others';
 import { accountControl } from '../../../utils/classes/AccountControl';
@@ -21,6 +21,7 @@ import AccountingEntries from '../../../models/AccountingEntry';
 import AccountingEntriesDetails from '../../../models/AccountingEntryDetail';
 import Client from '../../../models/Client';
 import moment from 'moment';
+import PurchasePeriod from '../../../models/PurchasePeriod';
 
 export const periodUpsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -258,7 +259,12 @@ export const lastEntryData = async (req: Request, res: Response, next: NextFunct
 }
 
 export const newAccountingEntry = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (accountingEntry: IAccountingEntries, accounting_period_id: number) {
+    (async function (
+        accountingEntry: IAccountingEntries,
+        accounting_period_id: number,
+        purchasePeriodId: number,
+        sellsPeriodId: number
+    ) {
         if (!await checkDetails(accountingEntry, accounting_period_id)) {
             throw Error("La entrada contable no está balanceada.")
         }
@@ -289,6 +295,9 @@ export const newAccountingEntry = async (req: Request, res: Response, next: Next
                 }))
 
                 if (entriesDetails) {
+                    if (purchasePeriodId) {
+                        await PurchasePeriod.update({ accounting_entry_id: accountingEntryData.dataValues.id }, { where: { id: purchasePeriodId } })
+                    }
                     return {
                         ...accountingEntryData.dataValues,
                         AccountingEntriesDetails: entriesDetails
@@ -301,7 +310,12 @@ export const newAccountingEntry = async (req: Request, res: Response, next: Next
             throw Error("No se pudo crear la entrada contable.")
         }
 
-    })(req.body, req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+    })(
+        req.body,
+        req.body.periodId,
+        req.body.purchasePeriodId,
+        req.body.sellsPeriodId
+    ).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const updateAccountingEntry = async (req: Request, res: Response, next: NextFunction) => {
@@ -974,4 +988,24 @@ export const reorderEntries = async (req: Request, res: Response, next: NextFunc
         req.body.newNumber,
         req.body.newDate
     ).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const deleteEntry = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (entryId: number, accounting_period_id: number) {
+        const entry = await AccountingEntries.findOne({
+            where: [
+                { id: entryId },
+                { accounting_period_id }
+            ]
+        })
+        if (entry) {
+            const updateAttribute = getUpdateAttributes(3, accounting_period_id, entryId, entry.dataValues.number, entry.dataValues.number);
+            if (updateAttribute.updateAll) {
+                await AccountingEntries.update(updateAttribute.updateAll, updateAttribute.attributesAll);
+                return await AccountingEntries.destroy({
+                    where: { id: entryId }
+                })
+            }
+        }
+    })(Number(req.params.entryId), Number(req.params.periodId)).then(data => success({ req, res, message: data })).catch(next)
 }

@@ -23,7 +23,7 @@ import PaymentTypeParameter from "../../../models/PaymentTypeParameter"
 import Receipt from "../../../models/Receipts"
 import Provider from "../../../models/Providers"
 import VatRateReceipt from "../../../models/VatRateReceipt"
-import { Op } from "sequelize"
+import { Op, col, fn } from "sequelize"
 import {
     checkDataReqReceipt,
     createPurchaseTxtItems,
@@ -42,6 +42,7 @@ import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
 import IvaCondition from "../../../models/IvaCondition";
 import { clientDataTax } from "../../../utils/afip/dataTax";
 import InvoiceType from "../../../models/InvoiceTypes";
+import { Columns } from "../../../constant/TABLES";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -767,7 +768,7 @@ export const getPeriodTotals = async (req: Request, res: Response, next: NextFun
     })(Number(req.query.purchasePeriodId)).then(data => success({ req, res, message: data })).catch(next)
 }
 
-export const getExcelReceips = async (req: Request, res: Response, next: NextFunction) => {
+export const getExcelReceipts = async (req: Request, res: Response, next: NextFunction) => {
     (async function (purchasePeriodId: number) {
         const receipts = await Receipt.findAll({
             where: { purchase_period_id: purchasePeriodId },
@@ -794,4 +795,42 @@ export const getReport = async (req: Request, res: Response, next: NextFunction)
             'application/pdf',
             data.fileName))
         .catch(next)
+}
+
+export const closePeriod = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (
+        purchasePeriodId: number,
+        accountingPeriodId: number,
+    ) {
+        return await PurchasePeriod.update({ closed: true }, {
+            where: [
+                { id: purchasePeriodId },
+                { accounting_period_id: accountingPeriodId }
+            ]
+        })
+    })(req.body.purchasePeriodId, req.body.accountingPeriodId).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const getClosedPeriods = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (accountingPeriodId: number) {
+        return await PurchasePeriod.findAll({
+            where: [{ accounting_period_id: accountingPeriodId }, { closed: true }, { accounting_entry_id: null }]
+        })
+    })(Number(req.query.accountingPeriodId)).then(data => success({ req, res, message: data })).catch(next)
+}
+
+export const buildEntry = async (req: Request, res: Response, next: NextFunction) => {
+    (async function (purchasePeriodId: number) {
+        return await PurchaseEntry.findAll({
+            attributes: [
+                Columns.purchaseEntries.account_chart_id,
+                Columns.purchaseEntries.receipt_id,
+                [fn('sum', col(Columns.purchaseEntries.debit)), 'debit'],
+                [fn('sum', col(Columns.purchaseEntries.credit)), 'credit'],
+            ],
+            where: [{ purchase_period_id: purchasePeriodId }, { account_chart_id: { [Op.ne]: null } }],
+            group: [Columns.purchaseEntries.account_chart_id],
+            include: [Receipt, AccountChart]
+        })
+    })(Number(req.params.purchasePeriodId)).then(data => success({ req, res, message: data })).catch(next)
 }

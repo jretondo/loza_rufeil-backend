@@ -18,9 +18,12 @@ import {
   getPeriodTotals,
   checkReceipt,
   upsertReceipts,
-  getExcelReceips,
+  getExcelReceipts,
   getReport,
-  generateUncheckedReceipts
+  generateUncheckedReceipts,
+  closePeriod,
+  getClosedPeriods,
+  buildEntry
 } from './purchases.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -28,6 +31,13 @@ import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
 const router = Router();
 
 router
+  .get(
+    "/entries/:purchasePeriodId",
+    secure(),
+    checkClient(EPermissions.read),
+    checkModule(EModules.accounting),
+    buildEntry
+  )
   .get(
     "/period/total",
     secure(),
@@ -41,6 +51,13 @@ router
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
     listPurchasePeriods
+  )
+  .get(
+    "/periods/closed",
+    secure(),
+    checkClient(EPermissions.read),
+    checkModule(EModules.accounting),
+    getClosedPeriods
   )
   .get(
     "/params",
@@ -111,7 +128,7 @@ router
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    getExcelReceips
+    getExcelReceipts
   )
   .post(
     "/receipt/unchecked",
@@ -161,6 +178,14 @@ router
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
     upsertReceipt
-  );
+  )
+  .put(
+    "/period/close",
+    secure(),
+    checkClient(EPermissions.write),
+    checkModule(EModules.purchases),
+    closePeriod
+  )
+
 
 export default router;

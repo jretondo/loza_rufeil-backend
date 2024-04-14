@@ -12,6 +12,7 @@ import JsReport from "jsreport-core"
 import { promisify } from "util"
 import ejs from "ejs"
 import { utils, write } from "xlsx"
+import roundNumber from "../../../utils/functions/roundNumber"
 
 export const nextChildrenAccount = async (accountData: AccountChart | null): Promise<AccountChart | null> => {
     if (accountData?.dataValues.group === 0) {
@@ -228,13 +229,13 @@ export const periodListFn = async (clientId: number, fromDate?: Date, toDate?: D
 
 export const checkDetails = async (entry: IAccountingEntries, accounting_period_id: number) => {
 
-    const debitDetails = entry.AccountingEntriesDetails?.reduce((acc, detail) => {
+    const debitDetails = roundNumber(entry.AccountingEntriesDetails?.reduce((acc, detail) => {
         return acc + detail.debit
-    }, 0)
+    }, 0) || 0)
 
-    const creditDetails = entry.AccountingEntriesDetails?.reduce((acc, detail) => {
+    const creditDetails = roundNumber(entry.AccountingEntriesDetails?.reduce((acc, detail) => {
         return acc + detail.credit
-    }, 0)
+    }, 0) || 0)
 
     if (entry.debit !== debitDetails || entry.credit !== creditDetails) {
         return false
@@ -370,7 +371,13 @@ function agregarCuentas(ws: any, cuentas: any, rowNum: any) {
     return rowNum;
 }
 
-export const getUpdateAttributes = (type: number, accounting_period_id: number, entryId: number, newEntryNumber: number, entryNumber: number) => {
+export const getUpdateAttributes = (
+    type: number,
+    accounting_period_id: number,
+    entryId: number,
+    newEntryNumber: number,
+    entryNumber: number
+) => {
     let updateAll = undefined;
     let attributesAll: UpdateOptions = {
         fields: [Columns.accountingEntries.date],
@@ -394,6 +401,14 @@ export const getUpdateAttributes = (type: number, accounting_period_id: number, 
                 { accounting_period_id }
             ];
             attributesAll.fields = [Columns.accountingEntries.number, Columns.accountingEntries.date];
+            updateAll = { number: literal(`${Columns.accountingEntries.number} - 1`) };
+            break;
+        case 3:
+            attributesAll.where = [
+                { number: { [Op.gte]: entryNumber } },
+                { accounting_period_id }
+            ];
+            attributesAll.fields = [Columns.accountingEntries.number];
             updateAll = { number: literal(`${Columns.accountingEntries.number} - 1`) };
             break;
         default:

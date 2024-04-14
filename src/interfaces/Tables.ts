@@ -146,6 +146,7 @@ export interface IPurchasePeriods {
     year: number,
     accounting_period_id: number,
     closed?: boolean,
+    accounting_entry_id?: number | null,
     AccountingPeriod?: IAccountingPeriod
 }
 

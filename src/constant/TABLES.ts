@@ -164,7 +164,8 @@ enum PurchasesPeriods {
     month = "month",
     year = "year",
     accounting_period_id = "accounting_period_id",
-    closed = "closed"
+    closed = "closed",
+    accounting_entry_id = "accounting_entry_id"
 }
 
 enum PurchaseParameters {
