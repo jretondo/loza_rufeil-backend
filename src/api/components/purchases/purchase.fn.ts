@@ -275,7 +275,7 @@ export const createPurchaseTxtVatRates = (purchaseItems: Receipt[]) => {
 }
 
 export const createPurchaseTxtVatRateItem = (purchaseItems: Receipt) => {
-    const vatRates = purchaseItems.dataValues.VatRatesReceipts
+    const vatRates = purchaseItems.dataValues.VatRateReceipts
     if (!vatRates) {
         return []
     }

@@ -10,7 +10,7 @@ export const vatTaxes = [
 export const othersTypes = [
     //{ id: 10, name: "No Gravado", is_tax: false },
     //{ id: 11, name: "Op. Exentas", is_tax: false },
-    { id: 12, name: "Perc. IVA", is_tax: true },
+    //{ id: 12, name: "Perc. IVA", is_tax: true },
     { id: 13, name: "Perc. Nacionales", is_tax: true },
     { id: 14, name: "Perc. IIBB", is_tax: true },
     { id: 15, name: "Perc. Municipales", is_tax: true },
