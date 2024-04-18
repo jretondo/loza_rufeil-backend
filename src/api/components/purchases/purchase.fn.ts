@@ -253,7 +253,7 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const exchangeRate = stringFill("1000000", 10)
     const vatRatesQuantity = stringFill(purchaseItems.dataValues.vat_rates_quantity.toString(), 1)
     const operationCode = stringFill(" ", 1)
-    const totalVat = roundNumber(purchaseItems.dataValues.VatRateReceipts?.reduce((acc, vat) => acc + vat.vat_amount, 0) || 0)
+    const totalVat = purchaseItems.dataValues.VatRateReceipts?.reduce((acc, vat) => acc + vat.vat_amount, 0) || 0
     const fiscalCredit =
         stringFill((stringFill(totalVat.toString().split(".")[0], 13) +
             stringFill(totalVat.toString().split(".")[1], 2)), 15, "0", false)
