@@ -223,7 +223,7 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const providerDocType = stringFill(purchaseItems.dataValues.Provider?.document_type.toString() || "", 2)
     const providerNumber = stringFill(purchaseItems.dataValues.Provider?.document_number.toString() || "", 20)
     const providerName = stringFill(purchaseItems.dataValues.Provider?.business_name || "".toString(), 30, " ", false)
-    const diference = "0.00"
+    const diference = purchaseItems.dataValues.receipt_type === 1 ? purchaseItems.dataValues.unrecorded : "0.00"
     const total =
         stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
@@ -253,7 +253,10 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const exchangeRate = stringFill("1000000", 10)
     const vatRatesQuantity = stringFill(purchaseItems.dataValues.vat_rates_quantity.toString(), 1)
     const operationCode = stringFill(" ", 1)
-    const fiscalCredit = stringFill("0", 15)
+    const totalVat = roundNumber(purchaseItems.dataValues.VatRateReceipts?.reduce((acc, vat) => acc + vat.vat_amount, 0) || 0)
+    const fiscalCredit =
+        stringFill((stringFill(totalVat.toString().split(".")[0], 13) +
+            stringFill(totalVat.toString().split(".")[1], 2)), 15, "0", false)
     const otherTributes = stringFill("0", 15)
     const brokerDocument = stringFill("0", 11)
     const brokerName = stringFill(" ", 30, " ")
@@ -676,6 +679,30 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
         vat_5: formatMoney(vat_5),
         vat_25: formatMoney(vat_2_5),
     }
+}
+
+export const checkDuplicateReceipt = async (receipt: IReceipts) => {
+    return await Receipt.findOne({
+        where: {
+            invoice_type_id: receipt.invoice_type_id,
+            sell_point: receipt.sell_point,
+            number: receipt.number,
+            total: receipt.total,
+            provider_id: receipt.provider_id,
+            receipt_type: receipt.receipt_type
+        }
+    })
+}
+
+export const checkDuplicateReceipts = async (receipts: IReceipts[]) => {
+    const duplicates = []
+    for (const receipt of receipts) {
+        const duplicate = await checkDuplicateReceipt(receipt)
+        if (duplicate) {
+            duplicates.push(duplicate)
+        }
+    }
+    return duplicates
 }
 
 export const receiptsPdfGenerator = async (receiptData: any): Promise<{

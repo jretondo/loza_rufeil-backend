@@ -26,6 +26,8 @@ import VatRateReceipt from "../../../models/VatRateReceipt"
 import { Op, col, fn } from "sequelize"
 import {
     checkDataReqReceipt,
+    checkDuplicateReceipt,
+    checkDuplicateReceipts,
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
     generateUncheckedReceiptsCVS,
@@ -41,7 +43,6 @@ import { isDate } from "moment"
 import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
 import IvaCondition from "../../../models/IvaCondition";
 import { clientDataTax } from "../../../utils/afip/dataTax";
-import InvoiceType from "../../../models/InvoiceTypes";
 import { Columns } from "../../../constant/TABLES";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
@@ -290,6 +291,11 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
             })
         }
 
+        const checkReceipt = await checkDuplicateReceipt(newRecords.NewReceipt)
+        if (checkReceipt) {
+            throw new Error("El recibo ya existe")
+        }
+
         const newReceipt = await Receipt.create(newRecords.NewReceipt)
         if (newReceipt.dataValues.id) {
             const newVatRates = newRecords.VatRatesReceipts.length > 0 ? await VatRateReceipt.bulkCreate(newRecords.VatRatesReceipts.map(vatRate => {
@@ -363,6 +369,10 @@ export const upsertReceipts = async (
                 });
 
                 if (providerAccount.length === 0) {
+                    const checkReceipt = await checkDuplicateReceipt(newRecords.NewReceipt);
+                    if (checkReceipt) {
+                        throw new Error("El recibo ya existe");
+                    }
                     await ProviderParameter.create({
                         provider_id: receipt.provider.id || 0,
                         account_chart_id: receipt.concepts[0].AccountChart?.id || null,
