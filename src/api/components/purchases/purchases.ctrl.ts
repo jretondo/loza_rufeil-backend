@@ -270,7 +270,14 @@ export const checkReceipt = async (
 
 
 export const upsertReceipt = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (receiptHeader: IHeaderReceiptReq, paymentsReceipt: IPaymentReceiptReq[], taxesReceipt: ITaxesReceiptReq[], conceptsReceipt: IReceiptConcept[], purchasePeriodId: number, provider: IProviders, observations: string) {
+    (async function (
+        receiptHeader: IHeaderReceiptReq,
+        paymentsReceipt: IPaymentReceiptReq[],
+        taxesReceipt: ITaxesReceiptReq[],
+        conceptsReceipt: IReceiptConcept[],
+        purchasePeriodId: number,
+        provider: IProviders,
+        observations: string) {
         const newRecords: {
             NewReceipt: IReceipts,
             VatRatesReceipts: IVatRatesReceipts[],
@@ -320,7 +327,14 @@ export const upsertReceipt = async (req: Request, res: Response, next: NextFunct
         } else {
             throw new Error("Hubo un error al querer guardar el recibo")
         }
-    })(req.body.header, req.body.payments, req.body.taxes, req.body.concepts, req.body.purchasePeriodId, req.body.provider, req.body.observations).then(data => success({ req, res, message: data })).catch(next)
+    })(req.body.header,
+        req.body.payments,
+        req.body.taxes,
+        req.body.concepts,
+        req.body.purchasePeriodId,
+        req.body.provider,
+        req.body.observations
+    ).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const upsertReceipts = async (

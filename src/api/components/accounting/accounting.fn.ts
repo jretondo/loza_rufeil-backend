@@ -269,7 +269,7 @@ export const accountListPDF = async (accountList: any, client: string, periodStr
     fileName: string
 }> => {
     const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
-    const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Plan-Cuentas.xlsx")
+    const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Plan-Cuentas.pdf")
     return new Promise(async (resolve, reject) => {
         const datos = {
             cuentas: accountList,
@@ -322,7 +322,7 @@ export const accountListPDF = async (accountList: any, client: string, periodStr
                     await jsreport.close()
                     const dataFact = {
                         pdfAddress,
-                        fileName: uniqueSuffix + "-Plan-Cuentas.xlsx"
+                        fileName: uniqueSuffix + "-Plan-Cuentas.pdf"
                     }
                     resolve(dataFact)
                 })
@@ -348,7 +348,7 @@ export const accountListExcel = (accountList: any) => {
 
     return {
         excelAddress,
-        fileName: uniqueSuffix + "-Plan-Cuentas.xlsx"
+        fileName: uniqueSuffix + "-Plan-Cuentas.pdf"
     }
 }
 
