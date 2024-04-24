@@ -261,7 +261,7 @@ body {
 }
 
 .resumen .totales {
-    width: 35%;
+    width: 50%;
     padding: 15px;
     text-align: center;
 }
@@ -282,7 +282,7 @@ body {
     font-weight: bold;
     background-color: #3573B0;
     color: white;
-    width: 40%;
+    width: 60%;
     text-align: right;
     padding: 15px;
     font-size: 16px;
@@ -291,13 +291,14 @@ body {
 .resumen .totales .listado .totalItem .import {
     font-weight: bold;
     color: #3573B0;
-    width: 60%;
+    width: 40%;
     text-align: left;
     padding: 15px;
 }
 
 tr td {
     text-align: right;
+    padding-inline: 10px;
 }
 
 tr td .name {

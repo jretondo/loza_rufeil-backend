@@ -662,6 +662,7 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
             vat_25: formatMoney(Number(receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id === 9)?.vat_amount || 0)),
             vat_withholdings: formatMoney(receipt.vat_withholdings),
             gross_income_withholdings: formatMoney(receipt.gross_income_withholdings),
+            national_tax_withholdings: formatMoney(receipt.national_tax_withholdings),
             total: formatMoney(receipt.total)
         }
     })
@@ -678,6 +679,9 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
         vat_105: formatMoney(vat_10_5),
         vat_5: formatMoney(vat_5),
         vat_25: formatMoney(vat_2_5),
+        vat_withholdings: formatMoney(vat_withholdings),
+        gross_income_withholdings: formatMoney(gross_income_withholdings),
+        national_tax_withholdings: formatMoney(national_tax_withholdings)
     }
 }
 
@@ -709,6 +713,7 @@ export const receiptsPdfGenerator = async (receiptData: any): Promise<{
     pdfAddress: string,
     fileName: string
 }> => {
+    console.log('receiptData :>> ', receiptData);
     const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
     const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Compras.pdf")
     return new Promise(async (resolve, reject) => {
