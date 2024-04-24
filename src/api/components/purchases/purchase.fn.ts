@@ -36,9 +36,9 @@ export const checkDataReqReceipt = (
     observations: string
 ) => {
     const { total } = headerReceipt
-    const totalPayment = roundNumber(paymentReceipt.reduce((acc, payment) => acc + payment.amount, 0), 2)
-    const totalTaxes = roundNumber(taxesReceipt.reduce((acc, tax) => acc + tax.amount, 0), 2)
-    const totalConcepts = roundNumber(receiptConcepts.reduce((acc, concept) => acc + concept.amount, 0), 2)
+    const totalPayment = roundNumber(paymentReceipt.reduce((acc, payment) => acc + Number(payment.amount), 0), 2)
+    const totalTaxes = roundNumber(taxesReceipt.reduce((acc, tax) => acc + Number(tax.amount), 0), 2)
+    const totalConcepts = roundNumber(receiptConcepts.reduce((acc, concept) => acc + Number(concept.amount), 0), 2)
 
     const vatTaxes = taxesReceipt.filter(tax => tax.is_vat)
 
@@ -348,7 +348,7 @@ export const jsonDataInvoiceGeneratorComplete = (dataSheet: Array<string[]>): ID
             }
             const rowObject: any = {}
             rowObject["date"] = moment(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1)).format("YYYY-MM-DD")
-            rowObject["invoiceType"] = row[1]
+            rowObject["invoiceType"] = parseInt(row[1])
             rowObject["sellPoint"] = row[2]
             rowObject["invoiceNumber"] = row[3]
             rowObject["documentType"] = row[4]
@@ -457,7 +457,7 @@ export const generateUncheckedReceiptsCVS = (receipts: {
             vat.vat_type_id < 10 ? vat.recorded_net : 0 : 0), 0) : 0).toFixed(2))
 
         return {
-            fecha: moment(receipt.date).format("DD/MM/YYYY"),
+            fecha: moment(receipt.date).format("YYYY-MM-DD"),
             tipo: invoiceType,
             punto_de_venta: receipt.sell_point,
             numero: receipt.number,
