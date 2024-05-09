@@ -70,7 +70,13 @@ export const getAccountList = async (req: Request, res: Response, next: NextFunc
                 { accounting_period_id: accountPeriodId },
                 { name: { [Op.like]: `%${contain}%` } }
             ],
-            order: [[`${Columns.accountCharts.code}`, "ASC"]]
+            order: [
+                [`${Columns.accountCharts.genre}`, "ASC"],
+                [`${Columns.accountCharts.group}`, "ASC"],
+                [`${Columns.accountCharts.caption}`, "ASC"],
+                [`${Columns.accountCharts.account}`, "ASC"],
+                [`${Columns.accountCharts.sub_account}`, "ASC"]
+            ]
         })
 
         const control = new accountControl()
