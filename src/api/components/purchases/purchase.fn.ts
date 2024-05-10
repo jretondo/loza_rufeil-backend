@@ -2,6 +2,7 @@ import roundNumber from "../../../utils/functions/roundNumber";
 import path from 'path';
 import fs from 'fs';
 import {
+    IAccountCharts,
     IHeaderReceiptReq,
     IPaymentReceiptReq,
     IProviders,
@@ -25,6 +26,12 @@ import JsReport from "jsreport-core";
 import { promisify } from "util";
 import ejs from 'ejs';
 import { formatMoney } from "../../../utils/functions/formatMoney";
+import { invoiceTypeConvertObject } from "../../../utils/functions/getWordTypeInvoice";
+import PurchaseParameter from "../../../models/PurchaseParameter";
+import AccountChart from "../../../models/AccountCharts";
+import { othersTypes, vatTaxes } from "./purchase.const";
+import PaymentTypeParameter from "../../../models/PaymentTypeParameter";
+import ProviderParameter from "../../../models/ProviderParameter";
 
 export const checkDataReqReceipt = (
     headerReceipt: IHeaderReceiptReq,
@@ -33,17 +40,20 @@ export const checkDataReqReceipt = (
     receiptConcepts: IReceiptConcept[],
     provider: IProviders,
     purchasePeriodId: number,
-    observations: string
+    observations: string,
+    notBlock?: boolean
 ) => {
     const { total } = headerReceipt
+    let checked = true
     const totalPayment = roundNumber(paymentReceipt.reduce((acc, payment) => acc + Number(payment.amount), 0), 2)
     const totalTaxes = roundNumber(taxesReceipt.reduce((acc, tax) => acc + Number(tax.amount), 0), 2)
     const totalConcepts = roundNumber(receiptConcepts.reduce((acc, concept) => acc + Number(concept.amount), 0), 2)
 
     const vatTaxes = taxesReceipt.filter(tax => tax.is_vat)
 
-    if (roundNumber(total, 2) !== roundNumber(totalPayment, 2) || roundNumber(total, 2) !== roundNumber(totalTaxes + totalConcepts, 2)) {
-        throw new Error("No se validan los totales!")
+    if ((roundNumber(total, 2) !== roundNumber(totalPayment, 2) || roundNumber(total, 2) !== roundNumber(totalTaxes + totalConcepts, 2))) {
+        checked = false
+        if (!notBlock) throw new Error("No se validan los totales!")
     }
 
     const totalUnrecordedConcepts = roundNumber(receiptConcepts.filter(concept => concept.recordType === 1).reduce((acc, concept) => acc + concept.amount, 0))
@@ -64,8 +74,9 @@ export const checkDataReqReceipt = (
 
     const totalVatRecorded = roundNumber(taxesReceipt.reduce((acc, tax) => acc + tax.recorded, 0))
 
-    if (vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 2) !== roundNumber(totalVatRecorded, 2))) {
-        throw new Error("No se validan los totales grabados!")
+    if ((vatTaxes.length > 0 && (roundNumber(totalRecordedConcepts, 2) !== roundNumber(totalVatRecorded, 2)))) {
+        checked = false
+        if (!notBlock) throw new Error("No se validan los totales!")
     }
 
     const receiptType = (): number => {
@@ -125,6 +136,7 @@ export const checkDataReqReceipt = (
         observation: observations,
         word: headerReceipt.word,
         receipt_type: headerReceipt.type.id,
+        checked
     }
 
     const VatRatesReceipts: IVatRatesReceipts[] = vatTaxes.map(tax => {
@@ -149,7 +161,8 @@ export const checkDataReqReceipt = (
         const recorded = roundNumber(calculatedRecorded(), 0)
 
         if (recorded !== roundNumber(tax.recorded, 0)) {
-            throw new Error("No se validan los totales grabados!")
+            checked = false
+            if (!notBlock) throw new Error("No se validan los totales!")
         }
 
         return {
@@ -858,4 +871,248 @@ function invoiceTypeConvert(invoiceType: number) {
         default:
             return "";
     }
+}
+
+export const completeReceipt = async (periodId: number, receipts: IReceipts[]) => {
+    return await Promise.all(receipts.map(async receipt => {
+        const { word, type } = invoiceTypeConvertObject(receipt.invoice_type_id)
+
+        const header = {
+            date: receipt.date,
+            total: receipt.total,
+            type: type,
+            word: word,
+            sellPoint: receipt.sell_point,
+            number: receipt.number
+        }
+        const taxesList = await getClientParamFn(periodId, receipt.provider_id).then(data => [...data.vat, ...data.others])
+        const { taxes, recorded } = getVatAmount(receipt.total, taxesList.map((data, key) => {
+            return {
+                type: data.type,
+                recorded: 0,
+                name: data.name,
+                is_vat: data.is_vat,
+                is_tax: data.is_tax,
+                id: key,
+                amount: 0,
+                active: data.active,
+                account_chart_id: data.AccountChart?.id || null,
+                AccountChart: data.AccountChart as IAccountCharts
+            }
+        }))
+
+        const receiptConcepts: IReceiptConcept[] = await ProviderParameter.findAll({
+            where: [{ provider_id: receipt.Provider?.id }, { accounting_period_id: periodId }],
+            include: [AccountChart]
+        }).then(data => {
+            let recordedAssigned = false;
+            return data.map((concept) => {
+                if (!recordedAssigned) {
+                    concept.dataValues.amount = recorded;
+                    recordedAssigned = true;
+                } else {
+                    concept.dataValues.amount = 0;
+                }
+                return {
+                    account_chart_id: concept.dataValues.account_chart_id ?? 0,
+                    accounting_period_id: concept.dataValues.accounting_period_id ?? 0,
+                    amount: concept.dataValues.amount,
+                    description: concept.dataValues.description,
+                    AccountChart: concept.dataValues.AccountChart,
+                    recordType: 0,
+                }
+            }).filter((concept) => (concept.amount && concept.amount > 0))
+        })
+
+        const paymentsParameters: IPaymentReceiptReq[] = await paymentParameter(periodId).then(data => {
+            return data.map((payment, key) => {
+                if (key === 0) {
+                    payment.dataValues.amount = receipt.total
+                } else {
+                    payment.dataValues.amount = 0;
+                }
+                return {
+                    account_chart_id: payment.dataValues.account_chart_id,
+                    accounting_period_id: payment.dataValues.accounting_period_id,
+                    amount: payment.dataValues.amount,
+                    name: payment.dataValues.name,
+                }
+            }).filter((payment) => (payment.amount && payment.amount > 0))
+        })
+
+        const data: receiptFront = {
+            header: header,
+            payments: paymentsParameters,
+            concepts: receiptConcepts,
+            taxes: taxes,
+            purchasePeriodId: periodId,
+            provider: receipt.Provider as IProviders,
+            observations: receipt.observation,
+            checked: false,
+            total: receipt.total,
+        }
+        const checked = checkDataReqReceipt(
+            data.header,
+            data.payments,
+            data.taxes,
+            data.concepts,
+            data.provider,
+            data.purchasePeriodId,
+            data.observations,
+            true
+        )
+        return {
+            ...receipt,
+            header: header,
+            payments: paymentsParameters,
+            concepts: receiptConcepts,
+            taxes: taxes,
+            purchasePeriodId: periodId,
+            provider: receipt.Provider as IProviders,
+            observations: receipt.observation,
+            total: receipt.total,
+            checked: checked.NewReceipt.checked
+        }
+    }))
+}
+
+const getVatAmount = (totalAmount: number, taxesList: ITaxesReceiptReq[]) => {
+    const newTaxesArray = taxesList.map((tax) => {
+        if (roundNumber(totalAmount) > 0 && tax.active) {
+            switch (tax.type) {
+                case 4:
+                    if (tax.recorded) {
+                        tax.recorded = tax.recorded > 0 ? tax.recorded : 0
+                        tax.amount = (tax.recorded * 0.105)
+                    } else {
+                        tax.amount = (totalAmount - (totalAmount / (1.105)))
+                        tax.recorded = tax.amount / 0.105
+                    }
+                    break;
+                case 5:
+                    if (tax.recorded) {
+                        tax.recorded = tax.recorded > 0 ? tax.recorded : 0
+                        tax.amount = (tax.recorded * 0.21)
+                    } else {
+                        tax.amount = (totalAmount - (totalAmount / (1.21)))
+                        tax.recorded = tax.amount / 0.21
+                    }
+                    break;
+                case 6:
+                    if (tax.recorded) {
+                        tax.recorded = tax.recorded > 0 ? tax.recorded : 0
+                        tax.amount = (tax.recorded * 0.27)
+                    } else {
+                        tax.amount = (totalAmount - (totalAmount / (1.27)))
+                        tax.recorded = tax.amount / 0.27
+                    }
+                    break;
+                case 8:
+                    if (tax.recorded) {
+                        tax.recorded = tax.recorded > 0 ? tax.recorded : 0
+                        tax.amount = (tax.recorded * 0.05)
+                    } else {
+                        tax.amount = (totalAmount - (totalAmount / (1.05)))
+                        tax.recorded = tax.amount / 0.05
+                    }
+                    break;
+                case 9:
+                    if (tax.recorded) {
+                        tax.recorded = tax.recorded > 0 ? tax.recorded : 0
+                        tax.amount = (tax.recorded * 0.025)
+                    } else {
+                        tax.amount = (totalAmount - (totalAmount / (1.025)))
+                        tax.recorded = tax.amount / 0.025
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            tax.amount = 0
+            tax.recorded = 0
+        }
+        tax.amount = roundNumber(tax.amount)
+        tax.recorded = roundNumber(tax.recorded)
+        return tax
+    })
+    return { taxes: newTaxesArray.filter((tax) => tax.amount > 0), recorded: roundNumber(taxesList.reduce((acc, tax) => acc + roundNumber(tax.recorded), 0)) }
+}
+
+export const getClientParamFn = async (periodId: number, vat_condition?: number) => {
+    const clientVatParameters = await PurchaseParameter.findAll(
+        { where: [{ is_vat: true }, { accounting_period_id: periodId }], include: [AccountChart] })
+    const clientOthersParameters = await PurchaseParameter.findAll(
+        { where: [{ is_vat: false }, { accounting_period_id: periodId }], include: [AccountChart] })
+
+    const allClientVatParams = vatTaxes.map(vatTax => {
+        const find = clientVatParameters.find(clientVatParam => clientVatParam.dataValues.type === vatTax.id)
+        if (find && vat_condition !== 20) {
+            return {
+                type: vatTax.id,
+                name: vatTax.name,
+                active: find.dataValues.active,
+                AccountChart: find.dataValues.AccountChart,
+                is_tax: true,
+                is_vat: true
+            }
+        } else {
+            return {
+                type: vatTax.id,
+                name: vatTax.name,
+                active: false,
+                AccountChart: null,
+                is_tax: true,
+                is_vat: true
+            }
+        }
+    })
+
+    const allClientOthersParams = othersTypes.map(otherType => {
+        const find = clientOthersParameters.find(clientOtherParam => clientOtherParam.dataValues.type === otherType.id)
+        if (find && vat_condition !== 20) {
+            return {
+                type: otherType.id,
+                name: otherType.name,
+                active: find.dataValues.active,
+                AccountChart: find.dataValues.AccountChart,
+                is_tax: otherType.is_tax,
+                is_vat: false
+            }
+        } else {
+            return {
+                type: otherType.id,
+                name: otherType.name,
+                active: false,
+                AccountChart: null,
+                is_tax: otherType.is_tax,
+                is_vat: false
+            }
+        }
+    })
+    return {
+        vat: allClientVatParams,
+        others: allClientOthersParams
+    }
+}
+
+export const paymentParameter = async (periodId: number) => {
+    return await PaymentTypeParameter.findAll({
+        where: [{ accounting_period_id: periodId }],
+        include: {
+            model: AccountChart
+        }
+    })
+}
+
+export interface receiptFront {
+    header: IHeaderReceiptReq,
+    payments: IPaymentReceiptReq[],
+    concepts: IReceiptConcept[],
+    taxes: ITaxesReceiptReq[],
+    purchasePeriodId: number,
+    provider: IProviders,
+    observations: string,
+    checked: boolean,
+    total: number
 }

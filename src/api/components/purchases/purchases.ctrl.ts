@@ -28,11 +28,14 @@ import {
     checkDataReqReceipt,
     checkDuplicateReceipt,
     checkDuplicateReceipts,
+    completeReceipt,
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
     generateUncheckedReceiptsCVS,
+    getClientParamFn,
     getDataSheet,
     jsonDataInvoiceGeneratorComplete,
+    paymentParameter,
     receiptsExcelGenerator,
     receiptsPdfGenerator,
     resumeDataGenerator
@@ -62,74 +65,11 @@ export const listPurchasePeriods = async (req: Request, res: Response, next: Nex
 }
 
 export const getClientsParams = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (clientId: number, periodId: number, vat_condition?: number) {
-
-        const clientVatParameters = await PurchaseParameter.findAll(
-            { where: [{ client_id: clientId }, { is_vat: true }, { accounting_period_id: periodId }], include: [AccountChart] })
-        const clientOthersParameters = await PurchaseParameter.findAll(
-            { where: [{ client_id: clientId }, { is_vat: false }, { accounting_period_id: periodId }], include: [AccountChart] })
-
-        const allClientVatParams = vatTaxes.map(vatTax => {
-            const find = clientVatParameters.find(clientVatParam => clientVatParam.dataValues.type === vatTax.id)
-            if (find && vat_condition !== 20) {
-                return {
-                    type: vatTax.id,
-                    name: vatTax.name,
-                    active: find.dataValues.active,
-                    AccountChart: find.dataValues.AccountChart,
-                    is_tax: true,
-                    is_vat: true
-                }
-            } else {
-                return {
-                    type: vatTax.id,
-                    name: vatTax.name,
-                    active: false,
-                    AccountChart: null,
-                    is_tax: true,
-                    is_vat: true
-                }
-            }
-        })
-
-        const allClientOthersParams = othersTypes.map(otherType => {
-            const find = clientOthersParameters.find(clientOtherParam => clientOtherParam.dataValues.type === otherType.id)
-            if (find && vat_condition !== 20) {
-                return {
-                    type: otherType.id,
-                    name: otherType.name,
-                    active: find.dataValues.active,
-                    AccountChart: find.dataValues.AccountChart,
-                    is_tax: otherType.is_tax,
-                    is_vat: false
-                }
-            } else {
-                return {
-                    type: otherType.id,
-                    name: otherType.name,
-                    active: false,
-                    AccountChart: null,
-                    is_tax: otherType.is_tax,
-                    is_vat: false
-                }
-            }
-        })
-        return {
-            vat: allClientVatParams,
-            others: allClientOthersParams
-        }
-    })(Number(req.body.clientId), req.body.periodId, Number(req.query.vat_condition)).then(data => success({ req, res, message: data })).catch(next)
+    return getClientParamFn(req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const getPaymentsParametersClient = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (clientId: number, periodId: number) {
-        return await PaymentTypeParameter.findAll({
-            where: [{ client_id: clientId }, { accounting_period_id: periodId }],
-            include: {
-                model: AccountChart
-            }
-        })
-    })(req.body.clientId, req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
+    return paymentParameter(req.body.periodId).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const insertClientsParams = async (req: Request, res: Response, next: NextFunction) => {
@@ -509,7 +449,7 @@ export const createPurchaseTxt = async (req: Request, res: Response, next: NextF
 }
 
 export const importCVSAfip = async (req: Request, res: Response, next: NextFunction) => {
-    (async function (files: { file: Express.Multer.File[] }, accountingPeriodId: number) {
+    (async function (files: { file: Express.Multer.File[] }, accountingPeriodId: number, clientId: number) {
         if (files) {
             const file = files.file[0];
             const dataSheet: Array<string[]> = getDataSheet(file.path);
@@ -715,11 +655,11 @@ export const importCVSAfip = async (req: Request, res: Response, next: NextFunct
                     }
                 })
             )
-            return dataInvoice;
+            return completeReceipt(accountingPeriodId, await dataInvoice)
         } else {
             throw new Error("No se encontró el archivo")
         }
-    })(req.files as { file: Express.Multer.File[] }, req.body.accountingPeriodId).then(data => success({ req, res, message: data })).catch(next)
+    })(req.files as { file: Express.Multer.File[] }, req.body.accountingPeriodId, Number(req.body.clientId)).then(data => success({ req, res, message: data })).catch(next)
 }
 
 export const generateUncheckedReceipts = (req: Request, res: Response, next: NextFunction) => {

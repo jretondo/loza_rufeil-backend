@@ -174,7 +174,8 @@ export interface IReceipts {
     VatRatesReceipts?: IVatRatesReceipts[] | any,
     VatRateReceipts?: IVatRatesReceipts[],
     PurchaseEntries?: IPurchaseEntries[],
-    ProviderAFIP?: any
+    ProviderAFIP?: any,
+    checked?: boolean
 }
 
 export interface IVatRatesReceipts {
@@ -204,7 +205,8 @@ export interface IPaymentTypesParameters {
     active: boolean,
     account_chart_id: number,
     accounting_period_id: number,
-    AccountChart?: IAccountCharts
+    AccountChart?: IAccountCharts,
+    amount?: number
 }
 
 export interface IProvidersParameters {
@@ -214,7 +216,8 @@ export interface IProvidersParameters {
     description: string,
     account_chart_id: number | null,
     accounting_period_id: number | null,
-    AccountChart?: IAccountCharts
+    AccountChart?: IAccountCharts,
+    amount?: number
 }
 
 export interface ICustomersParameters {
@@ -247,6 +250,7 @@ export interface IPaymentReceiptReq {
 }
 
 export interface ITaxesReceiptReq {
+    active?: boolean
     type: number,
     amount: number,
     is_vat: boolean,
