@@ -269,7 +269,7 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const totalVat = purchaseItems.dataValues.VatRateReceipts?.reduce((acc, vat) => acc + vat.vat_amount, 0) || 0
     const fiscalCredit =
         stringFill((stringFill(totalVat.toString().split(".")[0], 13) +
-            stringFill(totalVat.toString().split(".")[1], 2)), 15, "0", false)
+            stringFill(totalVat.toString().split(".").length > 1 ? totalVat.toString().split(".")[1] : "0", 2)), 15, "0", false)
     const otherTributes = stringFill("0", 15)
     const brokerDocument = stringFill("0", 11)
     const brokerName = stringFill(" ", 30, " ")
