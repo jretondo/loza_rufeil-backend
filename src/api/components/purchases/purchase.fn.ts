@@ -240,9 +240,10 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const total =
         stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
-    const unrecorded =
+    const unrecorded = Number(purchaseItems.dataValues.vat_rates_quantity) > 0 ?
         stringFill((stringFill(diference.toString().split(".")[0], 13) +
-            stringFill(diference.toString().split(".")[1], 2)), 15, "0", false)
+            stringFill(diference.toString().split(".")[1], 2)), 15, "0", false) :
+        stringFill("0", 15, "0", false)
     const exemptTransactions =
         stringFill((stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[1], 2)), 15, "0", false)
@@ -264,6 +265,7 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
 
     const moneyCode = stringFill("PES", 3)
     const exchangeRate = stringFill("1000000", 10)
+    console.log('purchaseItems.dataValues.vat_rates_quantity :>> ', purchaseItems.dataValues.vat_rates_quantity);
     const vatRatesQuantity = stringFill(purchaseItems.dataValues.vat_rates_quantity.toString(), 1)
     const operationCode = stringFill(" ", 1)
     const totalVat = purchaseItems.dataValues.VatRateReceipts?.reduce((acc, vat) => acc + vat.vat_amount, 0) || 0
