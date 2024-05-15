@@ -236,14 +236,16 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
     const providerDocType = stringFill(purchaseItems.dataValues.Provider?.document_type.toString() || "", 2)
     const providerNumber = stringFill(purchaseItems.dataValues.Provider?.document_number.toString() || "", 20)
     const providerName = stringFill(purchaseItems.dataValues.Provider?.business_name || "".toString(), 30, " ", false)
-    const diference = purchaseItems.dataValues.receipt_type === 1 ? purchaseItems.dataValues.unrecorded : "0.00"
+    const diference = purchaseItems.dataValues.word === "A" ? purchaseItems.dataValues.unrecorded : "0.00"
+
     const total =
         stringFill((stringFill(purchaseItems.dataValues.total.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.total.toString().split(".")[1], 2)), 15, "0", false)
-    const unrecorded = Number(purchaseItems.dataValues.vat_rates_quantity) > 0 ?
+
+    const unrecorded =
         stringFill((stringFill(diference.toString().split(".")[0], 13) +
-            stringFill(diference.toString().split(".")[1], 2)), 15, "0", false) :
-        stringFill("0", 15, "0", false)
+            stringFill(diference.toString().split(".")[1], 2)), 15, "0", false)
+
     const exemptTransactions =
         stringFill((stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[0], 13) +
             stringFill(purchaseItems.dataValues.exempt_transactions.toString().split(".")[1], 2)), 15, "0", false)
