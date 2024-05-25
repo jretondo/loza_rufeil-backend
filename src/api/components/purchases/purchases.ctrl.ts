@@ -17,7 +17,6 @@ import {
 import PurchasePeriod from "../../../models/PurchasePeriod"
 import { file, success } from "../../../network/response"
 import PurchaseParameter from "../../../models/PurchaseParameter"
-import { othersTypes, vatTaxes } from "./purchase.const"
 import AccountChart from "../../../models/AccountCharts"
 import PaymentTypeParameter from "../../../models/PaymentTypeParameter"
 import Receipt from "../../../models/Receipts"
@@ -27,7 +26,6 @@ import { Op, col, fn } from "sequelize"
 import {
     checkDataReqReceipt,
     checkDuplicateReceipt,
-    checkDuplicateReceipts,
     completeReceipt,
     createPurchaseTxtItems,
     createPurchaseTxtVatRates,
@@ -37,7 +35,6 @@ import {
     jsonDataInvoiceGeneratorComplete,
     paymentParameter,
     receiptsExcelGenerator,
-    receiptsPdfGenerator,
     resumeDataGenerator
 } from "./purchase.fn"
 import PurchaseEntry from '../../../models/PurchaseEntries';
@@ -47,6 +44,7 @@ import { FILES_ADDRESS } from "../../../constant/FILES_ADDRESS";
 import IvaCondition from "../../../models/IvaCondition";
 import { clientDataTax } from "../../../utils/afip/dataTax";
 import { Columns } from "../../../constant/TABLES";
+import { pdfGenerator } from "../../../utils/reports/chrome-pdf";
 
 export const listPurchasePeriods = async (req: Request, res: Response, next: NextFunction) => {
     (async function (accountingPeriodId: number, month?: number, year?: number) {
@@ -750,10 +748,24 @@ export const getReport = async (req: Request, res: Response, next: NextFunction)
     (async function (purchasePeriodId: number) {
         const receipts = await Receipt.findAll({
             where: { purchase_period_id: purchasePeriodId },
-            include: [Provider, VatRateReceipt, PurchaseEntry]
+            include: [Provider, VatRateReceipt, PurchaseEntry],
+            order: [[Columns.receipts.date, "ASC"]]
         }).then(receipts => receipts.map(receipt => receipt.dataValues))
         const dataInvoice = await resumeDataGenerator(receipts)
-        return await receiptsPdfGenerator(dataInvoice)
+        return await pdfGenerator({
+            data: dataInvoice,
+            fileName: `compras_${purchasePeriodId}`,
+            layoutPath: path.join("views", "reports", "purchasesList", "index.ejs"),
+            format: {
+                landscape: true,
+                format: "legal",
+                scale: 0.8,
+                displayHeaderFooter: false,
+                marginBottom: "3.35cm",
+                marginTop: "0.5cm",
+                headerTemplate: ""
+            }
+        })
     })(Number(req.body.purchasePeriodId))
         .then(data => file(req, res, data.pdfAddress,
             'application/pdf',
@@ -792,9 +804,12 @@ export const buildEntry = async (req: Request, res: Response, next: NextFunction
                 [fn('sum', col(Columns.purchaseEntries.debit)), 'debit'],
                 [fn('sum', col(Columns.purchaseEntries.credit)), 'credit'],
             ],
-            where: [{ purchase_period_id: purchasePeriodId }, { account_chart_id: { [Op.ne]: null } }],
+            where: [{ account_chart_id: { [Op.ne]: null } }],
             group: [Columns.purchaseEntries.account_chart_id],
-            include: [Receipt, AccountChart]
+            include: [{
+                model: Receipt,
+                where: { purchase_period_id: purchasePeriodId }
+            }, AccountChart]
         })
     })(Number(req.params.purchasePeriodId)).then(data => success({ req, res, message: data })).catch(next)
 }

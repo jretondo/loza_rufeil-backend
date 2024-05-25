@@ -49,5 +49,5 @@ VatRateReceipt.belongsTo(Receipt, {
     foreignKey: Columns.vatRatePurchase.receipt_id,
     targetKey: Columns.receipts.id
 })
-Receipt.sync({ alter: true });
+
 export default VatRateReceipt;

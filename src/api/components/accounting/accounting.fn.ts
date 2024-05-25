@@ -1,16 +1,13 @@
 import { Op, Sequelize, UpdateOptions, literal } from "sequelize"
 import { Columns } from "../../../constant/TABLES"
 import { IAccountChartsToFront } from "../../../interfaces/Others"
-import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from "../../../interfaces/Tables"
+import { IAccountCharts, IAccountingEntries } from "../../../interfaces/Tables"
 import AccountChart from "../../../models/AccountCharts"
 import AccountingPeriod from "../../../models/AccountingPeriod"
 import Client from "../../../models/Client"
 import moment from "moment"
 import path from 'path';
 import fs from 'fs';
-import JsReport from "jsreport-core"
-import { promisify } from "util"
-import ejs from "ejs"
 import { utils, write } from "xlsx"
 import roundNumber from "../../../utils/functions/roundNumber"
 
@@ -261,76 +258,6 @@ export const checkDetails = async (entry: IAccountingEntries, accounting_period_
     }
 
     return true
-}
-
-
-export const accountListPDF = async (accountList: any, client: string, periodStr: string): Promise<{
-    pdfAddress: string,
-    fileName: string
-}> => {
-    const uniqueSuffix = moment().format("YYYYMMDDHHmmss")
-    const pdfAddress = path.join("public", "reports", "excel", uniqueSuffix + "-Plan-Cuentas.pdf")
-    return new Promise(async (resolve, reject) => {
-        const datos = {
-            cuentas: accountList,
-            bussinesName: client,
-            periodStr: periodStr
-        }
-
-        const jsreport = JsReport({
-            extensions: {
-                "chrome-pdf": {
-                    "launchOptions": {
-                        "args": ["--no-sandbox"]
-                    }
-                }
-            }
-        })
-
-        jsreport.use(require('jsreport-chrome-pdf')())
-
-        const writeFileAsync = promisify(fs.writeFile)
-        await ejs.renderFile(path.join("views", "reports", "accountList", "index.ejs"), datos, async (err, data) => {
-            if (err) {
-                console.log('err', err);
-                throw new Error("Algo salio mal")
-            }
-
-            await jsreport.init()
-
-            jsreport.render({
-                template: {
-                    content: data,
-                    name: 'lista',
-                    engine: 'none',
-                    recipe: 'chrome-pdf',
-                    chrome: {
-                        "landscape": false,
-                        "format": "A4",
-                        "scale": 0.8,
-                        displayHeaderFooter: true,
-                        marginBottom: "3.35cm",
-                        marginTop: "0.5cm",
-                        headerTemplate: '<div></div>',
-                        footerTemplate: '<footer>Página <span class="pageNumber"></span> de <span class="pageCount"></span></footer>',
-                    },
-
-                },
-            })
-                .then(async (out) => {
-                    await writeFileAsync(pdfAddress, out.content)
-                    await jsreport.close()
-                    const dataFact = {
-                        pdfAddress,
-                        fileName: uniqueSuffix + "-Plan-Cuentas.pdf"
-                    }
-                    resolve(dataFact)
-                })
-                .catch((e) => {
-                    reject(e)
-                });
-        })
-    })
 }
 
 export const accountListExcel = (accountList: any) => {

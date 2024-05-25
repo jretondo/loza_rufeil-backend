@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import path from 'path';
 import { Op, Sequelize, WhereOptions, col, fn, literal } from 'sequelize';
 import { IAccountCharts, IAccountingEntries, IAccountingPeriod } from '../../../interfaces/Tables';
 import AccountingPeriod from '../../../models/AccountingPeriod';
@@ -10,7 +11,6 @@ import { accountControl } from '../../../utils/classes/AccountControl';
 import {
     accountChartItem,
     accountListExcel,
-    accountListPDF,
     checkDetails,
     getUpdateAttributes,
     newDefaultAccountCharts,
@@ -22,6 +22,7 @@ import AccountingEntriesDetails from '../../../models/AccountingEntryDetail';
 import Client from '../../../models/Client';
 import moment from 'moment';
 import PurchasePeriod from '../../../models/PurchasePeriod';
+import { pdfGenerator } from '../../../utils/reports/chrome-pdf';
 
 export const periodUpsert = async (req: Request, res: Response, next: NextFunction) => {
     (async function (
@@ -665,7 +666,27 @@ export const downloadPDF = async (req: Request, res: Response, next: NextFunctio
                 control.addCountSubAccount()
             }
         })
-        return accountListPDF(list, `${accountingPeriod?.dataValues.Client?.business_name} (${accountingPeriod?.dataValues.Client?.document_number})`, `${moment(accountingPeriod?.dataValues.from_date).format("DD/MM/YYYY")} - ${moment(accountingPeriod?.dataValues.to_date).format("DD/MM/YYYY")}`)
+        const dataRequestPdf = {
+            cuentas: list,
+            bussinesName: `${accountingPeriod?.dataValues.Client?.business_name} (${accountingPeriod?.dataValues.Client?.document_number})`,
+            periodStr: `${moment(accountingPeriod?.dataValues.from_date).format("DD/MM/YYYY")} - ${moment(accountingPeriod?.dataValues.to_date).format("DD/MM/YYYY")}`
+        }
+
+        return pdfGenerator({
+            data: dataRequestPdf,
+            fileName: "-Plan-Cuentas",
+            layoutPath: path.join("views", "reports", "accountList", "index.ejs"),
+            format: {
+                landscape: false,
+                format: "A4",
+                scale: 0.8,
+                displayHeaderFooter: true,
+                marginBottom: "3.35cm",
+                marginTop: "0.5cm",
+                headerTemplate: '<div></div>',
+                footerTemplate: '<footer>Página <span class="pageNumber"></span> de <span class="pageCount"></span></footer>',
+            }
+        })
     })(
         Number(req.params.periodId),
         String(req.query.contain ? req.query.contain : "")

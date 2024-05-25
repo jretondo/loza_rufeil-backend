@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  beneficios-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - /home/jretondo/proyectos/loza-rufeil/backend_v1:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3020:3020"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - beneficios-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - beneficios-network
+
+networks:
+  beneficios-network:
+    driver: bridge

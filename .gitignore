@@ -8,3 +8,4 @@ public
 src/api/ecosystem.config.ts
 public
 .vscode
+logs

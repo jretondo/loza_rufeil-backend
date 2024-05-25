@@ -51,5 +51,5 @@ AccountingEntries.belongsTo(AccountingPeriod, {
     foreignKey: Columns.accountingEntries.accounting_period_id,
     targetKey: Columns.accountingPeriod.id
 })
-AccountingEntries.sync({ alter: true })
+
 export = AccountingEntries

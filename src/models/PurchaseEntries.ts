@@ -5,7 +5,6 @@ import sequelize from '../database';
 import Receipt from './Receipts';
 import { Restrictions } from '../constant/OTHERS';
 import AccountChart from './AccountCharts';
-import PurchasePeriod from './PurchasePeriod';
 type PurchaseEntryCreationAttributes = Optional<IPurchaseEntries, 'id'>;
 
 class PurchaseEntry extends Model<IPurchaseEntries, PurchaseEntryCreationAttributes> { }
@@ -26,9 +25,6 @@ PurchaseEntry.init({
     account_chart_id: {
         type: DataTypes.INTEGER,
         allowNull: true
-    },
-    purchase_period_id: {
-        type: DataTypes.INTEGER
     },
     description: {
         type: DataTypes.STRING
@@ -69,18 +65,6 @@ AccountChart.hasMany(PurchaseEntry, {
 PurchaseEntry.belongsTo(AccountChart, {
     foreignKey: Columns.purchaseEntries.account_chart_id,
     targetKey: Columns.accountCharts.id
-})
-
-PurchasePeriod.hasMany(PurchaseEntry, {
-    foreignKey: Columns.purchaseEntries.purchase_period_id,
-    sourceKey: Columns.purchasePeriods.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
-
-PurchaseEntry.belongsTo(PurchasePeriod, {
-    foreignKey: Columns.purchaseEntries.purchase_period_id,
-    targetKey: Columns.purchasePeriods.id
 })
 
 export default PurchaseEntry;

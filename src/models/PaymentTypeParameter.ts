@@ -79,5 +79,4 @@ PaymentTypeParameter.belongsTo(AccountingPeriod, {
     targetKey: Columns.accountingPeriod.id
 })
 
-PaymentTypeParameter.sync({ alter: true })
 export default PaymentTypeParameter

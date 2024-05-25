@@ -83,6 +83,4 @@ PurchasePeriod.belongsTo(AccountingEntries, {
     targetKey: Columns.accountingEntries.id
 })
 
-PurchasePeriod.sync({ alter: true });
-
 export default PurchasePeriod;
