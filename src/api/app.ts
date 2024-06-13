@@ -81,9 +81,19 @@ export class App {
 
     listenProd(): void {
         var options = {
-            key: fs.readFileSync(path.join(__dirname, "..", "..", "..", "..", "..", config.ssl.key), 'utf8'),
-            cert: fs.readFileSync(path.join(__dirname, "..", "..", "..", "..", "..", config.ssl.crt), 'utf8')
-        };
+            key: fs.readFileSync(
+              path.join('/etc/letsencrypt/live/nekoadmin.com.ar-0002/privkey.pem'),
+              'utf8',
+            ),
+            cert: fs.readFileSync(
+              path.join('/etc/letsencrypt/live/nekoadmin.com.ar-0002/fullchain.pem'),
+              'utf8',
+            ),
+          };
+          console.log(
+            ' ruta cert',
+            path.join('/etc/letsencrypt/live/nekoadmin.com.ar-0002/privkey.pem'),
+          );
         https.createServer(options, this.app).listen(this.app.get('port'), () => {
             console.log(`Conectado al puerto ${this.app.get('port')}`)
         });
