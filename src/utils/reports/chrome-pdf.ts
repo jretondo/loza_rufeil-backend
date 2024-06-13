@@ -1,9 +1,8 @@
 import moment from "moment"
 import path from 'path';
 import fs from 'fs';
-import JsReport from "jsreport-core";
-import { promisify } from "util";
 import ejs from 'ejs';
+import puppeteer from 'puppeteer';
 
 export const pdfGenerator = async (dataRequest: {
     data: any,
@@ -44,51 +43,37 @@ export const pdfGenerator = async (dataRequest: {
             ...data,
             logo: 'data:image/png;base64,' + logo,
             style: "<style>" + estilo + "</style>",
-        }
+        }       
 
-        const jsreport = JsReport({
-            extensions: {
-                "chrome-pdf": {
-                    "launchOptions": {
-                        "args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-                        executablePath: "/usr/bin/chromium-browser"
-                    }
-                }
-            }
-        });
-
-        jsreport.use(require('jsreport-chrome-pdf')())
-
-        const writeFileAsync = promisify(fs.writeFile)
         await ejs.renderFile(layoutPath, datos, async (err, data) => {
             if (err) {
                 console.log('err', err);
                 throw new Error("Algo salio mal")
             }
 
-            await jsreport.init()
-
-            jsreport.render({
-                template: {
-                    content: data,
-                    name: 'lista',
-                    engine: 'none',
-                    recipe: 'chrome-pdf',
-                    chrome: format,
-                },
-            })
-                .then(async (out) => {
-                    await writeFileAsync(pdfAddress, out.content)
-                    await jsreport.close()
-                    const dataFact = {
-                        pdfAddress,
-                        fileName: uniqueSuffix + `-${fileName}.pdf`
-                    }
-                    resolve(dataFact)
-                })
-                .catch((e) => {
-                    reject(e)
-                });
+            const browser = await puppeteer.launch({
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                executablePath:
+                  process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+              });
+      
+              const page = await browser.newPage();
+              await page.setContent(data, {
+                waitUntil: 'networkidle0',
+              });
+      
+              await page.pdf({
+                path: pdfAddress,
+                ...format
+              });
+              await browser.close();
+      
+              const dataFact = {
+                pdfAddress: pdfAddress,
+                fileName: fileName,
+              };
+      
+            return resolve(dataFact);   
         })
     })
 }

@@ -762,7 +762,7 @@ export const getReport = async (req: Request, res: Response, next: NextFunction)
                 scale: 0.8,
                 displayHeaderFooter: false,
                 marginBottom: "3.35cm",
-                marginTop: "0.5cm",
+                marginTop: "1.5cm",
                 headerTemplate: ""
             }
         })

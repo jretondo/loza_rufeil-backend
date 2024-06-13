@@ -9,7 +9,8 @@
     "stop": "pm2 stop dist/api/ecosystem.config.js",
     "restart": "pm2 restart dist/api/ecosystem.config.js",
     "build": "tsc",
-    "purge": "rm -rf dist"
+    "purge": "rm -rf dist",
+    "dev": "ts-node src/api/index.ts"
   },
   "keywords": [
     "api",
@@ -22,7 +23,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/base-64": "^1.0.0",
-    "@types/bcrypt": "^5.0.0",
+    "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.7.2",
     "@types/cors": "^2.8.12",
     "@types/dotenv": "^6.1.1",
@@ -42,7 +43,7 @@
   },
   "dependencies": {
     "base-64": "^1.0.0",
-    "bcrypt": "^5.0.1",
+    "bcrypt": "^5.1.1",
     "compressing": "^1.9.0",
     "cors": "^2.8.5",
     "ejs": "^3.1.6",
