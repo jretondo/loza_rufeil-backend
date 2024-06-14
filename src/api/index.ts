@@ -10,7 +10,7 @@ dotenv.config({ path: path.join(__dirname, "..", "..", '.env') });
 const handleConn = async () => {
     try {
         await sequelize.authenticate();
-
+        await sequelize.sync();
         console.log('Connection has been established successfully. DB: ', config.mysql.database);
     } catch (error) {
         console.error('Unable to connect to the database:', error);

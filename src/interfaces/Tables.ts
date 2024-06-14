@@ -220,16 +220,6 @@ export interface IProvidersParameters {
     amount?: number
 }
 
-export interface ICustomersParameters {
-    id?: number,
-    customer_id: number,
-    active: boolean,
-    description: string,
-    account_chart_id: number | null,
-    accounting_period_id: number | null,
-    AccountChart?: IAccountCharts
-}
-
 export interface IHeaderReceiptReq {
     date: Date,
     total: number,
@@ -247,6 +237,13 @@ export interface IPaymentReceiptReq {
     accounting_period_id: number,
     amount: number,
     name: string,
+}
+
+export interface ISellPointReq {
+    account_chart_id: number,
+    accounting_period_id: number,
+    amount: number,
+    number: number,
 }
 
 export interface ITaxesReceiptReq {
@@ -305,4 +302,109 @@ export interface IAccountingEntryDetail {
     balance?: number,
     totalDebit?: number,
     totalCredit?: number,
+}
+
+// SELLS LOGIC
+export interface ICustomers {
+    id?: number,
+    document_type: number,
+    document_number: string,
+    business_name: string,
+    fantasie_name: string,
+    iva_condition_id: number,
+    direction: string,
+    city: string,
+    activity_description: string
+}
+
+export interface ICustomersParameters {
+    id?: number,
+    customer_id: number,
+    active: boolean,
+    description: string,
+    account_chart_id: number | null,
+    accounting_period_id: number | null,
+    AccountChart?: IAccountCharts,
+    amount?: number,
+    is_vat?: boolean
+}
+
+
+export interface IInvoices {
+    id?: number,
+    date: Date,
+    invoice_type_id: number,
+    sell_point: number,
+    number: number,
+    total: number,
+    unrecorded: number, //No grabado
+    exempt_transactions: number, //Operaciones exentas
+    vat_withholdings: number, //Percepciones de IVA
+    national_tax_withholdings: number, //Percepciones de impuestos nacionales
+    gross_income_withholdings: number, //Percepciones de ingresos brutos
+    local_tax_withholdings: number, //Percepciones municipales
+    internal_tax: number, //Impuestos internos
+    vat_rates_quantity: number, //Cantidad de alícuotas de IVA  
+    customer_id: number,
+    sell_period_id: number,
+    observation: string,
+    word: string,
+    receipt_type: number,
+    Customer?: ICustomers,
+    VatRatesInvoice?: IVatRatesInvoice[] | any,
+    VatRatesInvoices?: IVatRatesInvoice[] | any,
+    SellsEntries?: ISellsEntries[],
+    ProviderAFIP?: any,
+    checked?: boolean
+}
+
+export interface IPointsSells {
+    id?: number,    
+    number: string,
+    client_id: number,
+    active: boolean,
+    account_chart_id: number,
+    accounting_period_id: number,
+    AccountChart?: IAccountCharts,
+    amount?: number
+}
+
+export interface ISellsParameters {
+    id?: number,
+    client_id: number,
+    type: number,
+    is_vat: boolean,
+    active: boolean,
+    account_chart_id: number,
+    accounting_period_id: number,
+    is_tax: boolean,
+    AccountChart?: IAccountCharts
+}
+
+export interface IVatRatesInvoice {
+    id?: number,
+    invoice_id: number,
+    recorded_net: number, //Neto gravado
+    vat_type_id: number, //Tipo de IVA
+    vat_amount: number //Importe de IVA
+}
+
+export interface ISellsEntries {
+    id?: number,
+    date: Date,
+    invoice_id: number,
+    account_chart_id: number | null,
+    description: string,
+    debit: number,
+    credit: number
+}
+
+export interface ISellPeriods {
+    id?: number,
+    month: number,
+    year: number,
+    accounting_period_id: number,
+    closed?: boolean,
+    accounting_entry_id?: number | null,
+    AccountingPeriod?: IAccountingPeriod
 }

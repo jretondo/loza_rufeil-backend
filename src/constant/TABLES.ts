@@ -151,6 +151,26 @@ enum Receipts {
     observation = "observation"
 }
 
+enum Invoices {
+    id = "id",
+    date = "date",
+    invoice_type_id = "invoice_type_id",
+    sell_point = "sell_point",
+    number = "number",
+    total = "total",
+    unrecorded = "unrecorded",
+    exempt_transactions = "exempt_transactions",
+    vat_withholdings = "vat_withholdings",
+    national_tax_withholdings = "national_tax_withholdings",
+    gross_income_withholdings = "gross_income_withholdings",
+    local_tax_withholdings = "local_tax_withholdings",
+    internal_tax = "internal_tax",
+    vat_rates_quantity = "vat_rates_quantity",
+    customer_id = "customer_id",
+    sell_period_id = "sell_period_id",
+    observation = "observation"
+}
+
 enum PurchaseRatesReceipts {
     id = "id",
     receipt_id = "receipt_id",
@@ -160,6 +180,15 @@ enum PurchaseRatesReceipts {
 }
 
 enum PurchasesPeriods {
+    id = "id",
+    month = "month",
+    year = "year",
+    accounting_period_id = "accounting_period_id",
+    closed = "closed",
+    accounting_entry_id = "accounting_entry_id"
+}
+
+enum SellPeriods {
     id = "id",
     month = "month",
     year = "year",
@@ -178,9 +207,27 @@ enum PurchaseParameters {
     accounting_period_id = "accounting_period_id"
 }
 
+enum SellParameters {
+    id = "id",
+    client_id = "client_id",
+    type = "type",
+    is_vat = "is_vat",
+    active = "active",
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
+}
+
 enum VatRatePurchase {
     id = "id",
     receipt_id = "receipt_id",
+    recorded_net = "recorded_net",
+    vat_type_id = "vat_type_id",
+    vat_amount = "vat_amount"
+}
+
+enum VatRateInvoice {
+    id = "id",
+    invoice_id = "invoice_id",
     recorded_net = "recorded_net",
     vat_type_id = "vat_type_id",
     vat_amount = "vat_amount"
@@ -194,6 +241,16 @@ enum PaymentTypesParameters {
     account_chart_id = "account_chart_id",
     accounting_period_id = "accounting_period_id"
 }
+
+enum SellPoints {
+    id = "id",
+    number = "number",
+    client_id = "client_id",
+    active = "active",
+    account_chart_id = "account_chart_id",
+    accounting_period_id = "accounting_period_id"
+}
+
 
 enum ProvidersParameters {
     id = "id",
@@ -217,6 +274,17 @@ enum PurchaseEntries {
     id = "id",
     date = "date",
     receipt_id = "receipt_id",
+    account_chart_id = "account_chart_id",
+    purchase_period_id = "purchase_period_id",
+    description = "description",
+    debit = "debit",
+    credit = "credit"
+}
+
+enum SellEntries {
+    id = "id",
+    date = "date",
+    invoice_id = "invoice_id",
     account_chart_id = "account_chart_id",
     purchase_period_id = "purchase_period_id",
     description = "description",
@@ -260,14 +328,21 @@ export enum Tables {
     ACCOUNT_CHARTS = "account_charts",
     RECEIPTS = "receipts",
     VAT_RATES_RECEIPTS = "vat_rates_receipts",
+    VAT_RATES_INVOICES = "vat_rates_invoices",
     PURCHASE_PERIODS = "purchase_periods",
+    SELL_PERIODS = "sell_periods",
     PURCHASE_PARAMETERS = "purchase_parameters",
+    SELLS_PARAMETERS = "sells_parameters",
     PAYMENT_TYPES_PARAMETERS = "payment_types_parameters",
+    POINTS_SELLS_PARAMETERS = "points_sells_parameters",
+    SELL_POINTS = "sell_points",
     PROVIDERS_PARAMETERS = "providers_parameters",
     CUSTOMERS_PARAMETERS = "customers_parameters",
     PURCHASE_ENTRIES = "purchase_entries",
+    SELL_ENTRIES = "sell_entries",
     ENTRIES = "entries",
-    ENTRIES_DETAILS = "entries_details"
+    ENTRIES_DETAILS = "entries_details",
+    INVOICES = "invoices",
 }
 
 export const Columns = {
@@ -296,5 +371,11 @@ export const Columns = {
     accountingEntries: AccountingEntries,
     accountingEntriesDetails: AccountingEntriesDetails,
     customers: Customers,
-    customersParameters: CustomersParameters
+    customersParameters: CustomersParameters,
+    invoices: Invoices,
+    sellPoints: SellPoints,
+    sellParameters: SellParameters,
+    sellEntries: SellEntries,
+    vatRateInvoice: VatRateInvoice,
+    sellPeriods: SellPeriods
 }

@@ -23,6 +23,8 @@ import certificates from './components/certificates/certificates.rtr';
 import accounting from './components/accounting/accounting.rtr';
 import modules from './components/modules/modules.rtr';
 import purchases from './components/purchases/purchases.rtr';
+
+import sells from './components/sells/sells.rtr';
 import views from './components/views/network';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
@@ -69,7 +71,8 @@ export class App {
         this.app.use("/api/customers", customers)
         this.app.use("/api/certificates", certificates)
         this.app.use("/api/accounting", accounting)
-        this.app.use("/api/purchases", purchases)
+        this.app.use("/api/purchases", purchases)        
+        this.app.use("/api/sells", sells)
         this.app.use("/api/modules", modules)
         this.app.use(errorThrow);
     }
