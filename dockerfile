@@ -12,8 +12,8 @@ COPY . .
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    TZ=America/Argentina/Buenos_Aires
-    
+    TZ=Etc/UTC
+
 RUN npm install
 RUN npm run build
 
