@@ -5,16 +5,12 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 RUN apk update && apk add --no-cache \
-    openssl \
-    tzdata
+    openssl
 
 COPY . .
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    TZ=Etc/UTC
-
+    
 RUN npm install
 RUN npm run build
+RUN date
 
 CMD ["pm2-runtime", "start", "ecosystem.config.js"]
