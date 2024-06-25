@@ -1107,11 +1107,11 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
   const purchases = receipts.map((receipt) => {
     console.log(
       'moment(receipt.date).format("DD/MM/YYYY") :>> ',
-      moment(receipt.date).format('DD/MM/YYYY'),
+      moment.utc(receipt.date).format('DD/MM/YYYY'),
     );
     console.log('fecha', receipt.date.toISOString());
     return {
-      date: receipt.date.toISOString(),
+      date: moment.utc(receipt.date).format('DD/MM/YYYY'),
       receipt: `${invoiceTypeConvert(receipt.invoice_type_id)} ${zfill(
         receipt.sell_point,
         5,
