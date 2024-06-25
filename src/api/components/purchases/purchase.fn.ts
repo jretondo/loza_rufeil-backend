@@ -288,7 +288,7 @@ export const createPurchaseTxtItems = (purchaseItems: Receipt[]) => {
 
 export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
   const date = stringFill(
-    moment(purchaseItems.dataValues.date).format('YYYYMMDD'),
+    moment.utc(purchaseItems.dataValues.date).format('YYYYMMDD'),
     8,
   );
   const receiptType = stringFill(
@@ -535,9 +535,9 @@ export const jsonDataInvoiceGenerator = (
     const data = dataSheet.slice(1);
     const jsonData = data.map((row: any) => {
       const rowObject: any = {};
-      rowObject['date'] = moment(
-        new Date(row[0]).setDate(new Date(row[0]).getDate() + 1),
-      ).format('YYYY-MM-DD');
+      rowObject['date'] = moment
+        .utc(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1))
+        .format('YYYY-MM-DD');
       rowObject['invoiceType'] = row[1];
       rowObject['sellPoint'] = row[2];
       rowObject['invoiceNumber'] = row[3];
@@ -574,9 +574,9 @@ export const jsonDataInvoiceGeneratorComplete = (
         }
       }
       const rowObject: any = {};
-      rowObject['date'] = moment(
-        new Date(row[0]).setDate(new Date(row[0]).getDate() + 1),
-      ).format('YYYY-MM-DD');
+      rowObject['date'] = moment
+        .utc(new Date(row[0]).setDate(new Date(row[0]).getDate() + 1))
+        .format('YYYY-MM-DD');
       rowObject['invoiceType'] = parseInt(row[1]);
       rowObject['sellPoint'] = row[2];
       rowObject['invoiceNumber'] = row[3];
@@ -718,7 +718,7 @@ export const generateUncheckedReceiptsCVS = (
     );
 
     return {
-      fecha: moment(receipt.date).format('YYYY-MM-DD'),
+      fecha: moment.utc(receipt.date).format('YYYY-MM-DD'),
       tipo: invoiceType,
       punto_de_venta: receipt.sell_point,
       numero: receipt.number,
@@ -814,7 +814,7 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
   const receiptsTraslated = receipts.map((receipt) => {
     const invoiceType = invoiceTypeConvert(receipt.invoice_type_id);
     return {
-      Fecha: moment(receipt.date).format('DD/MM/YYYY'),
+      Fecha: moment.utc(receipt.date).format('DD/MM/YYYY'),
       Tipo: invoiceType,
       Punto_de_Venta: receipt.sell_point,
       Número: receipt.number,
@@ -1105,11 +1105,6 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
     });
 
   const purchases = receipts.map((receipt) => {
-    console.log(
-      'moment(receipt.date).format("DD/MM/YYYY") :>> ',
-      moment.utc(receipt.date).format('DD/MM/YYYY'),
-    );
-    console.log('fecha', receipt.date.toISOString());
     return {
       date: moment.utc(receipt.date).format('DD/MM/YYYY'),
       receipt: `${invoiceTypeConvert(receipt.invoice_type_id)} ${zfill(
