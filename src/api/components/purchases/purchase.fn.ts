@@ -464,19 +464,25 @@ export const createPurchaseTxtItem = (purchaseItems: Receipt) => {
 export const createPurchaseTxtVatRates = (purchaseItems: Receipt[]) => {
   let text = '';
   purchaseItems.forEach((purchase, key) => {
-    if (key === purchaseItems.length - 1) {
-      text += createPurchaseTxtVatRateItem(purchase);
+    const vatRates = purchase.dataValues.VatRateReceipts;
+    if (!vatRates || vatRates.length === 0) {
+      return text;
+    }
+    if (key > 0) {
+      text += '\n' + createPurchaseTxtVatRateItem(purchase);
     } else {
-      text += createPurchaseTxtVatRateItem(purchase) + '\n';
+      text += createPurchaseTxtVatRateItem(purchase);
     }
   });
   return text;
 };
 
 export const createPurchaseTxtVatRateItem = (purchaseItems: Receipt) => {
+  console.log('purchaseItems :>> ', purchaseItems);
   const vatRates = purchaseItems.dataValues.VatRateReceipts;
-  if (!vatRates) {
-    return [];
+  console.log('vatRates :>> ', vatRates);
+  if (!vatRates || vatRates.length === 0) {
+    return '';
   }
   return vatRates.map((vatRate: any) => {
     const receiptType = stringFill(
