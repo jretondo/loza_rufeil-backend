@@ -180,7 +180,7 @@ export const checkDataReqReceipt = (
     local_tax_withholdings: totalLocalTax, //Percepciones municipales
     internal_tax: totalInternalTax, //Impuestos internos
     vat_rates_quantity: vatTaxes.length, //Cantidad de alícuotas de IVA
-    customer_id: customer.id || 0,
+    customer_id: customer?.id || 0,
     sell_period_id: purchasePeriodId,
     observation: observations,
     word: headerReceipt.word,
@@ -577,34 +577,34 @@ export const jsonDataInvoiceGeneratorComplete = (
       rowObject['invoiceType'] = parseInt(row[1]);
       rowObject['sellPoint'] = row[2];
       rowObject['invoiceNumber'] = row[3];
-      rowObject['documentType'] = row[4];
-      rowObject['documentNumber'] = row[5];
-      rowObject['providerName'] = row[6];
-      rowObject['totalInvoice'] = parseFloat(row[7].replace(',', '.'));
+      rowObject['documentType'] = row[5];
+      rowObject['documentNumber'] = row[6];
+      rowObject['clientName'] = row[7];
+      rowObject['totalInvoice'] = parseFloat(row[9].replace(',', '.'));
       //row[8]
       //row[9]
-      rowObject['unrecorded'] = parseFloat(row[10].replace(',', '.'));
-      rowObject['exemptOperation'] = parseFloat(row[11].replace(',', '.'));
+      rowObject['unrecorded'] = parseFloat(row[12].replace(',', '.'));
+      rowObject['exemptOperation'] = parseFloat(row[13].replace(',', '.'));
       //row[12]
-      rowObject['nationalTaxes'] = parseFloat(row[13].replace(',', '.'));
-      rowObject['grossIncome'] = parseFloat(row[14].replace(',', '.'));
-      rowObject['localTaxes'] = parseFloat(row[15].replace(',', '.'));
-      rowObject['vatWithholdings'] = parseFloat(row[16].replace(',', '.'));
-      rowObject['internalTaxes'] = parseFloat(row[17].replace(',', '.'));
-      rowObject['otherTributes'] = parseFloat(row[18].replace(',', '.'));
-      rowObject['0_00VatBase'] = parseFloat(row[19].replace(',', '.'));
-      rowObject['2_50VatBase'] = parseFloat(row[20].replace(',', '.'));
-      rowObject['2_50Vat'] = parseFloat(row[21].replace(',', '.'));
-      rowObject['5_00VatBase'] = parseFloat(row[22].replace(',', '.'));
-      rowObject['5_00Vat'] = parseFloat(row[23].replace(',', '.'));
-      rowObject['10_50VatBase'] = parseFloat(row[24].replace(',', '.'));
-      rowObject['10_50Vat'] = parseFloat(row[25].replace(',', '.'));
-      rowObject['21_00VatBase'] = parseFloat(row[26].replace(',', '.'));
-      rowObject['21_00Vat'] = parseFloat(row[27].replace(',', '.'));
-      rowObject['27_00VatBase'] = parseFloat(row[28].replace(',', '.'));
-      rowObject['27_00Vat'] = parseFloat(row[29].replace(',', '.'));
-      rowObject['totalRecorded'] = parseFloat(row[30].replace(',', '.'));
-      rowObject['totalVat'] = parseFloat(row[31].replace(',', '.'));
+      rowObject['nationalTaxes'] = parseFloat(row[14].replace(',', '.'));
+      rowObject['grossIncome'] = parseFloat(row[15].replace(',', '.'));
+      rowObject['localTaxes'] = parseFloat(row[16].replace(',', '.'));
+      rowObject['vatWithholdings'] = parseFloat(row[17].replace(',', '.'));
+      rowObject['internalTaxes'] = parseFloat(row[18].replace(',', '.'));
+      rowObject['otherTributes'] = parseFloat(row[19].replace(',', '.'));
+      rowObject['0_00VatBase'] = parseFloat(row[20].replace(',', '.'));
+      rowObject['2_50VatBase'] = parseFloat(row[21].replace(',', '.'));
+      rowObject['2_50Vat'] = parseFloat(row[22].replace(',', '.'));
+      rowObject['5_00VatBase'] = parseFloat(row[23].replace(',', '.'));
+      rowObject['5_00Vat'] = parseFloat(row[24].replace(',', '.'));
+      rowObject['10_50VatBase'] = parseFloat(row[25].replace(',', '.'));
+      rowObject['10_50Vat'] = parseFloat(row[26].replace(',', '.'));
+      rowObject['21_00VatBase'] = parseFloat(row[27].replace(',', '.'));
+      rowObject['21_00Vat'] = parseFloat(row[28].replace(',', '.'));
+      rowObject['27_00VatBase'] = parseFloat(row[29].replace(',', '.'));
+      rowObject['27_00Vat'] = parseFloat(row[30].replace(',', '.'));
+      rowObject['totalRecorded'] = parseFloat(row[31].replace(',', '.'));
+      rowObject['totalVat'] = parseFloat(row[32].replace(',', '.'));
 
       return rowObject;
     });
@@ -1285,10 +1285,12 @@ export const completeReceipt = async (
         sellPoint: invoice.sell_point,
         number: invoice.number,
       };
+
       const taxesList = await getClientParamFn(
         periodId,
         invoice.customer_id,
       ).then((data) => [...data.vat, ...data.others]);
+
       const { taxes, recorded } = getVatAmount(
         invoice.total,
         taxesList.map((data, key) => {
@@ -1307,35 +1309,36 @@ export const completeReceipt = async (
         }),
       );
 
-      const invoiceConcepts: IReceiptConcept[] =
-        await CustomerParameter.findAll({
-          where: [
-            { customer_id: invoice.Customer?.id },
-            { accounting_period_id: periodId },
-          ],
-          include: [AccountChart],
-        }).then((data) => {
-          let recordedAssigned = false;
-          return data
-            .map((concept) => {
-              if (!recordedAssigned) {
-                concept.dataValues.amount = recorded;
-                recordedAssigned = true;
-              } else {
-                concept.dataValues.amount = 0;
-              }
-              return {
-                account_chart_id: concept.dataValues.account_chart_id ?? 0,
-                accounting_period_id:
-                  concept.dataValues.accounting_period_id ?? 0,
-                amount: concept.dataValues.amount,
-                description: concept.dataValues.description,
-                AccountChart: concept.dataValues.AccountChart,
-                recordType: 0,
-              };
-            })
-            .filter((concept) => concept.amount && concept.amount > 0);
-        });
+      const invoiceConcepts: IReceiptConcept[] = invoice.Customer
+        ? await CustomerParameter.findAll({
+            where: [
+              { customer_id: invoice.Customer?.id },
+              { accounting_period_id: periodId },
+            ],
+            include: [AccountChart],
+          }).then((data) => {
+            let recordedAssigned = false;
+            return data
+              .map((concept) => {
+                if (!recordedAssigned) {
+                  concept.dataValues.amount = recorded;
+                  recordedAssigned = true;
+                } else {
+                  concept.dataValues.amount = 0;
+                }
+                return {
+                  account_chart_id: concept.dataValues.account_chart_id ?? 0,
+                  accounting_period_id:
+                    concept.dataValues.accounting_period_id ?? 0,
+                  amount: concept.dataValues.amount,
+                  description: concept.dataValues.description,
+                  AccountChart: concept.dataValues.AccountChart,
+                  recordType: 0,
+                };
+              })
+              .filter((concept) => concept.amount && concept.amount > 0);
+          })
+        : [];
 
       const paymentsParameters: ISellPointReq[] = await paymentParameter(
         periodId,

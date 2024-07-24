@@ -1,53 +1,59 @@
 import { Restrictions } from '../constant/OTHERS';
 import { Columns, Tables } from './../constant/TABLES';
-import { IVatRatesReceipts } from "../interfaces/Tables";
-import { DataTypes, Model, Optional } from "sequelize";
+import { IVatRatesInvoice } from '../interfaces/Tables';
+import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../database';
 import Invoice from './Invoices';
 
-type VatRateInvoiceCreationAttributes = Optional<IVatRatesReceipts, 'id'>;
+type VatRateInvoiceCreationAttributes = Optional<IVatRatesInvoice, 'id'>;
 
-class VatRateInvoice extends Model<IVatRatesReceipts, VatRateInvoiceCreationAttributes> { }
+class VatRateInvoice extends Model<
+  IVatRatesInvoice,
+  VatRateInvoiceCreationAttributes
+> {}
 
-VatRateInvoice.init({
+VatRateInvoice.init(
+  {
     id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: false
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      allowNull: false,
     },
-    receipt_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+    invoice_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     recorded_net: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
     },
     vat_type_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     vat_amount: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
-    }
-}, {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+    },
+  },
+  {
     sequelize,
     tableName: Tables.VAT_RATES_INVOICES,
-    timestamps: false
-})
+    timestamps: false,
+  },
+);
 
 Invoice.hasMany(VatRateInvoice, {
-    foreignKey: Columns.vatRateInvoice.invoice_id,
-    sourceKey: Columns.receipts.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
+  foreignKey: Columns.vatRateInvoice.invoice_id,
+  sourceKey: Columns.receipts.id,
+  onDelete: Restrictions.CASCADE,
+  onUpdate: Restrictions.CASCADE,
+});
 
 VatRateInvoice.belongsTo(Invoice, {
-    foreignKey: Columns.vatRateInvoice.invoice_id,
-    targetKey: Columns.receipts.id
-})
+  foreignKey: Columns.vatRateInvoice.invoice_id,
+  targetKey: Columns.receipts.id,
+});
 
 export default VatRateInvoice;
