@@ -610,12 +610,130 @@ export const importCVSAfip = async (
     if (files) {
       const file = files.file[0];
       const dataSheet: Array<string[]> = getDataSheet(file.path);
-      //const dataProcessed = jsonDataInvoiceGenerator(dataSheet)
       const dataProcessed = jsonDataInvoiceGeneratorComplete(dataSheet);
 
       setTimeout(() => {
         fs.unlinkSync(file.path);
       }, 2500);
+
+      let customersUnique: {
+        document_number: number;
+        business_name: string;
+      }[] = Object.values(
+        dataProcessed.reduce((unique: any, data) => {
+          unique[data.documentNumber + data.providerName] = {
+            document_number: data.documentNumber,
+            business_name: data.providerName,
+          };
+          return unique;
+        }, {}),
+      );
+
+      await Promise.all(
+        customersUnique.map(async (customer) => {
+          return await Customer.findOne({
+            where: [
+              {
+                document_number: customer.document_number,
+              },
+            ],
+          }).then(async (provider) => {
+            if (
+              !provider &&
+              customer &&
+              String(customer.document_number).length > 5
+            ) {
+              const providerData = await clientDataTax(
+                customer.document_number,
+              );
+              const taxes =
+                providerData.data?.datosRegimenGeneral?.impuesto || [];
+              let vatTax = 30;
+              taxes.map((item) => {
+                switch (item.idImpuesto) {
+                  case 30:
+                    vatTax = 30;
+                    break;
+                  case 32:
+                    vatTax = 32;
+                    break;
+                  case 20:
+                    vatTax = 20;
+                    break;
+                  case 33:
+                    vatTax = 33;
+                    break;
+                  case 34:
+                    vatTax = 34;
+                    break;
+                  default:
+                    break;
+                }
+              });
+              let newProvider: ICustomers;
+              if (providerData.data?.datosGenerales) {
+                newProvider = {
+                  document_type: 80,
+                  document_number: String(customer.document_number),
+                  business_name:
+                    providerData.data?.datosGenerales.tipoPersona === 'FISICA'
+                      ? providerData.data.datosGenerales.apellido +
+                        ' ' +
+                        providerData.data.datosGenerales.nombre
+                      : providerData.data?.datosGenerales.razonSocial || '',
+                  fantasie_name:
+                    providerData.data?.datosGenerales.tipoPersona === 'FISICA'
+                      ? providerData.data.datosGenerales.apellido +
+                        ' ' +
+                        providerData.data.datosGenerales.nombre
+                      : providerData.data?.datosGenerales.razonSocial || '',
+                  iva_condition_id: vatTax,
+                  direction:
+                    providerData.data?.datosGenerales.domicilioFiscal
+                      .direccion || '',
+                  city:
+                    providerData.data?.datosGenerales.domicilioFiscal
+                      .descripcionProvincia || '',
+                  activity_description: providerData.data?.datosRegimenGeneral
+                    ?.actividad
+                    ? providerData.data?.datosRegimenGeneral?.actividad[0]
+                        .descripcionActividad
+                    : '',
+                };
+              } else {
+                newProvider = {
+                  document_type: 80,
+                  document_number: String(customer.document_number),
+                  business_name: customer.business_name,
+                  fantasie_name: customer.business_name,
+                  iva_condition_id: 30,
+                  direction: '',
+                  city: '',
+                  activity_description: '',
+                };
+              }
+
+              return await Customer.create(newProvider)
+                .then(async (newProvInserted) => {
+                  provider = await Customer.findOne({
+                    where: { id: newProvInserted.dataValues.id },
+                    include: [
+                      IvaCondition,
+                      {
+                        model: CustomerParameter,
+                        required: false,
+                      },
+                    ],
+                  });
+                })
+                .catch((error) => {
+                  console.log('error :>> ', error);
+                });
+            }
+          });
+        }),
+      );
+
       const dataInvoice: Promise<IInvoices[]> = Promise.all(
         dataProcessed.map(async (data) => {
           let provider_ = '';
@@ -626,7 +744,10 @@ export const importCVSAfip = async (
               },
             ],
             include: [
-              IvaCondition,
+              {
+                model: IvaCondition,
+                required: false,
+              },
               {
                 model: CustomerParameter,
                 required: false,
@@ -636,87 +757,6 @@ export const importCVSAfip = async (
             ],
           });
 
-          if (!provider && data.providerName && data.documentNumber) {
-            const providerData = await clientDataTax(data.documentNumber);
-            const taxes =
-              providerData.data?.datosRegimenGeneral?.impuesto || [];
-            let vatTax = 30;
-            taxes.map((item) => {
-              switch (item.idImpuesto) {
-                case 30:
-                  vatTax = 30;
-                  break;
-                case 32:
-                  vatTax = 32;
-                  break;
-                case 20:
-                  vatTax = 20;
-                  break;
-                case 33:
-                  vatTax = 33;
-                  break;
-                case 34:
-                  vatTax = 34;
-                  break;
-                default:
-                  break;
-              }
-            });
-            let newProvider: ICustomers;
-            if (providerData.data?.datosGenerales) {
-              newProvider = {
-                document_type: 80,
-                document_number: String(data.documentNumber),
-                business_name:
-                  providerData.data?.datosGenerales.tipoPersona === 'FISICA'
-                    ? providerData.data.datosGenerales.apellido +
-                      ' ' +
-                      providerData.data.datosGenerales.nombre
-                    : providerData.data?.datosGenerales.razonSocial || '',
-                fantasie_name:
-                  providerData.data?.datosGenerales.tipoPersona === 'FISICA'
-                    ? providerData.data.datosGenerales.apellido +
-                      ' ' +
-                      providerData.data.datosGenerales.nombre
-                    : providerData.data?.datosGenerales.razonSocial || '',
-                iva_condition_id: vatTax,
-                direction:
-                  providerData.data?.datosGenerales.domicilioFiscal.direccion ||
-                  '',
-                city:
-                  providerData.data?.datosGenerales.domicilioFiscal
-                    .descripcionProvincia || '',
-                activity_description: providerData.data?.datosRegimenGeneral
-                  ?.actividad
-                  ? providerData.data?.datosRegimenGeneral?.actividad[0]
-                      .descripcionActividad
-                  : '',
-              };
-            } else {
-              newProvider = {
-                document_type: 80,
-                document_number: String(data.documentNumber),
-                business_name: data.providerName,
-                fantasie_name: data.providerName,
-                iva_condition_id: 30,
-                direction: '',
-                city: '',
-                activity_description: '',
-              };
-            }
-
-            const newProvInserted = await Customer.create(newProvider);
-            provider = await Customer.findOne({
-              where: { id: newProvInserted.dataValues.id },
-              include: [
-                IvaCondition,
-                {
-                  model: CustomerParameter,
-                  required: false,
-                },
-              ],
-            });
-          }
           return {
             checked: false,
             date: data.date,

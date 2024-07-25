@@ -579,7 +579,7 @@ export const jsonDataInvoiceGeneratorComplete = (
       rowObject['invoiceNumber'] = row[3];
       rowObject['documentType'] = row[5];
       rowObject['documentNumber'] = row[6];
-      rowObject['clientName'] = row[7];
+      rowObject['providerName'] = row[7];
       rowObject['totalInvoice'] = parseFloat(row[9].replace(',', '.'));
       //row[8]
       //row[9]
