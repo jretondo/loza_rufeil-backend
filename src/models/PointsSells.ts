@@ -9,75 +9,82 @@ import Client from './Client';
 
 type PointsSellsCreationAttributes = Optional<IPointsSells, 'id'>;
 
-class PointsSells extends Model<IPointsSells, PointsSellsCreationAttributes> { }
+class PointsSells extends Model<IPointsSells, PointsSellsCreationAttributes> {}
 
-PointsSells.init({
+PointsSells.init(
+  {
     id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: false
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      allowNull: false,
     },
     client_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-      number: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+    number: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     active: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     account_chart_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     accounting_period_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-    }
-}, {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    address: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+  },
+  {
     tableName: Tables.POINTS_SELLS_PARAMETERS,
     timestamps: false,
-    sequelize
-})
+    sequelize,
+  },
+);
 
 Client.hasOne(PointsSells, {
-    foreignKey: Columns.sellPoints.client_id,
-    sourceKey: Columns.clients.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
+  foreignKey: Columns.sellPoints.client_id,
+  sourceKey: Columns.clients.id,
+  onDelete: Restrictions.CASCADE,
+  onUpdate: Restrictions.CASCADE,
+});
 
 PointsSells.belongsTo(Client, {
-    foreignKey: Columns.sellPoints.client_id,
-    targetKey: Columns.clients.id
-})
+  foreignKey: Columns.sellPoints.client_id,
+  targetKey: Columns.clients.id,
+});
 
 AccountChart.hasOne(PointsSells, {
-    foreignKey: Columns.sellPoints.account_chart_id,
-    sourceKey: Columns.accountCharts.id,
-    onDelete: Restrictions.SET_NULL,
-    onUpdate: Restrictions.SET_NULL
-})
+  foreignKey: Columns.sellPoints.account_chart_id,
+  sourceKey: Columns.accountCharts.id,
+  onDelete: Restrictions.SET_NULL,
+  onUpdate: Restrictions.SET_NULL,
+});
 
 PointsSells.belongsTo(AccountChart, {
-    foreignKey: Columns.sellPoints.account_chart_id,
-    targetKey: Columns.accountCharts.id
-})
+  foreignKey: Columns.sellPoints.account_chart_id,
+  targetKey: Columns.accountCharts.id,
+});
 
 AccountingPeriod.hasOne(PointsSells, {
-    foreignKey: Columns.sellPoints.accounting_period_id,
-    sourceKey: Columns.accountingPeriod.id,
-    onDelete: Restrictions.CASCADE,
-    onUpdate: Restrictions.CASCADE
-})
+  foreignKey: Columns.sellPoints.accounting_period_id,
+  sourceKey: Columns.accountingPeriod.id,
+  onDelete: Restrictions.CASCADE,
+  onUpdate: Restrictions.CASCADE,
+});
 
 PointsSells.belongsTo(AccountingPeriod, {
-    foreignKey: Columns.sellPoints.accounting_period_id,
-    targetKey: Columns.accountingPeriod.id
-})
+  foreignKey: Columns.sellPoints.accounting_period_id,
+  targetKey: Columns.accountingPeriod.id,
+});
 
-export default PointsSells
+export default PointsSells;

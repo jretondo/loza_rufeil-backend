@@ -32,6 +32,7 @@ import SellsParameter from '../../../models/SellsParameter';
 import PointsSells from '../../../models/PointsSells';
 import SellPeriod from '../../../models/SellPeriod';
 import CustomerParameter from '../../../models/CustomerParameter';
+import SellsDefaultParameters from '../../../models/SellsDefaultParameters';
 
 export const checkDataReqReceipt = (
   headerReceipt: IHeaderReceiptReq,
@@ -59,7 +60,10 @@ export const checkDataReqReceipt = (
   );
 
   const vatTaxes = taxesReceipt.filter((tax) => tax.is_vat);
-
+  console.log('total :>> ', total);
+  console.log('totalTaxes :>> ', totalTaxes);
+  console.log('totalPayment :>> ', totalPayment);
+  console.log('totalConcepts :>> ', totalConcepts);
   if (
     roundNumber(total, 2) !== roundNumber(totalPayment, 2) ||
     roundNumber(total, 2) !== roundNumber(totalTaxes + totalConcepts, 2)
@@ -1531,6 +1535,13 @@ export const getClientParamFn = async (
     vat: allClientVatParams,
     others: allClientOthersParams,
   };
+};
+
+export const getClientParamDefaultFn = async (periodId: number) => {
+  return await SellsDefaultParameters.findAll({
+    where: [{ accounting_period_id: periodId }],
+    include: [AccountChart],
+  });
 };
 
 export const paymentParameter = async (periodId: number) => {

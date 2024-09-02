@@ -9,6 +9,7 @@ import {
   IPointsSells,
   IReceiptConcept,
   ISellPointReq,
+  ISellsDefaultParameters,
   ISellsEntries,
   ISellsParameters,
   ITaxesReceiptReq,
@@ -30,6 +31,7 @@ import {
   paymentParameter,
   invoicesExcelGenerator,
   resumeDataGenerator,
+  getClientParamDefaultFn,
 } from './sells.fn';
 import { isDate } from 'moment';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -45,6 +47,7 @@ import VatRateInvoice from '../../../models/VatRateInvoice';
 import SellEntry from '../../../models/SellEntries';
 import Customer from '../../../models/Customers';
 import CustomerParameter from '../../../models/CustomerParameter';
+import SellsDefaultParameters from '../../../models/SellsDefaultParameters';
 
 export const listPurchasePeriods = async (
   req: Request,
@@ -74,6 +77,16 @@ export const getClientsParams = async (
   next: NextFunction,
 ) => {
   return getClientParamFn(req.body.periodId)
+    .then((data) => success({ req, res, message: data }))
+    .catch(next);
+};
+
+export const getClientsParamsDefault = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  return getClientParamDefaultFn(req.body.periodId)
     .then((data) => success({ req, res, message: data }))
     .catch(next);
 };
@@ -147,6 +160,7 @@ export const insertPaymentsParametersClient = async (
           active: paymentParam.active,
           account_chart_id: paymentParam.AccountChart?.id || null,
           accounting_period_id: periodId,
+          address: paymentParam.address || '',
         };
       },
     );
@@ -154,6 +168,32 @@ export const insertPaymentsParametersClient = async (
       where: [{ client_id: clientId }, { accounting_period_id: periodId }],
     });
     return await PointsSells.bulkCreate(paymentsParams);
+  })(req.body.clientId, req.body.params, req.body.periodId)
+    .then((data) => success({ req, res, message: data }))
+    .catch(next);
+};
+
+export const insertPaymentsParametersDefaultClient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  (async function (clientId: number, params: any, periodId: number) {
+    const paymentsParams: [ISellsDefaultParameters] = params.map(
+      (paymentParam: ISellsDefaultParameters) => {
+        return {
+          client_id: clientId,
+          description: paymentParam.description,
+          active: paymentParam.active,
+          account_chart_id: paymentParam.AccountChart?.id || null,
+          accounting_period_id: periodId,
+        };
+      },
+    );
+    await SellsDefaultParameters.destroy({
+      where: [{ client_id: clientId }, { accounting_period_id: periodId }],
+    });
+    return await SellsDefaultParameters.bulkCreate(paymentsParams);
   })(req.body.clientId, req.body.params, req.body.periodId)
     .then((data) => success({ req, res, message: data }))
     .catch(next);

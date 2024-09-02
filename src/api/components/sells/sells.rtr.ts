@@ -1,5 +1,8 @@
 import { EModules, EPermissions } from './../../../constant/OTHERS';
-import { checkClient, checkModule } from './../../../middlewares/secureMiddlewares';
+import {
+  checkClient,
+  checkModule,
+} from './../../../middlewares/secureMiddlewares';
 import { Router } from 'express';
 import secure from '../../../auth/secure';
 import {
@@ -23,7 +26,9 @@ import {
   generateUncheckedReceipts,
   closePeriod,
   getClosedPeriods,
-  buildEntry
+  buildEntry,
+  getClientsParamsDefault,
+  insertPaymentsParametersDefaultClient,
 } from './sells.ctrl';
 import uploadFile from '../../../middlewares/multer';
 import { FILES_ADDRESS } from '../../../constant/FILES_ADDRESS';
@@ -32,160 +37,173 @@ const router = Router();
 
 router
   .get(
-    "/entries/:purchasePeriodId",
+    '/entries/:purchasePeriodId',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.accounting),
-    buildEntry
+    buildEntry,
   )
   .get(
-    "/period/total",
+    '/period/total',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    getPeriodTotals
+    getPeriodTotals,
   )
   .get(
-    "/period",
+    '/period',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    listPurchasePeriods
+    listPurchasePeriods,
   )
   .get(
-    "/periods/closed",
+    '/periods/closed',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.accounting),
-    getClosedPeriods
+    getClosedPeriods,
   )
   .get(
-    "/params",
+    '/params/default',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    getClientsParams
+    getClientsParamsDefault,
   )
   .get(
-    "/paymentsMethods",
+    '/params',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    getPaymentsParametersClient
+    getClientsParams,
   )
   .get(
-    "/receipt/:id",
+    '/paymentsMethods',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    getReceipt
+    getPaymentsParametersClient,
   )
   .get(
-    "/receipts/:page",
+    '/receipt/:id',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    getReceipts
+    getReceipt,
   )
   .get(
-    "/receipts/txt/:purchaseId",
+    '/receipts/:page',
     secure(),
     checkClient(EPermissions.read),
     checkModule(EModules.purchases),
-    createPurchaseTxt
+    getReceipts,
+  )
+  .get(
+    '/receipts/txt/:purchaseId',
+    secure(),
+    checkClient(EPermissions.read),
+    checkModule(EModules.purchases),
+    createPurchaseTxt,
   )
   .post(
-    "/params",
+    '/params',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    insertClientsParams
+    insertClientsParams,
   )
   .post(
-    "/paymentsMethods",
+    '/paymentsMethods/default',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    insertPaymentsParametersClient
+    insertPaymentsParametersDefaultClient,
   )
   .post(
-    "/receipt/check",
+    '/paymentsMethods',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    checkReceipt
+    insertPaymentsParametersClient,
   )
   .post(
-    "/receipt/import",
+    '/receipt/check',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    uploadFile(FILES_ADDRESS.importsExcel, ["file"]),
-    importCVSAfip
+    checkReceipt,
   )
   .post(
-    "/receipts/export",
+    '/receipt/import',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    getExcelReceipts
+    uploadFile(FILES_ADDRESS.importsExcel, ['file']),
+    importCVSAfip,
   )
   .post(
-    "/receipt/unchecked",
+    '/receipts/export',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    generateUncheckedReceipts
+    getExcelReceipts,
   )
   .post(
-    "/receipts/report",
+    '/receipt/unchecked',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    getReport
+    generateUncheckedReceipts,
   )
   .post(
-    "/receipt",
+    '/receipts/report',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    upsertReceipt
+    getReport,
   )
   .post(
-    "/receipts",
+    '/receipt',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    upsertReceipts
+    upsertReceipt,
   )
   .post(
-    "/period",
+    '/receipts',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    insertPeriod
+    upsertReceipts,
+  )
+  .post(
+    '/period',
+    secure(),
+    checkClient(EPermissions.write),
+    checkModule(EModules.purchases),
+    insertPeriod,
   )
   .delete(
-    "/receipt/:id",
+    '/receipt/:id',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    deleteReceipt
+    deleteReceipt,
   )
   .put(
-    "/receipt",
+    '/receipt',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    upsertReceipt
+    upsertReceipt,
   )
   .put(
-    "/period/close",
+    '/period/close',
     secure(),
     checkClient(EPermissions.write),
     checkModule(EModules.purchases),
-    closePeriod
-  )
-
+    closePeriod,
+  );
 
 export default router;
