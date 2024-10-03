@@ -948,6 +948,18 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
     receipts.reduce((acc, receipt) => acc + Number(receipt.unrecorded), 0),
   );
 
+  const recorded = roundNumber(
+    receipts.reduce((acc, receipt) => {
+      return (
+        acc +
+        Number(
+          receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id)
+            ?.recorded_net || 0,
+        )
+      );
+    }, 0),
+  );
+
   const neto_0: number = roundNumber(
     receipts.reduce((acc, receipt) => {
       return (
@@ -1081,7 +1093,6 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
   );
 
   const totals = [
-    { name: 'Total', value: total },
     { name: 'Operaciones Exentas', value: exempt_transactions },
     { name: 'Percepciones de IVA', value: vat_withholdings },
     {
@@ -1100,7 +1111,10 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
     { name: 'Total IVA 10.5%', value: vat_10_5 },
     { name: 'Total IVA 5%', value: vat_5 },
     { name: 'Total IVA 2.5%', value: vat_2_5 },
+    { name: 'Grabado', value: recorded },
+    { name: 'Total', value: total },
   ];
+
   const totalsList = totals
     .filter((total) => total.value !== 0)
     .map((total) => {
