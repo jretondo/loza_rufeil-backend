@@ -836,14 +836,7 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
         receipt.gross_income_withholdings,
       ),
       "Percepciones Municipales": roundNumber(receipt.local_tax_withholdings),
-      "Impuestos Internos": roundNumber(receipt.internal_tax),
-      "Total Grabado": roundNumber(
-        receipt.VatRateReceipts?.reduce(
-          (acc, vat) => acc + Number(vat.recorded_net),
-          0,
-        ) || 0,
-      ),
-      "Total No Gravado": roundNumber(receipt.unrecorded),
+      "Impuestos Internos": roundNumber(receipt.internal_tax),     
       "Total Iva 0%": roundNumber(receipt.VatRateReceipts
         ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 3)
             ?.vat_amount || 0
@@ -868,6 +861,13 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
         ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 6)
             ?.vat_amount || 0
         : 0),
+        "Total Grabado": roundNumber(
+          receipt.VatRateReceipts?.reduce(
+            (acc, vat) => acc + Number(vat.recorded_net),
+            0,
+          ) || 0,
+        ),
+        "Total No Gravado": roundNumber(receipt.unrecorded),
       Total: roundNumber(receipt.total),
       Observaciones: receipt.observation,
     };
