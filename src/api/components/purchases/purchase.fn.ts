@@ -822,45 +822,52 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
     return {
       Fecha: moment.utc(receipt.date).format('DD/MM/YYYY'),
       Tipo: invoiceType,
-      Punto_de_Venta: receipt.sell_point,
-      Número: receipt.number,
+      "Punto de Venta": receipt.sell_point,
+      "Número": receipt.number,
       Proveedor: receipt.Provider?.business_name,
-      Cuit_Proveedor: receipt.Provider?.document_number,
+      "Cuit Proveedor": receipt.Provider?.document_number,
       Ingresos_Brutos: receipt.gross_income_withholdings,
-      Operaciones_Exentas: roundNumber(receipt.exempt_transactions),
-      Percepciones_de_IVA: roundNumber(receipt.vat_withholdings),
-      Percepciones_de_impuestos_nacionales: roundNumber(
+      "Operaciones Exentas": roundNumber(receipt.exempt_transactions),
+      "Percepciones de IVA": roundNumber(receipt.vat_withholdings),
+      "Percepciones de Impuestos Nacionales": roundNumber(
         receipt.national_tax_withholdings,
       ),
-      Percepciones_de_ingresos_brutos: roundNumber(
+      "Percepciones de Ingresos Brutos": roundNumber(
         receipt.gross_income_withholdings,
       ),
-      Percepciones_municipales: roundNumber(receipt.local_tax_withholdings),
-      Impuestos_internos: roundNumber(receipt.internal_tax),
-      Total_Iva_0: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)
-            ?.recorded_net || 0
-        : 0,
-      Total_Iva_2_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)
-            ?.recorded_net || 0
-        : 0,
-      Total_Iva_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)
-            ?.recorded_net || 0
-        : 0,
-      Total_Iva_10_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)
-            ?.recorded_net || 0
-        : 0,
-      Total_Iva_21: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)
-            ?.recorded_net || 0
-        : 0,
-      Total_Iva_27: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 10)
-            ?.recorded_net || 0
-        : 0,
+      "Percepciones Municipales": roundNumber(receipt.local_tax_withholdings),
+      "Impuestos Internos": roundNumber(receipt.internal_tax),
+      "Total Grabado": roundNumber(
+        receipt.VatRateReceipts?.reduce(
+          (acc, vat) => acc + Number(vat.recorded_net),
+          0,
+        ) || 0,
+      ),
+      "Total No Gravado": roundNumber(receipt.unrecorded),
+      "Total Iva 0%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 3)
+            ?.vat_amount || 0
+        : 0),
+      "Total Iva 2,5%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 9)
+            ?.vat_amount || 0
+        : 0),
+      "Total Iva 5%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 8)
+            ?.vat_amount || 0
+        : 0),
+      "Total Iva 10,5%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 4)
+            ?.vat_amount || 0
+        : 0),
+      "Total Iva 21%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 5)
+            ?.vat_amount || 0
+        : 0),
+      "Total Iva 27%": roundNumber(receipt.VatRateReceipts
+        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 6)
+            ?.vat_amount || 0
+        : 0),
       Total: roundNumber(receipt.total),
       Observaciones: receipt.observation,
     };
