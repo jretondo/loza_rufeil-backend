@@ -687,6 +687,11 @@ export const generateUncheckedReceiptsCVS = (
     neto_gravado: number;
     iva_total: number;
   }[] = receipts.map((receipt) => {
+    const creditsNotes = [3, 8, 13, 53, 110, 119];
+    const negativePositive = creditsNotes.includes(receipt.invoice_type_id)
+      ? -1
+      : 1;
+
     const invoiceType = Number(receipt.invoice_type_id);
     const totalVat: number = Number(
       (receipt.VatRatesReceipts
@@ -743,52 +748,74 @@ export const generateUncheckedReceiptsCVS = (
       imp_cta_iva: receipt.vat_withholdings,
       imp_internos: receipt.internal_tax,
       imp_otros_tributos: 0,
-      neto_iva_0: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 3)
-            ?.recorded_net || 0
-        : 0,
-      neto_iva_2_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)
-            ?.recorded_net || 0
-        : 0,
-      iva_2_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)
-            ?.vat_amount || 0
-        : 0,
-      neto_iva_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)
-            ?.recorded_net || 0
-        : 0,
-      iva_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)
-            ?.vat_amount || 0
-        : 0,
-      neto_iva_10_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)
-            ?.recorded_net || 0
-        : 0,
-      iva_10_5: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)
-            ?.vat_amount || 0
-        : 0,
-      neto_iva_21: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)
-            ?.recorded_net || 0
-        : 0,
-      iva_21: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)
-            ?.vat_amount || 0
-        : 0,
-      neto_iva_27: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)
-            ?.recorded_net || 0
-        : 0,
-      iva_27: receipt.VatRatesReceipts
-        ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)
-            ?.vat_amount || 0
-        : 0,
-      neto_gravado: totalNet,
-      iva_total: totalVat,
+      neto_iva_0:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 3)
+              ?.recorded_net || 0
+          : 0),
+      neto_iva_2_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)
+              ?.recorded_net || 0
+          : 0),
+      iva_2_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 9)
+              ?.vat_amount || 0
+          : 0),
+      neto_iva_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)
+              ?.recorded_net || 0
+          : 0),
+      iva_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 8)
+              ?.vat_amount || 0
+          : 0),
+      neto_iva_10_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)
+              ?.recorded_net || 0
+          : 0),
+      iva_10_5:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 4)
+              ?.vat_amount || 0
+          : 0),
+      neto_iva_21:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)
+              ?.recorded_net || 0
+          : 0),
+      iva_21:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 5)
+              ?.vat_amount || 0
+          : 0),
+      neto_iva_27:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)
+              ?.recorded_net || 0
+          : 0),
+      iva_27:
+        negativePositive *
+        (receipt.VatRatesReceipts
+          ? receipt.VatRatesReceipts.find((vat: any) => vat.vat_type_id === 6)
+              ?.vat_amount || 0
+          : 0),
+      neto_gravado: negativePositive * totalNet,
+      iva_total: negativePositive * totalVat,
     };
   });
 
@@ -819,56 +846,81 @@ export const generateUncheckedReceiptsCVS = (
 export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
   const receiptsTraslated = receipts.map((receipt) => {
     const invoiceType = invoiceTypeConvert(receipt.invoice_type_id);
+    const creditsNotes = [3, 8, 13, 53, 110, 119];
+    const negativePositive = creditsNotes.includes(receipt.invoice_type_id)
+      ? -1
+      : 1;
     return {
       Fecha: moment.utc(receipt.date).format('DD/MM/YYYY'),
       Tipo: invoiceType,
-      "Punto de Venta": receipt.sell_point,
-      "Número": receipt.number,
+      'Punto de Venta': receipt.sell_point,
+      Número: receipt.number,
       Proveedor: receipt.Provider?.business_name,
-      "Cuit Proveedor": receipt.Provider?.document_number,
+      'Cuit Proveedor': receipt.Provider?.document_number,
       Ingresos_Brutos: receipt.gross_income_withholdings,
-      "Operaciones Exentas": roundNumber(receipt.exempt_transactions),
-      "Percepciones de IVA": roundNumber(receipt.vat_withholdings),
-      "Percepciones de Impuestos Nacionales": roundNumber(
-        receipt.national_tax_withholdings,
-      ),
-      "Percepciones de Ingresos Brutos": roundNumber(
-        receipt.gross_income_withholdings,
-      ),
-      "Percepciones Municipales": roundNumber(receipt.local_tax_withholdings),
-      "Impuestos Internos": roundNumber(receipt.internal_tax),     
-      "Total Iva 0%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 3)
-            ?.vat_amount || 0
-        : 0),
-      "Total Iva 2,5%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 9)
-            ?.vat_amount || 0
-        : 0),
-      "Total Iva 5%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 8)
-            ?.vat_amount || 0
-        : 0),
-      "Total Iva 10,5%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 4)
-            ?.vat_amount || 0
-        : 0),
-      "Total Iva 21%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 5)
-            ?.vat_amount || 0
-        : 0),
-      "Total Iva 27%": roundNumber(receipt.VatRateReceipts
-        ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 6)
-            ?.vat_amount || 0
-        : 0),
-        "Total Grabado": roundNumber(
+      'Operaciones Exentas':
+        roundNumber(receipt.exempt_transactions) * negativePositive,
+      'Percepciones de IVA':
+        roundNumber(receipt.vat_withholdings) * negativePositive,
+      'Percepciones de Impuestos Nacionales':
+        roundNumber(receipt.national_tax_withholdings) * negativePositive,
+      'Percepciones de Ingresos Brutos':
+        roundNumber(receipt.gross_income_withholdings) * negativePositive,
+      'Percepciones Municipales':
+        roundNumber(receipt.local_tax_withholdings) * negativePositive,
+      'Impuestos Internos':
+        roundNumber(receipt.internal_tax) * negativePositive,
+      'Total Iva 0%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 3)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Iva 2,5%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 9)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Iva 5%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 8)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Iva 10,5%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 4)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Iva 21%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 5)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Iva 27%':
+        roundNumber(
+          receipt.VatRateReceipts
+            ? receipt.VatRateReceipts.find((vat: any) => vat.vat_type_id === 6)
+                ?.vat_amount || 0
+            : 0,
+        ) * negativePositive,
+      'Total Grabado':
+        roundNumber(
           receipt.VatRateReceipts?.reduce(
             (acc, vat) => acc + Number(vat.recorded_net),
             0,
           ) || 0,
-        ),
-        "Total No Gravado": roundNumber(receipt.unrecorded),
-      Total: roundNumber(receipt.total),
+        ) * negativePositive,
+      'Total No Gravado': roundNumber(receipt.unrecorded) * negativePositive,
+      Total: roundNumber(receipt.total) * negativePositive,
       Observaciones: receipt.observation,
     };
   });
@@ -899,6 +951,40 @@ export const receiptsExcelGenerator = (receipts: IReceipts[]) => {
 
 export const resumeDataGenerator = async (receipts: IReceipts[]) => {
   let clientId = 0;
+  receipts = receipts.map((receipt) => {
+    const creditsNotes = [3, 8, 13, 53, 110, 119];
+    const negativePositive = creditsNotes.includes(receipt.invoice_type_id)
+      ? -1
+      : 1;
+    if (negativePositive === -1) {
+      console.log('receipt :>> ', receipt.total);
+    }
+    receipt.total = receipt.total * negativePositive;
+    receipt.exempt_transactions =
+      receipt.exempt_transactions * negativePositive;
+    receipt.vat_withholdings = receipt.vat_withholdings * negativePositive;
+    receipt.national_tax_withholdings =
+      receipt.national_tax_withholdings * negativePositive;
+    receipt.gross_income_withholdings =
+      receipt.gross_income_withholdings * negativePositive;
+    receipt.local_tax_withholdings =
+      receipt.local_tax_withholdings * negativePositive;
+    receipt.internal_tax = receipt.internal_tax * negativePositive;
+    receipt.unrecorded = receipt.unrecorded * negativePositive;
+    receipt.VatRateReceipts =
+      receipt.VatRateReceipts &&
+      receipt.VatRateReceipts.map((vat) => {
+        vat.recorded_net = vat.recorded_net * negativePositive;
+        vat.vat_amount = vat.vat_amount * negativePositive;
+        return vat;
+      });
+
+    if (negativePositive === -1) {
+      console.log('receipt :>> ', receipt.total);
+    }
+
+    return receipt;
+  });
   const period = await PurchasePeriod.findOne({
     where: {
       id: receipts[0].purchase_period_id,
@@ -960,8 +1046,10 @@ export const resumeDataGenerator = async (receipts: IReceipts[]) => {
       return (
         acc +
         Number(
-          receipt.VatRateReceipts?.find((vat: any) => vat.vat_type_id)
-            ?.recorded_net || 0,
+          receipt.VatRateReceipts?.map((vat) => vat.recorded_net).reduce(
+            (acc, net) => acc + Number(net),
+            0,
+          ) || 0,
         )
       );
     }, 0),
