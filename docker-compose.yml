@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   loza-rufeil-app:
-    image: node-point-sell-prod:1.0
+    build:
+      context: .
+      dockerfile: dockerfile
     working_dir: /app
     volumes:
       - /etc/letsencrypt/live/nekoadmin.com.ar-0002/fullchain.pem:/etc/letsencrypt/live/nekoadmin.com.ar-0002/fullchain.pem:ro
