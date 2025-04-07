@@ -27,6 +27,7 @@ RUN npm install -g typescript pm2
 
 RUN npm install
 
+COPY . .
 # Establecer Puppeteer para usar Chromium de la instalación del sistema
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
