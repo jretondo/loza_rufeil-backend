@@ -20,7 +20,8 @@ RUN apk update && apk add --no-cache nss \
     ttf-freefont \
     git \
     tzdata \
-    wget
+    wget \
+    openssl
 
 RUN npm install -g typescript pm2
 
@@ -30,6 +31,8 @@ RUN npm install
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     TZ=America/Argentina/Buenos_Aires
+
+RUN npm run build
+RUN date
     
-# Comando por defecto para el contenedor
-CMD ["npm", "run", "start"]
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]
