@@ -60,7 +60,17 @@ export const pdfGenerator = async (dataRequest: {
       }
 
       const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--disable-software-rasterizer',
+          '--disable-accelerated-2d-canvas',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gl-drawing-for-tests',
+        ],
         executablePath:
           process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       });
