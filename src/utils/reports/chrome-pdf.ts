@@ -61,7 +61,8 @@ export const pdfGenerator = async (dataRequest: {
 
       const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: '/usr/bin/chromium',
+        executablePath:
+          process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       });
 
       const page = await browser.newPage();
