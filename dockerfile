@@ -1,39 +1,39 @@
-# Usar una imagen base oficial de Node.js
-FROM node:18-alpine
+FROM node:18-slim
 
-# Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copiar package.json y package-lock.json para instalar dependencias
+# Instalar Chromium y dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    fonts-liberation \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libnss3 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxrandr2 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Variables para Puppeteer
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV TZ=America/Argentina/Buenos_Aires
+
+# Copiar archivos necesarios
 COPY package*.json ./
 COPY tsconfig.json ./
-
-# Instalar dependencias de la aplicación
-RUN apk update && apk add --no-cache nss \
-    python3 \
-    chromium \
-    chromium-chromedriver \
-    fontconfig \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    git \
-    tzdata \
-    wget \
-    openssl
-
-RUN npm install -g typescript pm2
 
 RUN npm install
 
 COPY . .
-# Establecer Puppeteer para usar Chromium de la instalación del sistema
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    TZ=America/Argentina/Buenos_Aires
 
 RUN npm run build
-RUN date
-    
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+
+EXPOSE 3020
+
+CMD ["node", "dist/api/index.js"]
