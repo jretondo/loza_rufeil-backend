@@ -30,7 +30,7 @@ RUN npm install
 COPY . .
 # Establecer Puppeteer para usar Chromium de la instalación del sistema
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
     TZ=America/Argentina/Buenos_Aires
 
 RUN npm run build

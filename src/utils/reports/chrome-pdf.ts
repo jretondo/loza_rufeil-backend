@@ -23,25 +23,19 @@ export const pdfGenerator = async (dataRequest: {
   fileName: string;
 }> => {
   const { data, fileName, layoutPath, format } = dataRequest;
-
   const uniqueSuffix = moment().format('YYYYMMDDHHmmss');
   const pdfAddress = path.join(
     'public',
     'reports',
     'excel',
-    uniqueSuffix + `-${fileName}.pfd`,
+    `${uniqueSuffix}-${fileName}.pdf`,
   );
-  return new Promise(async (resolve, reject) => {
-    //const productos = await productController.pricesProd()
 
-    function base64_encode(file: any) {
-      // read binary data
-      var bitmap: Buffer = fs.readFileSync(file);
-      // convert binary data to base64 encoded string
-      return Buffer.from(bitmap).toString('base64');
-    }
+  let browser;
 
-    const logo = base64_encode(path.join('public', 'images', 'logo.png'));
+  try {
+    // Preparo datos
+    const logo = fs.readFileSync(path.join('public', 'images', 'logo.png'));
     const estilo = fs.readFileSync(
       path.join('views', 'reports', 'purchasesList', 'styles.css'),
       'utf8',
@@ -49,49 +43,60 @@ export const pdfGenerator = async (dataRequest: {
 
     const datos = {
       ...data,
-      logo: 'data:image/png;base64,' + logo,
-      style: '<style>' + estilo + '</style>',
+      logo: `data:image/png;base64,${Buffer.from(logo).toString('base64')}`,
+      style: `<style>${estilo}</style>`,
     };
 
-    await ejs.renderFile(layoutPath, datos, async (err, data) => {
-      if (err) {
-        console.log('err', err);
-        throw new Error('Algo salio mal');
-      }
+    // Render HTML con await (sin callback)
+    const html: string = await ejs.renderFile(layoutPath, datos);
 
-      const browser = await puppeteer.launch({
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-software-rasterizer',
-          '--disable-accelerated-2d-canvas',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gl-drawing-for-tests',
-        ],
-        executablePath:
-          process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-      });
-
-      const page = await browser.newPage();
-      await page.setContent(data, {
-        waitUntil: 'networkidle0',
-      });
-
-      await page.pdf({
-        path: pdfAddress,
-        ...format,
-      });
-      await browser.close();
-
-      const dataFact = {
-        pdfAddress: pdfAddress,
-        fileName: fileName,
-      };
-
-      return resolve(dataFact);
+    // Lanzar browser con configuración docker-friendly
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--no-zygote',
+        '--disable-software-rasterizer',
+        '--disable-accelerated-2d-canvas',
+      ],
     });
-  });
+
+    const page = await browser.newPage();
+
+    // Evitar timeouts
+    await page.setDefaultTimeout(0);
+    await page.setDefaultNavigationTimeout(0);
+
+    // Cargar HTML
+    await page.setContent(html, {
+      waitUntil: 'networkidle0',
+    });
+
+    // Generar PDF con timeout manual
+    await Promise.race([
+      page.pdf({ path: pdfAddress, ...format }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('PDF TIMEOUT')), 60000),
+      ),
+    ]);
+
+    return {
+      pdfAddress,
+      fileName,
+    };
+  } catch (err) {
+    console.error('PDF ERROR:', err);
+    throw err;
+  } finally {
+    // Esto evita el 100% CPU
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+  }
 };
