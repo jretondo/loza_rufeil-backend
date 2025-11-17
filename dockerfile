@@ -28,6 +28,8 @@ ENV TZ=America/Argentina/Buenos_Aires
 COPY package*.json ./
 COPY tsconfig.json ./
 
+RUN npm install -g typescript pm2
+
 RUN npm install
 
 COPY . .
