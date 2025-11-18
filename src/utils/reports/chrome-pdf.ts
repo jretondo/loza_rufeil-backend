@@ -69,11 +69,12 @@ export const pdfGenerator = async (dataRequest: {
 
     const page = await browser.newPage();
 
-    // Evitar timeouts
-    await page.setDefaultTimeout(0);
-    await page.setDefaultNavigationTimeout(0);
+    // Evita el error “Requesting main frame too early!”
+    await page.goto('about:blank', {
+      waitUntil: 'domcontentloaded',
+      timeout: 0,
+    });
 
-    // Cargar HTML
     await page.setContent(html, {
       waitUntil: 'networkidle0',
     });
